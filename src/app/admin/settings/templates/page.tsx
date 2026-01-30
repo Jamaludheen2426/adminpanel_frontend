@@ -70,7 +70,6 @@ import { useVariableMappings } from "@/hooks/use-email-campaigns";
 import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
 
 const defaultForm: CreateEmailTemplateDto = {
-  type: "template",
   name: "",
   subject: "",
   body: "",
@@ -118,7 +117,6 @@ export default function EmailTemplatesPage() {
   const openEditDialog = (template: EmailTemplate) => {
     setEditingTemplate(template);
     setForm({
-      type: template.type || "template",
       name: template.name,
       subject: template.subject ?? "",
       body: template.body,

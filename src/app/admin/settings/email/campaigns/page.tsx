@@ -138,7 +138,7 @@ export default function EmailCampaignsPage() {
   const [form, setForm] = useState<CreateEmailCampaignDto>(defaultForm);
 
   const campaigns = campaignsData?.data || [];
-  const templates = templatesData?.data?.filter((t) => t.type === "template") || [];
+  const templates = templatesData?.data || [];
   const configs = configsData?.data || [];
   const roles = rolesData?.data || [];
 
