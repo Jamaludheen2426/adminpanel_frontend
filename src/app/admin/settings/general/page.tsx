@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ export default function GeneralSettingsPage() {
     timezone: "UTC",
     font_direction: "ltr",
     language: "en",
+    coming_soon_enabled: "false",
   });
 
   useEffect(() => {
@@ -48,6 +50,7 @@ export default function GeneralSettingsPage() {
         timezone: settingsMap.timezone || "UTC",
         font_direction: settingsMap.font_direction || "ltr",
         language: settingsMap.language || "en",
+        coming_soon_enabled: settingsMap.coming_soon_enabled || "false",
       });
     }
   }, [settings]);
@@ -177,6 +180,36 @@ export default function GeneralSettingsPage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Coming Soon Mode */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Coming Soon Mode
+          </CardTitle>
+          <CardDescription>
+            Enable this to show a &quot;Coming Soon&quot; page to visitors on the main site
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between max-w-md">
+            <div className="space-y-0.5">
+              <Label htmlFor="coming_soon">Enable Coming Soon Page</Label>
+              <p className="text-sm text-muted-foreground">
+                When enabled, visitors will see a coming soon page instead of the main site
+              </p>
+            </div>
+            <Switch
+              id="coming_soon"
+              checked={values.coming_soon_enabled === "true"}
+              onCheckedChange={(checked) =>
+                setValues({ ...values, coming_soon_enabled: checked ? "true" : "false" })
+              }
+            />
           </div>
         </CardContent>
       </Card>
