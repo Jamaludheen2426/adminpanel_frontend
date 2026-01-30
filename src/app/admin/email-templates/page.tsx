@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -25,7 +18,7 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Plus, Edit, Trash2, Eye, Mail } from "lucide-react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -41,7 +34,6 @@ import { EmailTemplate } from "@/types";
 const templateSchema = z.object({
   name: z.string().min(2, "Template name required"),
   slug: z.string().optional(),
-  type: z.enum(["header", "footer", "template"]),
   subject: z.string().min(5, "Subject required"),
   body: z.string().min(10, "Body required"),
   description: z.string().optional(),
@@ -72,26 +64,23 @@ export default function EmailTemplatesPage() {
     register,
     handleSubmit,
     reset,
-    control,
     formState: { errors },
   } = useForm<TemplateFormData>({
     resolver: zodResolver(templateSchema),
     defaultValues: selectedTemplate
       ? {
           name: selectedTemplate.name,
-          type: selectedTemplate.type,
           subject: selectedTemplate.subject ?? "",
           body: selectedTemplate.body,
           description: selectedTemplate.description || "",
         }
-      : { type: "template" },
+      : {},
   });
 
   const handleEdit = (template: EmailTemplate) => {
     setSelectedTemplate(template);
     reset({
       name: template.name,
-      type: template.type,
       subject: template.subject ?? "",
       body: template.body,
       description: template.description || "",
@@ -141,7 +130,7 @@ export default function EmailTemplatesPage() {
   const handleDialogClose = () => {
     setIsDialogOpen(false);
     setSelectedTemplate(null);
-    reset({ type: "template" });
+    reset({});
   };
 
   const onSubmit = (data: TemplateFormData) => {
@@ -228,7 +217,7 @@ export default function EmailTemplatesPage() {
             <Button
               onClick={() => {
                 setSelectedTemplate(null);
-                reset({ type: "template" });
+                reset({});
               }}
             >
               <Plus size={18} className="mr-2" />
@@ -276,34 +265,6 @@ export default function EmailTemplatesPage() {
                   </p>
                 </div>
               )}
-
-              <div>
-                <Label htmlFor="type">Type</Label>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    >
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="template">Template</SelectItem>
-                        <SelectItem value="header">Header</SelectItem>
-                        <SelectItem value="footer">Footer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.type && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.type.message}
-                  </p>
-                )}
-              </div>
 
               <div>
                 <Label htmlFor="subject">Subject</Label>
