@@ -184,7 +184,7 @@ export default function GeneralSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Coming Soon Mode */}
+      {/* Coming Soon Mode */} 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
