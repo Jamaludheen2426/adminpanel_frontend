@@ -7,65 +7,67 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ActivityLog } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-
-const columns: ColumnDef<ActivityLog>[] = [
-  {
-    accessorKey: "action",
-    header: "Action",
-  },
-  {
-    accessorKey: "description",
-    header: "Description",
-  },
-  {
-    accessorKey: "createdAt",
-    header: "Date & Time",
-    cell: ({ row }) => {
-      const value = row.original.createdAt;
-
-      if (!value) return "-";
-
-      const date = new Date(value);
-      if (isNaN(date.getTime())) return "-";
-
-      return format(date, "MMM dd, yyyy HH:mm:ss");
-    },
-  },
-  {
-    id: "user",
-    header: "User",
-    cell: ({ row }) => row.original.user?.email || "-",
-  },
-  {
-    accessorKey: "ip_address",
-    header: "IP Address",
-  },
-];
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function ActivityLogsPage() {
+  const { t } = useTranslation();
   const { data: logsData, isLoading } = useActivityLogs();
-  
+
   const logs = logsData?.data || [];
+
+  const columns: ColumnDef<ActivityLog>[] = [
+    {
+      accessorKey: "action",
+      header: t('common.action'),
+    },
+    {
+      accessorKey: "description",
+      header: t('common.description'),
+    },
+    {
+      accessorKey: "createdAt",
+      header: t('activity.date_time'),
+      cell: ({ row }) => {
+        const value = row.original.createdAt;
+
+        if (!value) return "-";
+
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return "-";
+
+        return format(date, "MMM dd, yyyy HH:mm:ss");
+      },
+    },
+    {
+      id: "user",
+      header: t('common.user'),
+      cell: ({ row }) => row.original.user?.email || "-",
+    },
+    {
+      accessorKey: "ip_address",
+      header: t('activity.ip_address'),
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Activity Logs</h1>
-        <p className="text-gray-600 mt-1">
-          View system activity and user actions
+        <h1 className="text-3xl font-bold">{t('activity.logs')}</h1>
+        <p className="text-muted-foreground mt-1">
+          {t('activity.logs_desc')}
         </p>
       </div>
 
       <Card className="p-6">
         {isLoading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading activity logs...</p>
+            <p className="text-muted-foreground">{t('activity.loading')}</p>
           </div>
         ) : logs.length > 0 ? (
           <DataTable columns={columns} data={logs} />
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">No activity logs found</p>
+            <p className="text-muted-foreground">{t('activity.no_activity')}</p>
           </div>
         )}
       </Card>

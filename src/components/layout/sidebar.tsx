@@ -14,69 +14,76 @@ import {
   LogIn,
   Menu,
   X,
+  Languages,
+  DollarSign,
+  Mail,
 } from 'lucide-react';
+import { useTranslation } from '@/hooks/use-translation';
 
 interface MenuItem {
-  label: string;
+  labelKey: string;
   href?: string;
   icon: React.ReactNode;
   children?: MenuItem[];
 }
 
-const menuItems: MenuItem[] = [
-  {
-    label: 'Dashboard',
-    href: '/admin',
-    icon: <LayoutDashboard size={20} />,
-  },
-  {
-    label: 'Users',
-    href: '/admin/users',
-    icon: <Users size={20} />,
-  },
-  {
-    label: 'Access Control',
-    icon: <Shield size={20} />,
-    children: [
-      { label: 'Roles', href: '/admin/roles', icon: <Lock size={20} /> },
-      {
-        label: 'Permissions',
-        href: '/admin/permissions',
-        icon: <Lock size={20} />,
-      },
-    ],
-  },
-  {
-    label: 'Locations',
-    href: '/admin/locations',
-    icon: <MapPin size={20} />,
-  },
-  {
-    label: 'Configuration',
-    icon: <Settings size={20} />,
-    children: [
-      { label: 'Settings', href: '/admin/settings', icon: <Settings size={20} /> },
-      { label: 'Languages', href: '/admin/languages', icon: <LogIn size={20} /> },
-      { label: 'Currencies', href: '/admin/currencies', icon: <LogIn size={20} /> },
-      {
-        label: 'Email Templates',
-        href: '/admin/email-templates',
-        icon: <LogIn size={20} />,
-      },
-    ],
-  },
-];
-
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const [expanded, setExpanded] = useState<string[]>(['Locations']);
+  const [expanded, setExpanded] = useState<string[]>(['nav.locations']);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useTranslation();
 
-  const toggleExpand = (label: string) => {
+  // Menu items with translation keys
+  const menuItems: MenuItem[] = [
+    {
+      labelKey: 'nav.dashboard',
+      href: '/admin',
+      icon: <LayoutDashboard size={20} />,
+    },
+    {
+      labelKey: 'nav.users',
+      href: '/admin/users',
+      icon: <Users size={20} />,
+    },
+    {
+      labelKey: 'nav.access_control',
+      icon: <Shield size={20} />,
+      children: [
+        { labelKey: 'nav.roles', href: '/admin/roles', icon: <Lock size={20} /> },
+        {
+          labelKey: 'nav.permissions',
+          href: '/admin/permissions',
+          icon: <Lock size={20} />,
+        },
+      ],
+    },
+    {
+      labelKey: 'nav.locations',
+      href: '/admin/locations',
+      icon: <MapPin size={20} />,
+    },
+    {
+      labelKey: 'nav.configuration',
+      icon: <Settings size={20} />,
+      children: [
+        { labelKey: 'nav.settings', href: '/admin/settings', icon: <Settings size={20} /> },
+        { labelKey: 'nav.languages', href: '/admin/languages', icon: <Languages size={20} /> },
+        { labelKey: 'nav.currencies', href: '/admin/currencies', icon: <DollarSign size={20} /> },
+        { labelKey: 'nav.translations', href: '/admin/settings/translations', icon: <Languages size={20} /> },
+        {
+          labelKey: 'nav.email_templates',
+          href: '/admin/email-templates',
+          icon: <Mail size={20} />,
+        },
+      ],
+    },
+  ];
+
+  const toggleExpand = (labelKey: string) => {
     setExpanded((prev) =>
-      prev.includes(label)
-        ? prev.filter((item) => item !== label)
-        : [...prev, label]
+      prev.includes(labelKey)
+        ? prev.filter((item) => item !== labelKey)
+        : [...prev, labelKey]
     );
   };
 
@@ -87,34 +94,34 @@ export default function AdminSidebar() {
   const SidebarContent = () => (
     <div className="p-4 space-y-2">
       {menuItems.map((item) => (
-        <div key={item.label}>
+        <div key={item.labelKey}>
           {item.children ? (
             <div>
               <button
-                onClick={() => toggleExpand(item.label)}
+                onClick={() => toggleExpand(item.labelKey)}
                 className={`w-full flex items-center justify-between px-4 py-2 rounded-lg transition ${
-                  expanded.includes(item.label) || hasActiveChild(item.children)
+                  expanded.includes(item.labelKey) || hasActiveChild(item.children)
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 <span className="flex items-center gap-3">
                   {item.icon}
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
                 <ChevronDown
                   size={18}
                   className={`transition ${
-                    expanded.includes(item.label) ? 'rotate-180' : ''
+                    expanded.includes(item.labelKey) ? 'rotate-180' : ''
                   }`}
                 />
               </button>
 
-              {expanded.includes(item.label) && (
+              {expanded.includes(item.labelKey) && (
                 <div className="ml-4 mt-1 space-y-1">
                   {item.children.map((child) => (
                     <Link
-                      key={child.label}
+                      key={child.labelKey}
                       href={child.href || '#'}
                       className={`flex items-center gap-3 px-4 py-2 rounded-lg transition ${
                         isActive(child.href)
@@ -123,7 +130,7 @@ export default function AdminSidebar() {
                       }`}
                     >
                       {child.icon}
-                      {child.label}
+                      {t(child.labelKey)}
                     </Link>
                   ))}
                 </div>
@@ -139,7 +146,7 @@ export default function AdminSidebar() {
               }`}
             >
               {item.icon}
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           )}
         </div>

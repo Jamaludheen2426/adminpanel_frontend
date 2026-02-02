@@ -123,4 +123,30 @@ export const queryKeys = {
     statistics: (id: number) => [...queryKeys.emailCampaigns.all, 'statistics', id] as const,
     variableMappings: () => [...queryKeys.emailCampaigns.all, 'variableMappings'] as const,
   },
+
+  // Translations
+  translations: {
+    all: ['translations'] as const,
+    forLanguage: (langCode: string) => [...queryKeys.translations.all, 'lang', langCode] as const,
+    forLanguageGroup: (langCode: string, group: string) => [...queryKeys.translations.all, 'lang', langCode, group] as const,
+    stats: () => [...queryKeys.translations.all, 'stats'] as const,
+    groups: () => [...queryKeys.translations.all, 'groups'] as const,
+    export: () => [...queryKeys.translations.all, 'export'] as const,
+  },
+
+  // Translation Keys
+  translationKeys: {
+    all: ['translationKeys'] as const,
+    lists: () => [...queryKeys.translationKeys.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.translationKeys.lists(), params] as const,
+    detail: (id: number) => [...queryKeys.translationKeys.all, 'detail', id] as const,
+  },
+
+  // Missing Translation Keys
+  missingTranslationKeys: {
+    all: ['missingTranslationKeys'] as const,
+    lists: () => [...queryKeys.missingTranslationKeys.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.missingTranslationKeys.lists(), params] as const,
+    count: () => [...queryKeys.missingTranslationKeys.all, 'count'] as const,
+  },
 };

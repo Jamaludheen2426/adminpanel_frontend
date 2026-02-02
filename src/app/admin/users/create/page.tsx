@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTranslation } from '@/hooks/use-translation';
 
 const userSchema = z.object({
   first_name: z.string().min(2, 'First name required'),
@@ -33,6 +34,7 @@ interface CreateUserPayload extends Omit<UserFormData, 'role_id'> {
 
 export default function CreateUserPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data: rolesData } = useRoles({ page: 1, limit: 100 });
   const createUserMutation = useCreateUser();
 
@@ -64,18 +66,18 @@ export default function CreateUserPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Create User</h1>
-        <p className="text-gray-600 mt-1">Add a new user to the system</p>
+        <h1 className="text-3xl font-bold">{t('users.create_user', 'Create User')}</h1>
+        <p className="text-gray-600 mt-1">{t('users.create_user_desc', 'Add a new user to the system')}</p>
       </div>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="first_name">First Name</Label>
+              <Label htmlFor="first_name">{t('users.first_name', 'First Name')}</Label>
               <Input
                 id="first_name"
-                placeholder="John"
+                placeholder={t('users.first_name_placeholder', 'John')}
                 {...register('first_name')}
                 className="mt-2"
               />
@@ -87,10 +89,10 @@ export default function CreateUserPage() {
             </div>
 
             <div>
-              <Label htmlFor="last_name">Last Name</Label>
+              <Label htmlFor="last_name">{t('users.last_name', 'Last Name')}</Label>
               <Input
                 id="last_name"
-                placeholder="Doe"
+                placeholder={t('users.last_name_placeholder', 'Doe')}
                 {...register('last_name')}
                 className="mt-2"
               />
@@ -103,11 +105,11 @@ export default function CreateUserPage() {
           </div>
 
           <div>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('common.email', 'Email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="john@example.com"
+              placeholder={t('users.email_placeholder', 'john@example.com')}
               {...register('email')}
               className="mt-2"
             />
@@ -117,7 +119,7 @@ export default function CreateUserPage() {
           </div>
 
           <div>
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('common.password', 'Password')}</Label>
             <Input
               id="password"
               type="password"
@@ -133,13 +135,13 @@ export default function CreateUserPage() {
           </div>
 
           <div>
-            <Label htmlFor="role_id">Role</Label>
+            <Label htmlFor="role_id">{t('common.role', 'Role')}</Label>
             <Select
               onValueChange={(value) => setValue('role_id', value)}
               defaultValue=""
             >
               <SelectTrigger className="mt-2">
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder={t('users.select_role', 'Select a role')} />
               </SelectTrigger>
               <SelectContent>
                 {rolesData?.data?.map((role) => (
@@ -158,14 +160,14 @@ export default function CreateUserPage() {
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={createUserMutation.isPending}>
-              {createUserMutation.isPending ? 'Creating...' : 'Create User'}
+              {createUserMutation.isPending ? t('common.creating', 'Creating...') : t('users.create_user', 'Create User')}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
           </div>
         </form>

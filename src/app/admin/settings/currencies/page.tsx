@@ -24,9 +24,11 @@ import {
 } from "@/components/ui/dialog";
 import { useCurrencies, useDeleteCurrency, useSetDefaultCurrency } from "@/hooks/use-currencies";
 import { CurrencyForm } from "@/components/admin/currencies/currency-form";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Currency } from "@/types";
 
 export default function CurrenciesPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -42,7 +44,7 @@ export default function CurrenciesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this currency?")) {
+    if (confirm(t('currencies.delete_confirm'))) {
       deleteCurrencyMutation.mutate(id);
     }
   };
@@ -59,19 +61,19 @@ export default function CurrenciesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Currencies</h1>
+        <h1 className="text-3xl font-bold">{t('currencies.title')}</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setSelectedCurrency(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Currency
+              {t('currencies.add_currency')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{selectedCurrency ? "Edit Currency" : "Add Currency"}</DialogTitle>
+              <DialogTitle>{selectedCurrency ? t('currencies.edit_currency') : t('currencies.add_currency')}</DialogTitle>
               <DialogDescription>
-                {selectedCurrency ? "Update the currency details below." : "Fill in the details to create a new currency."}
+                {selectedCurrency ? t('currencies.edit_desc') : t('currencies.add_desc')}
               </DialogDescription>
             </DialogHeader>
             <CurrencyForm currency={selectedCurrency} onSuccess={handleDialogClose} />
@@ -85,7 +87,7 @@ export default function CurrenciesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search currencies..."
+                placeholder={t('currencies.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -103,12 +105,12 @@ export default function CurrenciesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Symbol</TableHead>
-                    <TableHead>Exchange Rate</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('common.name')}</TableHead>
+                    <TableHead>{t('common.code')}</TableHead>
+                    <TableHead>{t('currencies.symbol')}</TableHead>
+                    <TableHead>{t('currencies.exchange_rate')}</TableHead>
+                    <TableHead>{t('common.status')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -131,7 +133,7 @@ export default function CurrenciesPage() {
                       <TableCell>{currency.exchange_rate}</TableCell>
                       <TableCell>
                         <Badge variant={currency.is_active ? "default" : "secondary"}>
-                          {currency.is_active ? "Active" : "Inactive"}
+                          {currency.is_active ? t('common.active') : t('common.inactive')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -169,7 +171,7 @@ export default function CurrenciesPage() {
                   {data?.data?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No currencies found
+                        {t('currencies.no_currencies_found')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -179,7 +181,7 @@ export default function CurrenciesPage() {
               {data?.pagination && data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Page {data.pagination.page} of {data.pagination.totalPages}
+                    {t('common.page')} {data.pagination.page} / {data.pagination.totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -188,7 +190,7 @@ export default function CurrenciesPage() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={!data.pagination.hasPrevPage}
                     >
-                      Previous
+                      {t('common.previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -196,7 +198,7 @@ export default function CurrenciesPage() {
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!data.pagination.hasNextPage}
                     >
-                      Next
+                      {t('common.next')}
                     </Button>
                   </div>
                 </div>

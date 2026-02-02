@@ -32,9 +32,10 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useSettingsByGroup } from "@/hooks/use-settings";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface MenuItem {
-  label: string;
+  labelKey: string;
   href?: string;
   icon: React.ElementType;
   children?: MenuItem[];
@@ -42,26 +43,26 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    label: "Dashboard",
+    labelKey: "nav.dashboard",
     href: "/admin",
     icon: LayoutDashboard,
   },
   {
-    label: "Appearance",
+    labelKey: "nav.appearance",
     icon: Palette,
     children: [
-      { label: "Theme", href: "/admin/appearance/theme", icon: Brush },
-      { label: "Menu", href: "/admin/appearance/menu", icon: Menu },
-      { label: "Theme Option", href: "/admin/appearance/theme-option", icon: SlidersHorizontal },
+      { labelKey: "nav.theme", href: "/admin/appearance/theme", icon: Brush },
+      { labelKey: "nav.menu", href: "/admin/appearance/menu", icon: Menu },
+      { labelKey: "nav.theme_option", href: "/admin/appearance/theme-option", icon: SlidersHorizontal },
     ],
   },
   {
-    label: "Settings",
+    labelKey: "nav.settings",
     href: "/admin/settings",
     icon: Settings,
   },
   {
-    label: "Platform Administration",
+    labelKey: "nav.platform_admin",
     href: "/admin/platform",
     icon: ShieldCheck,
   },
@@ -69,6 +70,7 @@ const menuItems: MenuItem[] = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
   const { data: settings } = useSettingsByGroup("appearance");
 
   const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Panel";
@@ -94,14 +96,14 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('nav.navigation')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
                 if (item.children) {
                   return (
                     <Collapsible
-                      key={item.label}
+                      key={item.labelKey}
                       defaultOpen={isChildActive(item.children)}
                       className="group/collapsible"
                     >
@@ -109,18 +111,18 @@ export function AppSidebar() {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton>
                             <item.icon className="w-4 h-4" />
-                            <span>{item.label}</span>
+                            <span>{t(item.labelKey)}</span>
                             <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
                             {item.children.map((child) => (
-                              <SidebarMenuSubItem key={child.label}>
+                              <SidebarMenuSubItem key={child.labelKey}>
                                 <SidebarMenuSubButton asChild isActive={isActive(child.href)}>
                                   <Link href={child.href || "#"}>
                                     <child.icon className="w-4 h-4" />
-                                    <span>{child.label}</span>
+                                    <span>{t(child.labelKey)}</span>
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -133,11 +135,11 @@ export function AppSidebar() {
                 }
 
                 return (
-                  <SidebarMenuItem key={item.label}>
+                  <SidebarMenuItem key={item.labelKey}>
                     <SidebarMenuButton asChild isActive={isActive(item.href)}>
                       <Link href={item.href || "#"}>
                         <item.icon className="w-4 h-4" />
-                        <span>{item.label}</span>
+                        <span>{t(item.labelKey)}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

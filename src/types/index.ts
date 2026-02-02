@@ -440,3 +440,65 @@ export interface CampaignStatistics {
   queue: Record<string, number>;
   sent: Record<string, number>;
 }
+
+// Translation types
+export interface TranslationKey extends BaseEntity {
+  key: string;
+  default_value: string;
+  description: string | null;
+  group: string;
+  translations?: Translation[];
+}
+
+export interface Translation extends BaseEntity {
+  translation_key_id: number;
+  language_id: number;
+  value: string;
+  status: 'auto' | 'reviewed';
+  language?: Language;
+  translation_key?: TranslationKey;
+}
+
+export interface CreateTranslationKeyDto {
+  key: string;
+  default_value: string;
+  description?: string;
+  group: string;
+  auto_translate?: boolean;
+}
+
+export interface UpdateTranslationKeyDto {
+  key?: string;
+  default_value?: string;
+  description?: string;
+  group?: string;
+}
+
+export interface UpdateTranslationDto {
+  language_id: number;
+  value: string;
+}
+
+export interface TranslationMap {
+  [key: string]: string;
+}
+
+export interface TranslationStats {
+  total_keys: number;
+  languages: {
+    id: number;
+    code: string;
+    name: string;
+    total: number;
+    auto: number;
+    reviewed: number;
+    missing: number;
+    completion: number;
+  }[];
+}
+
+export interface BulkImportResult {
+  created: number;
+  skipped: number;
+  errors: { key: string; error: string }[];
+}

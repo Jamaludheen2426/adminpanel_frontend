@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useAuth, useUpdateProfile, useChangePassword } from "@/hooks";
 import { useUploadMedia } from "@/hooks/use-media";
+import { useTranslation } from "@/hooks/use-translation";
 import { User, Mail, Phone, Shield, Calendar, Camera } from "lucide-react";
 import { format } from "date-fns";
 
@@ -43,6 +44,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function ProfilePage() {
+  const { t } = useTranslation();
   const { user, isLoading } = useAuth();
   const updateProfileMutation = useUpdateProfile();
   const changePasswordMutation = useChangePassword();
@@ -108,17 +110,17 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Profile</h1>
+        <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
         <p className="text-muted-foreground mt-1">
-          Manage your account settings and preferences
+          {t('profile.description')}
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-1">
           <CardHeader>
-            <CardTitle>Account Info</CardTitle>
-            <CardDescription>Your account details</CardDescription>
+            <CardTitle>{t('profile.account_info')}</CardTitle>
+            <CardDescription>{t('profile.account_details')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-center">
@@ -164,27 +166,27 @@ export default function ProfilePage() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Shield className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Role:</span>
+                <span className="text-muted-foreground">{t('roles.role')}:</span>
                 <Badge variant="outline">{user?.role?.name || "N/A"}</Badge>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">Status:</span>
+                <span className="text-muted-foreground">{t('common.status')}:</span>
                 <Badge variant={user?.is_active ? "default" : "secondary"}>
-                  {user?.is_active ? "Active" : "Inactive"}
+                  {user?.is_active ? t('common.active') : t('common.inactive')}
                 </Badge>
               </div>
               {user?.phone && (
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Phone:</span>
+                  <span className="text-muted-foreground">{t('profile.phone')}:</span>
                   <span>{user.phone}</span>
                 </div>
               )}
               {user?.last_login_at && (
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Last Login:</span>
+                  <span className="text-muted-foreground">{t('profile.last_login')}:</span>
                   <span>{format(new Date(user.last_login_at), "MMM dd, yyyy")}</span>
                 </div>
               )}
@@ -195,14 +197,14 @@ export default function ProfilePage() {
         <div className="md:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
+              <CardTitle>{t('profile.personal_info')}</CardTitle>
+              <CardDescription>{t('profile.personal_info_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="first_name">First Name</Label>
+                    <Label htmlFor="first_name">{t('profile.first_name')}</Label>
                     <Input
                       id="first_name"
                       placeholder="John"
@@ -215,7 +217,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last_name">Last Name</Label>
+                    <Label htmlFor="last_name">{t('profile.last_name')}</Label>
                     <Input
                       id="last_name"
                       placeholder="Doe"
@@ -230,7 +232,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('common.email')}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -245,7 +247,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">{t('profile.phone')}</Label>
                   <Input
                     id="phone"
                     placeholder="+1234567890"
@@ -254,7 +256,7 @@ export default function ProfilePage() {
                 </div>
 
                 <Button type="submit" disabled={updateProfileMutation.isPending}>
-                  {updateProfileMutation.isPending ? "Saving..." : "Update Profile"}
+                  {updateProfileMutation.isPending ? t('common.saving') : t('profile.update_profile')}
                 </Button>
               </form>
             </CardContent>
@@ -262,17 +264,17 @@ export default function ProfilePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
-              <CardDescription>Update your password to keep your account secure</CardDescription>
+              <CardTitle>{t('profile.change_password')}</CardTitle>
+              <CardDescription>{t('profile.change_password_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="current_password">Current Password</Label>
+                  <Label htmlFor="current_password">{t('profile.current_password')}</Label>
                   <Input
                     id="current_password"
                     type="password"
-                    placeholder="Enter current password"
+                    placeholder={t('profile.enter_current_password')}
                     {...passwordForm.register("current_password")}
                   />
                   {passwordForm.formState.errors.current_password && (
@@ -283,11 +285,11 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new_password">New Password</Label>
+                  <Label htmlFor="new_password">{t('profile.new_password')}</Label>
                   <Input
                     id="new_password"
                     type="password"
-                    placeholder="Enter new password"
+                    placeholder={t('profile.enter_new_password')}
                     {...passwordForm.register("new_password")}
                   />
                   {passwordForm.formState.errors.new_password && (
@@ -298,11 +300,11 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirm_password">Confirm New Password</Label>
+                  <Label htmlFor="confirm_password">{t('profile.confirm_password')}</Label>
                   <Input
                     id="confirm_password"
                     type="password"
-                    placeholder="Confirm new password"
+                    placeholder={t('profile.confirm_new_password')}
                     {...passwordForm.register("confirm_password")}
                   />
                   {passwordForm.formState.errors.confirm_password && (
@@ -313,7 +315,7 @@ export default function ProfilePage() {
                 </div>
 
                 <Button type="submit" disabled={changePasswordMutation.isPending}>
-                  {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+                  {changePasswordMutation.isPending ? t('common.changing') : t('profile.change_password')}
                 </Button>
               </form>
             </CardContent>

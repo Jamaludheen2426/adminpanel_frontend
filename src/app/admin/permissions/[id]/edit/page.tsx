@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
+import { useTranslation } from '@/hooks/use-translation';
 
 const permissionSchema = z.object({
   name: z.string().min(2, 'Permission name required'),
@@ -22,6 +23,7 @@ type PermissionFormData = z.infer<typeof permissionSchema>;
 export default function EditPermissionPage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useTranslation();
   const permissionId = Number(params.id);
 
   const { data: permissionData, isLoading } = usePermission(permissionId);
@@ -62,23 +64,23 @@ export default function EditPermissionPage() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <div className="text-center py-8">{t('common.loading', 'Loading...')}</div>;
   }
 
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Edit Permission</h1>
-        <p className="text-gray-600 mt-1">Update permission information</p>
+        <h1 className="text-3xl font-bold">{t('permissions.edit_permission', 'Edit Permission')}</h1>
+        <p className="text-gray-600 mt-1">{t('permissions.edit_permission_desc', 'Update permission information')}</p>
       </div>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="name">Permission Name</Label>
+            <Label htmlFor="name">{t('permissions.permission_name', 'Permission Name')}</Label>
             <Input
               id="name"
-              placeholder="users.create"
+              placeholder={t('permissions.permission_name_placeholder', 'users.create')}
               {...register('name')}
               className="mt-2"
             />
@@ -88,10 +90,10 @@ export default function EditPermissionPage() {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('common.description', 'Description')}</Label>
             <Textarea
               id="description"
-              placeholder="Permission description..."
+              placeholder={t('permissions.description_placeholder', 'Permission description...')}
               {...register('description')}
               className="mt-2"
               rows={4}
@@ -105,14 +107,14 @@ export default function EditPermissionPage() {
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={updatePermissionMutation.isPending}>
-              {updatePermissionMutation.isPending ? 'Updating...' : 'Update Permission'}
+              {updatePermissionMutation.isPending ? t('common.updating', 'Updating...') : t('permissions.update_permission', 'Update Permission')}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
           </div>
         </form>

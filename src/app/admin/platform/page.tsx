@@ -15,61 +15,62 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface PlatformItem {
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   href: string;
   icon: React.ElementType;
 }
 
 interface PlatformGroup {
-  title: string;
+  titleKey: string;
   items: PlatformItem[];
 }
 
 const platformGroups: PlatformGroup[] = [
   {
-    title: "User Management",
+    titleKey: "platform.user_management",
     items: [
       {
-        label: "Users",
-        description: "Manage all registered users and their accounts",
+        labelKey: "nav.users",
+        descriptionKey: "platform.users_desc",
         href: "/admin/users",
         icon: Users,
       },
       {
-        label: "Roles",
-        description: "Create and manage user roles and access levels",
+        labelKey: "nav.roles",
+        descriptionKey: "platform.roles_desc",
         href: "/admin/roles",
         icon: Shield,
       },
       {
-        label: "Permissions",
-        description: "Define granular permissions for roles",
+        labelKey: "permissions.title",
+        descriptionKey: "platform.permissions_desc",
         href: "/admin/permissions",
         icon: Lock,
       },
       {
-        label: "Profile",
-        description: "View and update your admin profile",
+        labelKey: "profile.title",
+        descriptionKey: "platform.profile_desc",
         href: "/admin/profile",
         icon: UserCog,
       },
     ],
   },
   {
-    title: "System",
+    titleKey: "platform.system",
     items: [
       {
-        label: "Activity Log",
-        description: "View all user activities and system events",
+        labelKey: "activity.logs",
+        descriptionKey: "platform.activity_desc",
         href: "/admin/activity-logs",
         icon: Activity,
       },
       {
-        label: "Cache Manager",
-        description: "Clear and manage application cache",
+        labelKey: "platform.cache_manager",
+        descriptionKey: "platform.cache_desc",
         href: "/admin/platform/cache",
         icon: Database,
       },
@@ -78,19 +79,21 @@ const platformGroups: PlatformGroup[] = [
 ];
 
 export default function PlatformPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Platform Administration</h1>
+        <h1 className="text-3xl font-bold">{t('nav.platform_admin')}</h1>
         <p className="text-muted-foreground mt-1">
-          Manage users, roles, and system administration
+          {t('platform.page_desc')}
         </p>
       </div>
 
       {platformGroups.map((group) => (
-        <Card key={group.title}>
+        <Card key={group.titleKey}>
           <CardHeader>
-            <CardTitle className="text-lg">{group.title}</CardTitle>
+            <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -104,10 +107,10 @@ export default function PlatformPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-primary group-hover:underline">
-                          {item.label}
+                          {t(item.labelKey)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {item.description}
+                          {t(item.descriptionKey)}
                         </p>
                       </div>
                     </div>

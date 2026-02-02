@@ -15,6 +15,7 @@ import {
   MapPin,
   BarChart3,
   Palette,
+  Languages,
 } from "lucide-react";
 import {
   Card,
@@ -22,126 +23,133 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useTranslation } from "@/hooks/use-translation";
 
 interface SettingItem {
-  label: string;
-  description: string;
+  labelKey: string;
+  descriptionKey: string;
   href: string;
   icon: React.ElementType;
 }
 
 interface SettingGroup {
-  title: string;
+  titleKey: string;
   items: SettingItem[];
 }
 
 const settingGroups: SettingGroup[] = [
   {
-    title: "Common",
+    titleKey: "settings.common",
     items: [
       {
-        label: "General",
-        description: "View and update your general settings and site info",
+        labelKey: "settings.general",
+        descriptionKey: "settings.general_desc",
         href: "/admin/settings/general",
         icon: Settings,
       },
       {
-        label: "Email",
-        description: "View and update your email settings and SMTP configuration",
+        labelKey: "settings.email",
+        descriptionKey: "settings.email_desc",
         href: "/admin/settings/email",
         icon: Mail,
       },
       {
-        label: "Email Templates",
-        description: "Email templates using HTML & system variables",
+        labelKey: "settings.email_templates",
+        descriptionKey: "settings.email_templates_desc",
         href: "/admin/settings/templates",
         icon: FileText,
       },
       {
-        label: "Phone Number",
-        description: "Configure phone number field settings",
+        labelKey: "settings.phone_number",
+        descriptionKey: "settings.phone_number_desc",
         href: "/admin/settings/phone",
         icon: Phone,
       },
       {
-        label: "Languages",
-        description: "View and update your website languages",
+        labelKey: "settings.languages",
+        descriptionKey: "settings.languages_desc",
         href: "/admin/settings/languages",
         icon: Globe,
       },
       {
-        label: "Currencies",
-        description: "View and update your website currencies",
+        labelKey: "settings.currencies",
+        descriptionKey: "settings.currencies_desc",
         href: "/admin/settings/currencies",
         icon: DollarSign,
       },
       {
-        label: "Media",
-        description: "View and update your media settings",
+        labelKey: "settings.media",
+        descriptionKey: "settings.media_desc",
         href: "/admin/settings/media",
         icon: Image,
       },
       {
-        label: "Website Tracking",
-        description: "View and update your Website Tracking settings",
+        labelKey: "settings.website_tracking",
+        descriptionKey: "settings.website_tracking_desc",
         href: "/admin/settings/website-tracking",
         icon: Globe,
       },
       {
-        label: "Dashboard Color Theme",
-        description: "View and update Admin Colors And Layout,...",
+        labelKey: "settings.dashboard_theme",
+        descriptionKey: "settings.dashboard_theme_desc",
         href: "/admin/settings/admin-apperance",
         icon: Palette,
       },
       {
-        label: "Site Settings ",
-        description: "View and update logo, favicon, layout,...",
+        labelKey: "settings.site_settings",
+        descriptionKey: "settings.site_settings_desc",
         href: "/admin/settings/admin-settings",
         icon: Settings,
       },
       {
-        label: "Email Campaigns ",
-        description: "View and update logo, favicon, layout,...",
+        labelKey: "settings.email_campaigns",
+        descriptionKey: "settings.email_campaigns_desc",
         href: "/admin/settings/email/campaigns",
         icon: Mail,
       },
       {
-        label: "Social Login",
-        description: "View and update logo, favicon, layout,...",
+        labelKey: "settings.social_login",
+        descriptionKey: "settings.social_login_desc",
         href: "/admin/settings/social-login",
         icon: Globe,
       },
     ],
   },
   {
-    title: "Localization",
+    titleKey: "settings.localization",
     items: [
       {
-        label: "Locations",
-        description: "Manage countries, states, cities, and pincodes",
+        labelKey: "settings.translations",
+        descriptionKey: "settings.translations_desc",
+        href: "/admin/settings/translations",
+        icon: Languages,
+      },
+      {
+        labelKey: "settings.locations",
+        descriptionKey: "settings.locations_desc",
         href: "/admin/settings/locations",
         icon: MapPin,
       },
       {
-        label: "Timezone",
-        description: "Configure timezone and date format settings",
+        labelKey: "settings.timezone",
+        descriptionKey: "settings.timezone_desc",
         href: "/admin/settings/timezone",
         icon: Globe,
       },
     ],
   },
   {
-    title: "Performance",
+    titleKey: "settings.performance",
     items: [
       {
-        label: "Cache",
-        description: "Configure caching for optimized speed",
+        labelKey: "settings.cache",
+        descriptionKey: "settings.cache_desc",
         href: "/admin/settings/cache",
         icon: Database,
       },
       {
-        label: "Optimize",
-        description: "Minify HTML output, inline CSS, remove comments",
+        labelKey: "settings.optimize",
+        descriptionKey: "settings.optimize_desc",
         href: "/admin/settings/optimize",
         icon: BarChart3,
       },
@@ -150,19 +158,21 @@ const settingGroups: SettingGroup[] = [
 ];
 
 export default function SettingsPage() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-3xl font-bold">{t('nav.settings')}</h1>
         <p className="text-muted-foreground mt-1">
-          Manage all your application settings and configuration
+          {t('settings.page_desc')}
         </p>
       </div>
 
       {settingGroups.map((group) => (
-        <Card key={group.title}>
+        <Card key={group.titleKey}>
           <CardHeader>
-            <CardTitle className="text-lg">{group.title}</CardTitle>
+            <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -176,10 +186,10 @@ export default function SettingsPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-primary group-hover:underline">
-                          {item.label}
+                          {t(item.labelKey)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {item.description}
+                          {t(item.descriptionKey)}
                         </p>
                       </div>
                     </div>

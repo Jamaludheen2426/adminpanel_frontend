@@ -25,9 +25,11 @@ import {
 import { useRoles, useDeleteRole } from "@/hooks/use-roles";
 import { RoleForm } from "@/components/admin/roles/role-form";
 import { RolePermissions } from "@/components/admin/roles/role-permissions";
+import { useTranslation } from "@/hooks/use-translation";
 import type { Role } from "@/types";
 
 export default function RolesPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -48,7 +50,7 @@ export default function RolesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this role?")) {
+    if (confirm(t('roles.delete_confirm'))) {
       deleteRoleMutation.mutate(id);
     }
   };
@@ -61,19 +63,19 @@ export default function RolesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Roles</h1>
+        <h1 className="text-3xl font-bold">{t('nav.roles')}</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setSelectedRole(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Role
+              {t('roles.add_role')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{selectedRole ? "Edit Role" : "Add Role"}</DialogTitle>
+              <DialogTitle>{selectedRole ? t('roles.edit_role') : t('roles.add_role')}</DialogTitle>
               <DialogDescription>
-                {selectedRole ? "Update the role details below." : "Fill in the details to create a new role."}
+                {selectedRole ? t('roles.edit_desc') : t('roles.add_desc')}
               </DialogDescription>
             </DialogHeader>
             <RoleForm role={selectedRole} onSuccess={handleDialogClose} />
@@ -84,9 +86,9 @@ export default function RolesPage() {
       <Dialog open={isPermissionsOpen} onOpenChange={setIsPermissionsOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Manage Permissions - {selectedRole?.name}</DialogTitle>
+            <DialogTitle>{t('roles.manage_permissions')} - {selectedRole?.name}</DialogTitle>
             <DialogDescription>
-              Select the permissions to assign to this role.
+              {t('roles.permissions_desc')}
             </DialogDescription>
           </DialogHeader>
           {selectedRole && (
@@ -104,7 +106,7 @@ export default function RolesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search roles..."
+                placeholder={t('roles.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -122,11 +124,11 @@ export default function RolesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Slug</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('common.name')}</TableHead>
+                    <TableHead>{t('common.slug')}</TableHead>
+                    <TableHead>{t('common.description')}</TableHead>
+                    <TableHead>{t('common.status')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -143,7 +145,7 @@ export default function RolesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={role.is_active ? "default" : "secondary"}>
-                          {role.is_active ? "Active" : "Inactive"}
+                          {role.is_active ? t('common.active') : t('common.inactive')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -178,7 +180,7 @@ export default function RolesPage() {
                   {data?.data?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No roles found
+                        {t('roles.no_roles_found')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -188,7 +190,7 @@ export default function RolesPage() {
               {data?.pagination && data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    Page {data.pagination.page} of {data.pagination.totalPages}
+                    {t('common.page')} {data.pagination.page} / {data.pagination.totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -197,7 +199,7 @@ export default function RolesPage() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={!data.pagination.hasPrevPage}
                     >
-                      Previous
+                      {t('common.previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -205,7 +207,7 @@ export default function RolesPage() {
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!data.pagination.hasNextPage}
                     >
-                      Next
+                      {t('common.next')}
                     </Button>
                   </div>
                 </div>

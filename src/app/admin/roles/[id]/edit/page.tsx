@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { useEffect } from 'react';
+import { useTranslation } from '@/hooks/use-translation';
 
 const roleSchema = z.object({
   name: z.string().min(2, 'Role name required'),
@@ -22,6 +23,7 @@ type RoleFormData = z.infer<typeof roleSchema>;
 export default function EditRolePage() {
   const router = useRouter();
   const params = useParams();
+  const { t } = useTranslation();
   const roleId = Number(params.id);
 
   const { data: roleData, isLoading } = useRole(roleId);
@@ -62,23 +64,23 @@ export default function EditRolePage() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">Loading...</div>;
+    return <div className="text-center py-8">{t('common.loading', 'Loading...')}</div>;
   }
 
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Edit Role</h1>
-        <p className="text-gray-600 mt-1">Update role information</p>
+        <h1 className="text-3xl font-bold">{t('roles.edit_role', 'Edit Role')}</h1>
+        <p className="text-gray-600 mt-1">{t('roles.edit_role_desc', 'Update role information')}</p>
       </div>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="name">Role Name</Label>
+            <Label htmlFor="name">{t('roles.role_name', 'Role Name')}</Label>
             <Input
               id="name"
-              placeholder="Administrator"
+              placeholder={t('roles.role_name_placeholder', 'Administrator')}
               {...register('name')}
               className="mt-2"
             />
@@ -88,10 +90,10 @@ export default function EditRolePage() {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('common.description', 'Description')}</Label>
             <Textarea
               id="description"
-              placeholder="Role description..."
+              placeholder={t('roles.description_placeholder', 'Role description...')}
               {...register('description')}
               className="mt-2"
               rows={4}
@@ -105,14 +107,14 @@ export default function EditRolePage() {
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={updateRoleMutation.isPending}>
-              {updateRoleMutation.isPending ? 'Updating...' : 'Update Role'}
+              {updateRoleMutation.isPending ? t('common.updating', 'Updating...') : t('roles.update_role', 'Update Role')}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
           </div>
         </form>

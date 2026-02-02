@@ -8,6 +8,7 @@ import {
   Pencil,
   Eye,
   Mail,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -64,9 +65,9 @@ import {
   usePreviewEmailTemplate,
   useToggleEmailTemplate,
   useSendEmailTemplate,
+  useTemplateVariables,
 } from "@/hooks/use-email-templates";
 import { useEmailConfigs } from "@/hooks/use-email-configs";
-import { useVariableMappings } from "@/hooks/use-email-campaigns";
 import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
 
 const defaultForm: CreateEmailTemplateDto = {
@@ -80,7 +81,7 @@ const defaultForm: CreateEmailTemplateDto = {
 export default function EmailTemplatesPage() {
   const { data: templatesData, isLoading } = useEmailTemplates();
   const { data: configsData } = useEmailConfigs();
-  const { data: variableMappings } = useVariableMappings();
+  const { data: templateVariables = [] } = useTemplateVariables();
   const createMutation = useCreateEmailTemplate();
   const updateMutation = useUpdateEmailTemplate();
   const deleteMutation = useDeleteEmailTemplate();
@@ -106,7 +107,6 @@ export default function EmailTemplatesPage() {
 
   const templates = templatesData?.data || [];
   const configs = configsData?.data || [];
-  const systemVariables = variableMappings ? Object.keys(variableMappings) : [];
 
   const openCreateDialog = () => {
     setEditingTemplate(null);
@@ -422,17 +422,17 @@ export default function EmailTemplatesPage() {
             <div className="p-3 bg-muted rounded-md">
               <p className="text-sm font-medium mb-2">Available Variables (click to copy):</p>
               <div className="flex flex-wrap gap-2">
-                {systemVariables.map((variable) => (
+                {templateVariables.map((v) => (
                   <Badge
-                    key={variable}
+                    key={v.key}
                     variant="secondary"
                     className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
                     onClick={() => {
-                      navigator.clipboard.writeText(`{{${variable}}}`);
+                      navigator.clipboard.writeText(`{{${v.key}}}`);
                     }}
-                    title={variableMappings?.[variable] ? `Source: ${variableMappings[variable].source}` : ""}
+                    title={v.description}
                   >
-                    {`{{${variable}}}`}
+                    {`{{${v.key}}}`}
                   </Badge>
                 ))}
               </div>

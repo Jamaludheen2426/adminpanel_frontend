@@ -50,6 +50,11 @@ const emailTemplatesApi = {
     const response = await apiClient.post(`/email-templates/${id}/send`, { to, variables });
     return response.data.data;
   },
+
+  getVariables: async (): Promise<{ key: string; description: string; category: string }[]> => {
+    const response = await apiClient.get('/email-templates/variables');
+    return response.data.data.variables;
+  },
 };
 
 // Get all email templates with pagination and optional type filter
@@ -162,5 +167,14 @@ export function useSendEmailTemplate() {
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to send email');
     },
+  });
+}
+
+// Get available template variables
+export function useTemplateVariables() {
+  return useQuery({
+    queryKey: [...queryKeys.emailTemplates.all, 'variables'],
+    queryFn: () => emailTemplatesApi.getVariables(),
+    staleTime: 1000 * 60 * 10, // 10 minutes - variables don't change often
   });
 }

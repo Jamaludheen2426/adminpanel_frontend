@@ -11,17 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LanguageSwitcher } from "@/components/common/language-switcher";
+import { useTranslation } from "@/hooks/use-translation";
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <header className="h-16 border-b bg-background flex items-center justify-between px-6">
       <div className="flex items-center gap-4">
-        <h2 className="text-lg font-semibold">Welcome back, Admin</h2>
+        <h2 className="text-lg font-semibold">{t('auth.welcome_back')}</h2>
       </div>
 
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
+
         <Button variant="ghost" size="icon">
           <Bell className="w-5 h-5" />
         </Button>
@@ -42,20 +47,20 @@ export function AdminHeader() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('profile.my_account')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="w-4 h-4 mr-2" />
-              Profile
+              {t('nav.profile')}
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="w-4 h-4 mr-2" />
-              Settings
+              {t('nav.settings')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">
               <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              {t('auth.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

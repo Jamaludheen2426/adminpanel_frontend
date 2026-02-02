@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslation } from '@/hooks/use-translation';
 
 const roleSchema = z.object({
   name: z.string().min(2, 'Role name required'),
@@ -20,6 +21,7 @@ type RoleFormData = z.infer<typeof roleSchema>;
 
 export default function CreateRolePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const createRoleMutation = useCreateRole();
 
   const {
@@ -39,17 +41,17 @@ export default function CreateRolePage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Create Role</h1>
-        <p className="text-gray-600 mt-1">Create a new role for user management</p>
+        <h1 className="text-3xl font-bold">{t('roles.create_role', 'Create Role')}</h1>
+        <p className="text-gray-600 mt-1">{t('roles.create_role_desc', 'Create a new role for user management')}</p>
       </div>
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
-            <Label htmlFor="name">Role Name</Label>
+            <Label htmlFor="name">{t('roles.role_name', 'Role Name')}</Label>
             <Input
               id="name"
-              placeholder="Administrator"
+              placeholder={t('roles.role_name_placeholder', 'Administrator')}
               {...register('name')}
               className="mt-2"
             />
@@ -59,10 +61,10 @@ export default function CreateRolePage() {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('common.description', 'Description')}</Label>
             <Textarea
               id="description"
-              placeholder="Role description..."
+              placeholder={t('roles.description_placeholder', 'Role description...')}
               {...register('description')}
               className="mt-2"
               rows={4}
@@ -76,14 +78,14 @@ export default function CreateRolePage() {
 
           <div className="flex gap-4 pt-4">
             <Button type="submit" disabled={createRoleMutation.isPending}>
-              {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
+              {createRoleMutation.isPending ? t('common.creating', 'Creating...') : t('roles.create_role', 'Create Role')}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => router.back()}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
           </div>
         </form>

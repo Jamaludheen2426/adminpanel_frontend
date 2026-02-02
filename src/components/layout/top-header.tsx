@@ -10,29 +10,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguages, useCurrencies } from "@/hooks";
+import { useTranslation } from "@/hooks/use-translation";
 import { useState, useEffect } from "react";
 
 export function TopHeader() {
   const { theme, setTheme } = useTheme();
+  const { t, language, setLanguage } = useTranslation();
   const { data: languagesData } = useLanguages({ limit: 100 });
   const { data: currenciesData } = useCurrencies({ limit: 100 });
 
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Load saved preferences from localStorage
-    const savedLang = localStorage.getItem("preferred_language");
+    // Load saved currency from localStorage
     const savedCurrency = localStorage.getItem("preferred_currency");
-    if (savedLang) setSelectedLanguage(savedLang);
     if (savedCurrency) setSelectedCurrency(savedCurrency);
   }, []);
 
   const handleLanguageChange = (code: string) => {
-    setSelectedLanguage(code);
-    localStorage.setItem("preferred_language", code);
+    // Use the translation hook's setLanguage to trigger refetch
+    setLanguage(code);
   };
 
   const handleCurrencyChange = (code: string) => {
@@ -43,7 +42,7 @@ export function TopHeader() {
   const languages = languagesData?.data?.filter(l => l.is_active) || [];
   const currencies = currenciesData?.data?.filter(c => c.is_active) || [];
 
-  const currentLanguage = languages.find(l => l.code === selectedLanguage) || languages[0];
+  const currentLanguage = languages.find(l => l.code === language) || languages[0];
   const currentCurrency = currencies.find(c => c.code === selectedCurrency) || currencies[0];
 
   if (!mounted) {
@@ -56,7 +55,7 @@ export function TopHeader() {
     <div className="h-10 bg-muted/50 border-b">
       <div className="h-full flex items-center justify-between px-4">
         <div className="text-xs text-muted-foreground">
-          Welcome to Admin Dashboard
+          {t('dashboard.welcome_admin')}
         </div>
 
         <div className="flex items-center gap-1">
@@ -72,15 +71,15 @@ export function TopHeader() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px]">
               {languages.length > 0 ? (
-                languages.map((language) => (
+                languages.map((lang) => (
                   <DropdownMenuItem
-                    key={language.id}
-                    onClick={() => handleLanguageChange(language.code)}
-                    className={selectedLanguage === language.code ? "bg-accent" : ""}
+                    key={lang.id}
+                    onClick={() => handleLanguageChange(lang.code)}
+                    className={language === lang.code ? "bg-accent" : ""}
                   >
-                    <span className="flex-1">{language.name}</span>
+                    <span className="flex-1">{lang.name}</span>
                     <span className="text-xs text-muted-foreground ml-2">
-                      {language.code.toUpperCase()}
+                      {lang.code.toUpperCase()}
                     </span>
                   </DropdownMenuItem>
                 ))

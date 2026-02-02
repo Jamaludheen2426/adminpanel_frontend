@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/providers/query-provider";
+import { TranslationProvider } from "@/providers/translation-provider";
 import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -26,17 +27,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={poppins.className}>
         <QueryProvider>
-          <AnalyticsProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              {children}
-              <Toaster />
-            </ThemeProvider>
-          </AnalyticsProvider>
+          <TranslationProvider>
+            <AnalyticsProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                {children}
+                <Toaster />
+              </ThemeProvider>
+            </AnalyticsProvider>
+          </TranslationProvider>
         </QueryProvider>
       </body>
     </html>
