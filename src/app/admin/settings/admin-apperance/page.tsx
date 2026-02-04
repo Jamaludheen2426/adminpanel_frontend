@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, RotateCcw, Save } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,6 +77,17 @@ export default function ColorThemeSettingsPage() {
     bulkUpdateMutation.mutate({
       group: "appearance",
       ...values,
+    });
+  };
+
+  const handleReset = () => {
+    const defaults: Record<string, string> = {};
+    lightColors.forEach((c) => { defaults[c.key] = c.defaultVal; });
+    darkColors.forEach((c) => { defaults[c.key] = c.defaultVal; });
+    setValues(defaults);
+    bulkUpdateMutation.mutate({
+      group: "appearance",
+      ...defaults,
     });
   };
 
@@ -172,8 +183,12 @@ export default function ColorThemeSettingsPage() {
         </Card>
       </div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={handleReset} disabled={bulkUpdateMutation.isPending}>
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Reset to Defaults
+        </Button>
         <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
           <Save className="mr-2 h-4 w-4" />
           {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}

@@ -13,8 +13,7 @@ import { useSettingsByGroup } from "@/hooks/use-settings";
 
 const registerSchema = z
   .object({
-    firstName: z.string().min(2, "First name must be at least 2 characters"),
-    lastName: z.string().min(2, "Last name must be at least 2 characters"),
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
@@ -53,12 +52,11 @@ export default function RegisterPage() {
   }, [settings]);
 
   const onSubmit = (data: RegisterFormData) => {
-    const { confirmPassword, firstName, lastName, ...rest } = data;
+    const { confirmPassword, fullName, ...rest } = data;
     void confirmPassword;
     registerMutation.mutate({
       ...rest,
-      first_name: firstName,
-      last_name: lastName,
+      full_name: fullName,
     });
   };
 
@@ -99,36 +97,20 @@ export default function RegisterPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-gray-700 text-sm font-medium">
-                  First Name
-                </Label>
-                <Input
-                  id="firstName"
-                  placeholder="John"
-                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                  {...register("firstName")}
-                />
-                {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName" className="text-gray-700 text-sm font-medium">
-                  Last Name
-                </Label>
-                <Input
-                  id="lastName"
-                  placeholder="Doe"
-                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                  {...register("lastName")}
-                />
-                {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName.message}</p>
-                )}
-              </div>
+            {/* Full Name Field */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-gray-700 text-sm font-medium">
+                Full Name
+              </Label>
+              <Input
+                id="fullName"
+                placeholder="John Doe"
+                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
+                {...register("fullName")}
+              />
+              {errors.fullName && (
+                <p className="text-sm text-red-500">{errors.fullName.message}</p>
+              )}
             </div>
 
             {/* Email Field */}

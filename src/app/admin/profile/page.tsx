@@ -23,8 +23,7 @@ import { User, Mail, Phone, Shield, Calendar, Camera } from "lucide-react";
 import { format } from "date-fns";
 
 const profileSchema = z.object({
-  first_name: z.string().min(2, "First name must be at least 2 characters"),
-  last_name: z.string().min(2, "Last name must be at least 2 characters"),
+  full_name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
   phone: z.string().optional(),
 });
@@ -65,8 +64,7 @@ export default function ProfilePage() {
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     values: {
-      first_name: user?.first_name || "",
-      last_name: user?.last_name || "",
+      full_name: user?.full_name || "",
       email: user?.email || "",
       phone: user?.phone || "",
     },
@@ -158,7 +156,7 @@ export default function ProfilePage() {
             </div>
             <div className="text-center">
               <h3 className="font-semibold text-lg">
-                {user?.first_name} {user?.last_name}
+                {user?.full_name}
               </h3>
               <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
@@ -202,33 +200,18 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first_name">{t('profile.first_name')}</Label>
-                    <Input
-                      id="first_name"
-                      placeholder="John"
-                      {...profileForm.register("first_name")}
-                    />
-                    {profileForm.formState.errors.first_name && (
-                      <p className="text-sm text-destructive">
-                        {profileForm.formState.errors.first_name.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last_name">{t('profile.last_name')}</Label>
-                    <Input
-                      id="last_name"
-                      placeholder="Doe"
-                      {...profileForm.register("last_name")}
-                    />
-                    {profileForm.formState.errors.last_name && (
-                      <p className="text-sm text-destructive">
-                        {profileForm.formState.errors.last_name.message}
-                      </p>
-                    )}
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="full_name">{t('profile.full_name')}</Label>
+                  <Input
+                    id="full_name"
+                    placeholder="John Doe"
+                    {...profileForm.register("full_name")}
+                  />
+                  {profileForm.formState.errors.full_name && (
+                    <p className="text-sm text-destructive">
+                      {profileForm.formState.errors.full_name.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

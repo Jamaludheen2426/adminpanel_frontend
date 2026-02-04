@@ -19,8 +19,7 @@ import {
 import { useTranslation } from '@/hooks/use-translation';
 
 const userSchema = z.object({
-  first_name: z.string().min(2, 'First name required'),
-  last_name: z.string().min(2, 'Last name required'),
+  full_name: z.string().min(2, 'Full name required'),
   email: z.string().email('Invalid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   role_id: z.string().min(1, 'Role is required'),
@@ -52,8 +51,7 @@ export default function CreateUserPage() {
 
   const onSubmit = (data: UserFormData) => {
     const payload: CreateUserPayload = {
-      first_name: data.first_name,
-      last_name: data.last_name,
+      full_name: data.full_name,
       email: data.email,
       password: data.password,
       role_id: parseInt(data.role_id, 10),
@@ -72,36 +70,19 @@ export default function CreateUserPage() {
 
       <Card className="p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="first_name">{t('users.first_name', 'First Name')}</Label>
-              <Input
-                id="first_name"
-                placeholder={t('users.first_name_placeholder', 'John')}
-                {...register('first_name')}
-                className="mt-2"
-              />
-              {errors.first_name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.first_name.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="last_name">{t('users.last_name', 'Last Name')}</Label>
-              <Input
-                id="last_name"
-                placeholder={t('users.last_name_placeholder', 'Doe')}
-                {...register('last_name')}
-                className="mt-2"
-              />
-              {errors.last_name && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.last_name.message}
-                </p>
-              )}
-            </div>
+          <div>
+            <Label htmlFor="full_name">{t('users.full_name', 'Full Name')}</Label>
+            <Input
+              id="full_name"
+              placeholder={t('users.full_name_placeholder', 'John Doe')}
+              {...register('full_name')}
+              className="mt-2"
+            />
+            {errors.full_name && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.full_name.message}
+              </p>
+            )}
           </div>
 
           <div>

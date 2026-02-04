@@ -269,10 +269,17 @@ export function useTranslateAllToLanguage() {
 
   return useMutation({
     mutationFn: translationsApi.translateAllToLanguage,
-    onSuccess: (data) => {
+    onSuccess: (data: { count: number; failed?: number; reactivated?: number; quotaExceeded?: boolean }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.translationKeys.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.translations.all });
-      toast.success(`${data.count} translations created successfully`);
+
+      if (data.quotaExceeded) {
+        toast.error(`API quota exceeded! ${data.count} created, ${data.failed} skipped. Try again tomorrow.`);
+      } else if (data.failed && data.failed > 0) {
+        toast.warning(`${data.count} translations created, ${data.failed} failed`);
+      } else {
+        toast.success(`${data.count} translations created successfully`);
+      }
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to translate');

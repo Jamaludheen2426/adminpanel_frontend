@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Plus, Trash2, TestTube, Star, Pencil, HelpCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Trash2,
+  TestTube,
+  Star,
+  Pencil,
+  HelpCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Card,
   CardContent,
@@ -53,7 +62,9 @@ import {
   useUpdateEmailConfig,
   useDeleteEmailConfig,
   useTestEmailConfig,
+  useToggleEmailConfig,
 } from "@/hooks/use-email-configs";
+import { useEmailTemplates } from "@/hooks/use-email-templates";
 import type { EmailConfig, CreateEmailConfigDto } from "@/types";
 
 const drivers = [
@@ -80,10 +91,12 @@ const defaultForm: CreateEmailConfigDto = {
 
 export default function EmailSettingsPage() {
   const { data: configsData, isLoading } = useEmailConfigs();
+  const { data: templatesData } = useEmailTemplates();
   const createMutation = useCreateEmailConfig();
   const updateMutation = useUpdateEmailConfig();
   const deleteMutation = useDeleteEmailConfig();
   const testMutation = useTestEmailConfig();
+  const toggleMutation = useToggleEmailConfig();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -91,11 +104,15 @@ export default function EmailSettingsPage() {
   const [helpDialogOpen, setHelpDialogOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<EmailConfig | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [testingId, setTestingId] = useState<number | null>(null);
+  const [testingConfig, setTestingConfig] = useState<EmailConfig | null>(null);
   const [testEmail, setTestEmail] = useState("");
+  const [testTemplate, setTestTemplate] = useState<number | undefined>(
+    undefined,
+  );
   const [form, setForm] = useState<CreateEmailConfigDto>(defaultForm);
 
   const configs = configsData?.data || [];
+  const templates = templatesData?.data || [];
 
   const openCreateDialog = () => {
     setEditingConfig(null);
@@ -146,6 +163,37 @@ export default function EmailSettingsPage() {
       });
     }
   };
+
+  const openTestDialog = (config: EmailConfig) => {
+    setTestingConfig(config);
+    setTestEmail("");
+    setTestTemplate(undefined);
+    setTestDialogOpen(true);
+  };
+
+  const handleTest = () => {
+    if (!testingConfig) return;
+    testMutation.mutate(
+      {
+        id: testingConfig.id,
+        test_email: testEmail || undefined,
+        template_id: testTemplate,
+      },
+      {
+        onSuccess: () => {
+          setTestDialogOpen(false);
+          setTestingConfig(null);
+          setTestEmail("");
+          setTestTemplate(undefined);
+        },
+      },
+    );
+  };
+
+  const handleToggleActive = (id: number) => {
+    toggleMutation.mutate(id);
+  };
+
   // Add this helper function to render driver-specific fields
   const renderDriverFields = () => {
     switch (form.driver) {
@@ -200,7 +248,12 @@ export default function EmailSettingsPage() {
               <Label>Encryption</Label>
               <Select
                 value={form.encryption || "tls"}
-                onValueChange={(val) => setForm({ ...form, encryption: val as "tls" | "ssl" | "none" })}
+                onValueChange={(val) =>
+                  setForm({
+                    ...form,
+                    encryption: val as "tls" | "ssl" | "none",
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -231,7 +284,8 @@ export default function EmailSettingsPage() {
                 ⚠️ Important: &quot;From Email&quot; must be verified in Brevo
               </p>
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                Go to Settings → Senders, domains, IPs → Add & verify your sender email
+                Go to Settings → Senders, domains, IPs → Add & verify your
+                sender email
               </p>
             </div>
             <div className="space-y-2">
@@ -242,7 +296,8 @@ export default function EmailSettingsPage() {
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Found at: SMTP & API → SMTP tab → &quot;Login&quot; field (e.g. a0ff1b001@smtp-brevo.com)
+                Found at: SMTP & API → SMTP tab → &quot;Login&quot; field (e.g.
+                a0ff1b001@smtp-brevo.com)
               </p>
             </div>
             <div className="space-y-2">
@@ -254,7 +309,8 @@ export default function EmailSettingsPage() {
                 onChange={(e) => setForm({ ...form, api_key: e.target.value })}
               />
               <p className="text-xs text-muted-foreground">
-                Generate at: SMTP & API → Your SMTP Keys → Generate a new SMTP key
+                Generate at: SMTP & API → Your SMTP Keys → Generate a new SMTP
+                key
               </p>
             </div>
           </>
@@ -321,7 +377,7 @@ export default function EmailSettingsPage() {
                   <TableHead>Name</TableHead>
                   <TableHead>Driver</TableHead>
                   <TableHead>From Email</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Active</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -345,26 +401,24 @@ export default function EmailSettingsPage() {
                       {config.from_email}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={config.is_active ? "default" : "secondary"}
-                      >
-                        {config.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                      <Switch
+                        checked={config.is_active}
+                        onCheckedChange={() => handleToggleActive(config.id)}
+                        disabled={toggleMutation.isPending}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setTestingId(config.id);
-                            setTestEmail("");
-                            setTestDialogOpen(true);
-                          }}
+                          variant="default"
+                          size="sm"
+                          onClick={() => openTestDialog(config)}
                           disabled={testMutation.isPending}
                           title="Test Connection"
+                          className="bg-blue-500 hover:bg-blue-600 text-white"
                         >
-                          <TestTube className="h-4 w-4" />
+                          <TestTube className="h-4 w-4 mr-1" />
+                          Test
                         </Button>
                         <Button
                           variant="ghost"
@@ -454,7 +508,12 @@ export default function EmailSettingsPage() {
               <Label>Email Driver</Label>
               <Select
                 value={form.driver}
-                onValueChange={(val) => setForm({ ...form, driver: val as "smtp" | "brevo" | "sendmail" })}
+                onValueChange={(val) =>
+                  setForm({
+                    ...form,
+                    driver: val as "smtp" | "brevo" | "sendmail",
+                  })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -511,42 +570,62 @@ export default function EmailSettingsPage() {
 
       {/* Test Email Dialog */}
       <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Test Email Connection</DialogTitle>
             <DialogDescription>
-              Enter an email address to receive a test email. Leave empty to
-              only verify the connection.
+              Send a test email using the &quot;{testingConfig?.name}&quot;
+              configuration.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="test_email">Test Email Address</Label>
+              <Label htmlFor="test_email">Email Address</Label>
               <Input
                 id="test_email"
                 type="email"
-                placeholder="your@email.com"
+                placeholder="test@example.com"
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Leave empty to only verify the connection without sending.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="test_template">Template (Optional)</Label>
+              <Select
+                value={testTemplate?.toString() || "none"}
+                onValueChange={(val) =>
+                  setTestTemplate(val === "none" ? undefined : parseInt(val))
+                }
+              >
+                <SelectTrigger id="test_template">
+                  <SelectValue placeholder="Select a template" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Template (Basic Test)</SelectItem>
+                  {templates.map((template) => (
+                    <SelectItem
+                      key={template.id}
+                      value={template.id.toString()}
+                    >
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Select a template to test with actual content
+              </p>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setTestDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={() => {
-                if (testingId) {
-                  testMutation.mutate({
-                    id: testingId,
-                    test_email: testEmail || undefined,
-                  });
-                  setTestDialogOpen(false);
-                }
-              }}
-              disabled={testMutation.isPending}
-            >
+            <Button onClick={handleTest} disabled={testMutation.isPending}>
               {testMutation.isPending ? "Testing..." : "Test Connection"}
             </Button>
           </DialogFooter>
@@ -565,11 +644,14 @@ export default function EmailSettingsPage() {
           <div className="space-y-6">
             {/* What is Email Configuration */}
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg">What is Email Configuration?</h3>
+              <h3 className="font-semibold text-lg">
+                What is Email Configuration?
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Email configuration allows your application to send emails to users for notifications,
-                password resets, welcome messages, and other communications. You can set up multiple
-                configurations for different purposes.
+                Email configuration allows your application to send emails to
+                users for notifications, password resets, welcome messages, and
+                other communications. You can set up multiple configurations for
+                different purposes.
               </p>
             </div>
 
@@ -580,33 +662,42 @@ export default function EmailSettingsPage() {
               <div className="p-3 border rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge>SMTP</Badge>
-                  <span className="text-xs text-green-600 dark:text-green-400">Free with your provider</span>
+                  <span className="text-xs text-green-600 dark:text-green-400">
+                    Free with your provider
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Generic SMTP works with most email providers like Gmail, Outlook, Yahoo, or your own mail server.
-                  You&apos;ll need the host, port, username, and password from your email provider.
+                  Generic SMTP works with most email providers like Gmail,
+                  Outlook, Yahoo, or your own mail server. You&apos;ll need the
+                  host, port, username, and password from your email provider.
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">Brevo</Badge>
-                  <span className="text-xs text-green-600 dark:text-green-400">300 emails/day FREE</span>
+                  <span className="text-xs text-green-600 dark:text-green-400">
+                    300 emails/day FREE
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Brevo (formerly Sendinblue) offers 300 free emails per day. Great for small to medium applications.
-                  Sign up at brevo.com, verify your sender email, and get your SMTP credentials.
+                  Brevo (formerly Sendinblue) offers 300 free emails per day.
+                  Great for small to medium applications. Sign up at brevo.com,
+                  verify your sender email, and get your SMTP credentials.
                 </p>
               </div>
 
               <div className="p-3 border rounded-lg space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">Sendmail</Badge>
-                  <span className="text-xs text-muted-foreground">Server-based</span>
+                  <span className="text-xs text-muted-foreground">
+                    Server-based
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Uses your server&apos;s built-in sendmail. No additional configuration needed, but requires
-                  sendmail to be installed and configured on your server.
+                  Uses your server&apos;s built-in sendmail. No additional
+                  configuration needed, but requires sendmail to be installed
+                  and configured on your server.
                 </p>
               </div>
             </div>
@@ -615,10 +706,22 @@ export default function EmailSettingsPage() {
             <div className="space-y-3">
               <h3 className="font-semibold text-lg">Quick Setup Steps</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                <li>Click &quot;Add Email Config&quot; to create a new configuration</li>
-                <li>Give it a descriptive name (e.g., &quot;Primary SMTP&quot;, &quot;Marketing Emails&quot;)</li>
-                <li>Enter the &quot;From Email&quot; - this will appear as the sender address</li>
-                <li>Enter the &quot;From Name&quot; - this will appear as the sender name</li>
+                <li>
+                  Click &quot;Add Email Config&quot; to create a new
+                  configuration
+                </li>
+                <li>
+                  Give it a descriptive name (e.g., &quot;Primary SMTP&quot;,
+                  &quot;Marketing Emails&quot;)
+                </li>
+                <li>
+                  Enter the &quot;From Email&quot; - this will appear as the
+                  sender address
+                </li>
+                <li>
+                  Enter the &quot;From Name&quot; - this will appear as the
+                  sender name
+                </li>
                 <li>Select your email driver (SMTP, Brevo, or Sendmail)</li>
                 <li>Fill in the driver-specific credentials</li>
                 <li>Save and test your configuration using the test button</li>
@@ -627,21 +730,35 @@ export default function EmailSettingsPage() {
 
             {/* SMTP Examples */}
             <div className="space-y-3">
-              <h3 className="font-semibold text-lg">SMTP Configuration Examples</h3>
+              <h3 className="font-semibold text-lg">
+                SMTP Configuration Examples
+              </h3>
 
               {/* Gmail SMTP Example */}
               <div className="p-3 border rounded-lg bg-muted/30 space-y-2">
                 <h4 className="font-medium">Gmail SMTP</h4>
                 <div className="text-sm space-y-1">
-                  <p><strong>Host:</strong> smtp.gmail.com</p>
-                  <p><strong>Port:</strong> 587</p>
-                  <p><strong>Username:</strong> your-email@gmail.com</p>
-                  <p><strong>Password:</strong> App Password (not your regular password)</p>
-                  <p><strong>Encryption:</strong> TLS</p>
+                  <p>
+                    <strong>Host:</strong> smtp.gmail.com
+                  </p>
+                  <p>
+                    <strong>Port:</strong> 587
+                  </p>
+                  <p>
+                    <strong>Username:</strong> your-email@gmail.com
+                  </p>
+                  <p>
+                    <strong>Password:</strong> App Password (not your regular
+                    password)
+                  </p>
+                  <p>
+                    <strong>Encryption:</strong> TLS
+                  </p>
                 </div>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                  Note: For Gmail, you need to generate an &quot;App Password&quot; in your Google Account settings
-                  under Security → 2-Step Verification → App Passwords.
+                  Note: For Gmail, you need to generate an &quot;App
+                  Password&quot; in your Google Account settings under Security
+                  → 2-Step Verification → App Passwords.
                 </p>
               </div>
 
@@ -649,15 +766,33 @@ export default function EmailSettingsPage() {
               <div className="p-3 border rounded-lg bg-muted/30 space-y-2">
                 <h4 className="font-medium">Outlook / Microsoft 365 SMTP</h4>
                 <div className="text-sm space-y-1">
-                  <p><strong>Host:</strong> smtp.office365.com <span className="text-muted-foreground">(or smtp-mail.outlook.com)</span></p>
-                  <p><strong>Port:</strong> 587 <span className="text-muted-foreground">(TLS)</span> or 465 <span className="text-muted-foreground">(SSL)</span></p>
-                  <p><strong>Username:</strong> your-email@outlook.com (full email address)</p>
-                  <p><strong>Password:</strong> Your account password or App Password</p>
-                  <p><strong>Encryption:</strong> TLS (recommended) or SSL</p>
+                  <p>
+                    <strong>Host:</strong> smtp.office365.com{" "}
+                    <span className="text-muted-foreground">
+                      (or smtp-mail.outlook.com)
+                    </span>
+                  </p>
+                  <p>
+                    <strong>Port:</strong> 587{" "}
+                    <span className="text-muted-foreground">(TLS)</span> or 465{" "}
+                    <span className="text-muted-foreground">(SSL)</span>
+                  </p>
+                  <p>
+                    <strong>Username:</strong> your-email@outlook.com (full
+                    email address)
+                  </p>
+                  <p>
+                    <strong>Password:</strong> Your account password or App
+                    Password
+                  </p>
+                  <p>
+                    <strong>Encryption:</strong> TLS (recommended) or SSL
+                  </p>
                 </div>
                 <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                  Note: If you have 2-factor authentication enabled, you&apos;ll need to create an App Password
-                  in your Microsoft account security settings.
+                  Note: If you have 2-factor authentication enabled, you&apos;ll
+                  need to create an App Password in your Microsoft account
+                  security settings.
                 </p>
               </div>
 
@@ -665,14 +800,29 @@ export default function EmailSettingsPage() {
               <div className="p-3 border rounded-lg bg-muted/30 space-y-2">
                 <h4 className="font-medium">GoDaddy / Secureserver SMTP</h4>
                 <div className="text-sm space-y-1">
-                  <p><strong>Host:</strong> smtpout.secureserver.net</p>
-                  <p><strong>Port:</strong> 465 <span className="text-muted-foreground">(SSL)</span> or 587 <span className="text-muted-foreground">(TLS)</span></p>
-                  <p><strong>Username:</strong> your-email@yourdomain.com (full email address)</p>
-                  <p><strong>Password:</strong> Your email account password</p>
-                  <p><strong>Encryption:</strong> SSL (port 465) or TLS (port 587)</p>
+                  <p>
+                    <strong>Host:</strong> smtpout.secureserver.net
+                  </p>
+                  <p>
+                    <strong>Port:</strong> 465{" "}
+                    <span className="text-muted-foreground">(SSL)</span> or 587{" "}
+                    <span className="text-muted-foreground">(TLS)</span>
+                  </p>
+                  <p>
+                    <strong>Username:</strong> your-email@yourdomain.com (full
+                    email address)
+                  </p>
+                  <p>
+                    <strong>Password:</strong> Your email account password
+                  </p>
+                  <p>
+                    <strong>Encryption:</strong> SSL (port 465) or TLS (port
+                    587)
+                  </p>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  This is commonly used for domain emails hosted on GoDaddy or similar hosting providers.
+                  This is commonly used for domain emails hosted on GoDaddy or
+                  similar hosting providers.
                 </p>
               </div>
             </div>
@@ -681,17 +831,20 @@ export default function EmailSettingsPage() {
             <div className="space-y-2">
               <h3 className="font-semibold text-lg">Tips</h3>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Always test your configuration before using it in production</li>
-                <li>Use a dedicated email address for sending (e.g., noreply@yourdomain.com)</li>
+                <li>
+                  Always test your configuration before using it in production
+                </li>
+                <li>
+                  Use a dedicated email address for sending (e.g.,
+                  noreply@yourdomain.com)
+                </li>
                 <li>Set one configuration as default for system emails</li>
                 <li>Keep your credentials secure and never share them</li>
               </ul>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setHelpDialogOpen(false)}>
-              Got it
-            </Button>
+            <Button onClick={() => setHelpDialogOpen(false)}>Got it</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -190,7 +190,7 @@ export default function RolesPage() {
               {data?.pagination && data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    {t('common.page')} {data.pagination.page} / {data.pagination.totalPages}
+                    {t('common.page', 'Page')} {data.pagination.page} / {data.pagination.totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -199,7 +199,7 @@ export default function RolesPage() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={!data.pagination.hasPrevPage}
                     >
-                      {t('common.previous')}
+                      {t('common.previous', 'Previous')}
                     </Button>
                     <Button
                       variant="outline"
@@ -207,7 +207,7 @@ export default function RolesPage() {
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!data.pagination.hasNextPage}
                     >
-                      {t('common.next')}
+                      {t('common.next', 'Next')}
                     </Button>
                   </div>
                 </div>

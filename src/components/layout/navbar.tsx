@@ -27,9 +27,11 @@ export default function AdminNavbar() {
     logoutMutation.mutate();
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.[0] || "";
-    const last = lastName?.[0] || "";
+  const getInitials = (fullName?: string) => {
+    if (!fullName) return "AD";
+    const parts = fullName.trim().split(" ");
+    const first = parts[0]?.[0] || "";
+    const last = parts[parts.length - 1]?.[0] || "";
     return (first + last).toUpperCase() || "AD";
   };
 
@@ -106,7 +108,7 @@ export default function AdminNavbar() {
                 <Avatar className="h-9 w-9">
                   <AvatarImage src={user?.avatar || ""} alt="User" />
                   <AvatarFallback className="bg-primary text-primary-foreground">
-                    {getInitials(user?.first_name, user?.last_name)}
+                    {getInitials(user?.full_name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -115,7 +117,7 @@ export default function AdminNavbar() {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {user?.first_name} {user?.last_name}
+                    {user?.full_name}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
                     {user?.email}

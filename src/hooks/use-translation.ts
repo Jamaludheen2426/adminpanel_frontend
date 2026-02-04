@@ -32,7 +32,7 @@ import { useTranslationContext } from '@/providers/translation-provider';
  * for admin review. This is non-blocking and won't slow down the app.
  */
 export function useTranslation() {
-  const { t, language, setLanguage, isLoading, translations } = useTranslationContext();
+  const { t, language, setLanguage, applyLanguage, isLoading, translations } = useTranslationContext();
 
   return {
     /**
@@ -52,10 +52,16 @@ export function useTranslation() {
     language,
 
     /**
-     * Change the current language
+     * Change the current language and save to General Settings
      * @param lang - Language code to switch to
      */
     setLanguage,
+
+    /**
+     * Apply language without saving to settings (use when saving settings separately)
+     * @param lang - Language code to apply
+     */
+    applyLanguage,
 
     /**
      * Whether translations are currently loading

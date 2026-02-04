@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,6 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const loginMutation = useLogin();
   const { data: settings } = useSettingsByGroup("appearance");
-  const [backgroundImage, setBackgroundImage] = useState("");
 
   const {
     register,
@@ -31,18 +29,9 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  useEffect(() => {
-    if (settings) {
-      const bgSetting = settings.find((s) => s.key === "login_background_urls");
-      if (bgSetting?.value) {
-        const urls = bgSetting.value.split(",").filter(Boolean);
-        if (urls.length > 0) {
-          const randomImage = urls[Math.floor(Math.random() * urls.length)];
-          setBackgroundImage(randomImage);
-        }
-      }
-    }
-  }, [settings]);
+  const adminLogoUrl = settings?.find((s) => s.key === "admin_logo_url")?.value || "";
+  const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Login";
+  const backgroundImage = settings?.find((s) => s.key === "login_background_url")?.value || "";
 
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data);
@@ -77,7 +66,15 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
+            {adminLogoUrl ? (
+              <img
+                src={adminLogoUrl}
+                alt={adminTitle}
+                className="h-12 mx-auto object-contain mb-4"
+              />
+            ) : (
+              <h1 className="text-3xl font-bold text-gray-900">{adminTitle}</h1>
+            )}
             <p className="text-gray-500 text-sm">
               Enter your credentials to access the admin panel
             </p>

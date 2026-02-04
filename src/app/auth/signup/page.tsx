@@ -13,8 +13,7 @@ import Cookies from 'js-cookie';
 
 const signUpSchema = z
   .object({
-    firstName: z.string().min(2, 'First name required'),
-    lastName: z.string().min(2, 'Last name required'),
+    fullName: z.string().min(2, 'Full name required'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
@@ -48,8 +47,7 @@ export default function SignUpPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: data.firstName,
-          lastName: data.lastName,
+          full_name: data.fullName,
           email: data.email,
           password: data.password,
         }),
@@ -102,36 +100,19 @@ export default function SignUpPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              placeholder="John"
-              {...register('firstName')}
-              className="mt-2"
-            />
-            {errors.firstName && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.firstName.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              placeholder="Doe"
-              {...register('lastName')}
-              className="mt-2"
-            />
-            {errors.lastName && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.lastName.message}
-              </p>
-            )}
-          </div>
+        <div>
+          <Label htmlFor="fullName">Full Name</Label>
+          <Input
+            id="fullName"
+            placeholder="John Doe"
+            {...register('fullName')}
+            className="mt-2"
+          />
+          {errors.fullName && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.fullName.message}
+            </p>
+          )}
         </div>
 
         <div>

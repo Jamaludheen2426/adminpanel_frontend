@@ -81,7 +81,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="text-3xl font-bold">{t('nav.dashboard')}</h1>
         <p className="text-muted-foreground mt-1">
-          {t('auth.welcome_back')}, {user?.first_name || "Admin"}
+          {t('auth.welcome_back')}, {user?.full_name || "Admin"}
         </p>
       </div>
 
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                 {activities.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="font-medium">
-                      {log.user?.first_name} {log.user?.last_name}
+                      {log.user?.full_name}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{log.action}</Badge>

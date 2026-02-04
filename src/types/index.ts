@@ -11,8 +11,7 @@ export interface BaseEntity {
 
 // User types
 export interface User extends BaseEntity {
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
   phone: string | null;
   avatar: string | null;
@@ -24,8 +23,7 @@ export interface User extends BaseEntity {
 }
 
 export interface CreateUserDto {
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
   password: string;
   phone?: string;
@@ -33,8 +31,7 @@ export interface CreateUserDto {
 }
 
 export interface UpdateUserDto {
-  first_name?: string;
-  last_name?: string;
+  full_name?: string;
   email?: string;
   phone?: string;
   role_id?: number;
@@ -301,8 +298,7 @@ export interface LoginDto {
 }
 
 export interface RegisterDto {
-  first_name: string;
-  last_name: string;
+  full_name: string;
   email: string;
   password: string;
   phone?: string;
@@ -329,8 +325,7 @@ export interface ResetPasswordDto {
 }
 
 export interface UpdateProfileDto {
-  first_name?: string;
-  last_name?: string;
+  full_name?: string;
   email?: string;
   phone?: string;
   avatar?: string;

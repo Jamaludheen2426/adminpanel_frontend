@@ -19,8 +19,7 @@ import { useRoles } from "@/hooks/use-roles";
 import type { User } from "@/types";
 
 const userSchema = z.object({
-  first_name: z.string().min(2, "First name must be at least 2 characters"),
-  last_name: z.string().min(2, "Last name must be at least 2 characters"),
+  full_name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
   phone: z.string().optional(),
@@ -53,8 +52,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
         : userSchema.extend({ password: z.string().min(6, "Password must be at least 6 characters") })
     ),
     defaultValues: {
-      first_name: user?.first_name || "",
-      last_name: user?.last_name || "",
+      full_name: user?.full_name || "",
       email: user?.email || "",
       phone: user?.phone || "",
       role_id: user?.role_id || undefined,
@@ -79,21 +77,12 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="first_name">First Name</Label>
-          <Input id="first_name" placeholder="John" {...register("first_name")} />
-          {errors.first_name && (
-            <p className="text-sm text-destructive">{errors.first_name.message}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="last_name">Last Name</Label>
-          <Input id="last_name" placeholder="Doe" {...register("last_name")} />
-          {errors.last_name && (
-            <p className="text-sm text-destructive">{errors.last_name.message}</p>
-          )}
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="full_name">Full Name</Label>
+        <Input id="full_name" placeholder="John Doe" {...register("full_name")} />
+        {errors.full_name && (
+          <p className="text-sm text-destructive">{errors.full_name.message}</p>
+        )}
       </div>
 
       <div className="space-y-2">

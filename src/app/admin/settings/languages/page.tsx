@@ -1,7 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, Star, Languages } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
+  Star,
+  Languages,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,27 +30,94 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useLanguages, useDeleteLanguage, useSetDefaultLanguage } from "@/hooks/use-languages";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  useLanguages,
+  useDeleteLanguage,
+  useSetDefaultLanguage,
+} from "@/hooks/use-languages";
 import { LanguageForm } from "@/components/admin/languages/language-form";
 import { useTranslation } from "@/hooks/use-translation";
 import { useTranslateAllToLanguage } from "@/hooks/use-translations";
+import { Progress } from "@/components/ui/progress";
 import type { Language } from "@/types";
+import { useToggleLanguageStatus } from "@/hooks/use-languages";
+import { Switch } from "@/components/ui/switch";
+import { HelpCircle } from "lucide-react";
 
 export default function LanguagesPage() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(
+    null,
+  );
+
+  // Alert dialog states
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [translateDialogOpen, setTranslateDialogOpen] = useState(false);
+  const [languageToDelete, setLanguageToDelete] = useState<number | null>(null);
+  const [languageToTranslate, setLanguageToTranslate] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
 
   const { data, isLoading } = useLanguages({ page, limit: 10, search });
   const deleteLanguageMutation = useDeleteLanguage();
   const setDefaultMutation = useSetDefaultLanguage();
   const translateAllMutation = useTranslateAllToLanguage();
+  const toggleStatusMutation = useToggleLanguageStatus();
+
+  // Progress state for translation
+  const [translateProgress, setTranslateProgress] = useState(0);
+
+  // Animate progress while translating
+  useEffect(() => {
+    if (translateAllMutation.isPending) {
+      setTranslateProgress(0);
+      const interval = setInterval(() => {
+        setTranslateProgress((prev) => {
+          // Slow down as it approaches 95%
+          if (prev >= 95) return prev;
+          if (prev >= 80) return prev + 0.5;
+          if (prev >= 60) return prev + 1;
+          return prev + 2;
+        });
+      }, 200);
+      return () => clearInterval(interval);
+    } else {
+      // Jump to 100% when complete
+      if (translateProgress > 0) {
+        setTranslateProgress(100);
+        setTimeout(() => setTranslateProgress(0), 500);
+      }
+    }
+  }, [translateAllMutation.isPending]);
 
   const handleTranslateAll = (languageId: number, languageName: string) => {
-    if (confirm(t('languages.translate_all_confirm', `Generate translations for all keys to ${languageName}?`))) {
-      translateAllMutation.mutate(languageId);
+    setLanguageToTranslate({ id: languageId, name: languageName });
+    setTranslateDialogOpen(true);
+  };
+
+  const confirmTranslateAll = () => {
+    if (languageToTranslate) {
+      // Close dialog immediately, show full-screen loader
+      setTranslateDialogOpen(false);
+      translateAllMutation.mutate(languageToTranslate.id, {
+        onSettled: () => {
+          setLanguageToTranslate(null);
+        },
+      });
     }
   };
 
@@ -51,9 +126,19 @@ export default function LanguagesPage() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t('languages.delete_confirm'))) {
-      deleteLanguageMutation.mutate(id);
+  const handleDelete = (id: number) => {
+    setLanguageToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (languageToDelete) {
+      deleteLanguageMutation.mutate(languageToDelete, {
+        onSettled: () => {
+          setDeleteDialogOpen(false);
+          setLanguageToDelete(null);
+        },
+      });
     }
   };
 
@@ -68,25 +153,134 @@ export default function LanguagesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Full-screen blocking loader during translation */}
+      {translateAllMutation.isPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-lg bg-card border shadow-lg min-w-[320px]">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <div className="text-center w-full">
+              <h3 className="text-lg font-semibold">
+                {t("languages.translating_title", "Translating...")}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t("languages.translating_to", "Translating all keys to")}{" "}
+                {languageToTranslate?.name}
+              </p>
+              <div className="mt-4 space-y-2">
+                <Progress value={translateProgress} className="h-3" />
+                <p className="text-sm font-medium">
+                  {Math.round(translateProgress)}%
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                {t(
+                  "languages.please_wait",
+                  "Please wait, this may take a while...",
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('languages.title')}</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setSelectedLanguage(null)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('languages.add_language')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{selectedLanguage ? t('languages.edit_language') : t('languages.add_language')}</DialogTitle>
-              <DialogDescription>
-                {selectedLanguage ? t('languages.edit_desc') : t('languages.add_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <LanguageForm language={selectedLanguage} onSuccess={handleDialogClose} />
-          </DialogContent>
-        </Dialog>
+        <h1 className="text-3xl font-bold">{t("languages.title")}</h1>
+        <div className="flex items-center gap-2">
+          {/* HELP BUTTON */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Language Settings Help</DialogTitle>
+                <DialogDescription>
+                  Understand each field before adding a language.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="font-semibold">Name</p>
+                  <p className="text-muted-foreground">
+                    Display name shown to users (Example: English).
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold">Code</p>
+                  <p className="text-muted-foreground">
+                    Short ISO code like <b>en</b>, <b>ar</b>, <b>fr</b>.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold">Native Name</p>
+                  <p className="text-muted-foreground">
+                    Language written in its own format ( العربية ).
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold">Direction</p>
+                  <p className="text-muted-foreground">
+                    LTR → English RTL → Arabic
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold">Default Language</p>
+                  <p className="text-muted-foreground">
+                    Main language of the system. Cannot be disabled.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-semibold">Active</p>
+                  <p className="text-muted-foreground">
+                    Only active languages are visible to users.
+                  </p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          {/* ADD LANGUAGE */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setSelectedLanguage(null)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t("languages.add_language")}
+              </Button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedLanguage
+                    ? t("languages.edit_language")
+                    : t("languages.add_language")}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedLanguage
+                    ? t("languages.edit_desc")
+                    : t("languages.add_desc")}
+                </DialogDescription>
+              </DialogHeader>
+
+              <LanguageForm
+                language={selectedLanguage}
+                onSuccess={handleDialogClose}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -95,7 +289,7 @@ export default function LanguagesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('languages.search')}
+                placeholder={t("languages.search")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -113,12 +307,14 @@ export default function LanguagesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('common.code')}</TableHead>
-                    <TableHead>{t('languages.native_name')}</TableHead>
-                    <TableHead>{t('languages.direction')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                    <TableHead className="text-right">{t('common.actions')}</TableHead>
+                    <TableHead>{t("common.name")}</TableHead>
+                    <TableHead>{t("common.code")}</TableHead>
+                    <TableHead>{t("languages.native_name")}</TableHead>
+                    <TableHead>{t("languages.direction")}</TableHead>
+                    <TableHead>{t("common.status")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("common.actions")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,51 +335,88 @@ export default function LanguagesPage() {
                       </TableCell>
                       <TableCell>{language.native_name || "-"}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{language.direction.toUpperCase()}</Badge>
+                        <Badge variant="outline">
+                          {language.direction.toUpperCase()}
+                        </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={language.is_active ? "default" : "secondary"}>
-                          {language.is_active ? t('common.active') : t('common.inactive')}
-                        </Badge>
+                        <Switch
+                          checked={language.is_active}
+                          disabled={
+                            language.is_default ||
+                            (toggleStatusMutation.isPending &&
+                              toggleStatusMutation.variables?.id ===
+                                language.id)
+                          }
+                          onCheckedChange={(checked) => {
+                            toggleStatusMutation.mutate({
+                              id: language.id,
+                              is_active: checked,
+                            });
+                          }}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleTranslateAll(language.id, language.name)}
+                            variant="default"
+                            size="sm"
+                            onClick={() =>
+                              handleTranslateAll(language.id, language.name)
+                            }
                             disabled={translateAllMutation.isPending}
-                            title={t('languages.translate_all', 'Translate all keys')}
+                            title={t(
+                              "languages.translate_all",
+                              "Translate all keys",
+                            )}
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
                           >
-                            <Languages className="h-4 w-4" />
+                            {translateAllMutation.isPending &&
+                            languageToTranslate?.id === language.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                            ) : (
+                              <Languages className="h-4 w-4 mr-1" />
+                            )}
+                            Translate
                           </Button>
+
                           {!language.is_default && (
                             <Button
-                              variant="ghost"
-                              size="icon"
+                              size="sm"
                               onClick={() => handleSetDefault(language.id)}
                               disabled={setDefaultMutation.isPending}
-                              title={t('languages.set_default', 'Set as default')}
+                              title={t(
+                                "languages.set_default",
+                                "Set as default",
+                              )}
+                              className={`text-white ${
+                                language.is_default
+                                  ? "bg-yellow-500 hover:bg-yellow-600"
+                                  : "bg-blue-500 hover:bg-blue-600"
+                              }`}
                             >
-                              <Star className="h-4 w-4" />
+                              <Star className="h-4 w-4 mr-1" />
+                              Default
                             </Button>
                           )}
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEdit(language)}
-                            title={t('common.edit', 'Edit')}
+                            title={t("common.edit", "Edit")}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
-                            size="icon"
                             onClick={() => handleDelete(language.id)}
-                            disabled={deleteLanguageMutation.isPending || language.is_default}
-                            title={t('common.delete', 'Delete')}
+                            disabled={
+                              deleteLanguageMutation.isPending ||
+                              language.is_default
+                            }
+                            title={t("common.delete", "Delete")}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </TableCell>
@@ -191,8 +424,11 @@ export default function LanguagesPage() {
                   ))}
                   {data?.data?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        {t('languages.no_languages_found')}
+                      <TableCell
+                        colSpan={6}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        {t("languages.no_languages_found")}
                       </TableCell>
                     </TableRow>
                   )}
@@ -202,7 +438,8 @@ export default function LanguagesPage() {
               {data?.pagination && data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    {t('common.page')} {data.pagination.page} / {data.pagination.totalPages}
+                    {t("common.page", "Page")} {data.pagination.page} /{" "}
+                    {data.pagination.totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -211,7 +448,7 @@ export default function LanguagesPage() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={!data.pagination.hasPrevPage}
                     >
-                      {t('common.previous')}
+                      {t("common.previous", "Previous")}
                     </Button>
                     <Button
                       variant="outline"
@@ -219,7 +456,7 @@ export default function LanguagesPage() {
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!data.pagination.hasNextPage}
                     >
-                      {t('common.next')}
+                      {t("common.next", "Next")}
                     </Button>
                   </div>
                 </div>
@@ -228,6 +465,119 @@ export default function LanguagesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("languages.delete_title", "Delete Language")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                "languages.delete_confirm",
+                "Are you sure you want to delete this language? This will also deactivate all translations for this language.",
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLanguageMutation.isPending}>
+              {t("common.cancel", "Cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteLanguageMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteLanguageMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("common.deleting", "Deleting...")}
+                </>
+              ) : (
+                t("common.delete", "Delete")
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Translate All Confirmation Dialog */}
+      <AlertDialog
+        open={translateDialogOpen}
+        onOpenChange={(open) => {
+          if (!translateAllMutation.isPending) {
+            setTranslateDialogOpen(open);
+            if (!open) setLanguageToTranslate(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("languages.translate_all_title", "Translate All Keys")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(
+                "languages.translate_all_confirm",
+                `Generate translations for all keys to ${languageToTranslate?.name || ""}?`,
+              ).replace("${languageName}", languageToTranslate?.name || "")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {translateAllMutation.isPending && (
+            <div className="space-y-3 py-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t(
+                  "languages.translating_progress",
+                  "Translating... This may take a while for large datasets.",
+                )}
+              </div>
+              <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary animate-pulse rounded-full w-full origin-left"
+                  style={{
+                    animation: "indeterminate 1.5s ease-in-out infinite",
+                  }}
+                />
+              </div>
+              <style jsx>{`
+                @keyframes indeterminate {
+                  0% {
+                    transform: translateX(-100%);
+                  }
+                  50% {
+                    transform: translateX(0%);
+                  }
+                  100% {
+                    transform: translateX(100%);
+                  }
+                }
+              `}</style>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={translateAllMutation.isPending}>
+              {t("common.cancel", "Cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmTranslateAll}
+              disabled={translateAllMutation.isPending}
+            >
+              {translateAllMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("languages.translating", "Translating...")}
+                </>
+              ) : (
+                t("languages.translate_all", "Translate All")
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

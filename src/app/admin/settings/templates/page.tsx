@@ -8,7 +8,9 @@ import {
   Pencil,
   Eye,
   Mail,
-  HelpCircle,
+  Code,
+  Copy,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -104,6 +107,9 @@ export default function EmailTemplatesPage() {
     subject: string;
     body: string;
   } | null>(null);
+  const [copiedVariable, setCopiedVariable] = useState<string | null>(null);
+  const [bodyEditorTab, setBodyEditorTab] = useState<"editor" | "preview">("editor");
+  const [enableHtmlStructure, setEnableHtmlStructure] = useState(false);
 
   const templates = templatesData?.data || [];
   const configs = configsData?.data || [];
@@ -111,6 +117,8 @@ export default function EmailTemplatesPage() {
   const openCreateDialog = () => {
     setEditingTemplate(null);
     setForm(defaultForm);
+    setEnableHtmlStructure(false);
+    setBodyEditorTab("editor");
     setDialogOpen(true);
   };
 
@@ -123,6 +131,13 @@ export default function EmailTemplatesPage() {
       description: template.description ?? "",
       email_config_id: template.email_config_id ?? undefined,
     });
+    // Auto-detect if body contains HTML structure
+    setEnableHtmlStructure(
+      template.body.includes("<html") || 
+      template.body.includes("<!DOCTYPE") ||
+      template.body.includes("<body")
+    );
+    setBodyEditorTab("editor");
     setDialogOpen(true);
   };
 
@@ -188,6 +203,43 @@ export default function EmailTemplatesPage() {
         },
       }
     );
+  };
+
+  const handleCopyVariable = (variableKey: string) => {
+    const variableText = `{{${variableKey}}}`;
+    navigator.clipboard.writeText(variableText);
+    setCopiedVariable(variableKey);
+    setTimeout(() => setCopiedVariable(null), 2000);
+  };
+
+  const handleToggleHtmlStructure = (enabled: boolean) => {
+    setEnableHtmlStructure(enabled);
+    if (enabled && !form.body.includes("<html")) {
+      // Wrap current body in HTML structure
+      setForm({
+        ...form,
+        body: getDefaultHtmlStructure(form.body),
+      });
+    } else if (!enabled && form.body.includes("<html")) {
+      // Try to extract body content
+      const bodyMatch = form.body.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+      if (bodyMatch) {
+        setForm({
+          ...form,
+          body: bodyMatch[1].trim(),
+        });
+      }
+    }
+  };
+
+  // Generate preview with sample variables
+  const generateBodyPreview = () => {
+    let previewBody = form.body;
+    templateVariables.forEach((v) => {
+      const regex = new RegExp(`{{${v.key}}}`, "g");
+      previewBody = previewBody.replace(regex, `[${v.key}]`);
+    });
+    return previewBody;
   };
 
   return (
@@ -339,7 +391,7 @@ export default function EmailTemplatesPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingTemplate ? "Edit Email Template" : "Create Email Template"}
@@ -362,7 +414,7 @@ export default function EmailTemplatesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Email Configuration</Label>
+                <Label>Email Sender</Label>
                 <Select
                   value={form.email_config_id?.toString() || "default"}
                   onValueChange={(val) =>
@@ -376,7 +428,7 @@ export default function EmailTemplatesPage() {
                     <SelectValue placeholder="Select email config" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Default Configuration</SelectItem>
+                    <SelectItem value="default">Select Sender Email</SelectItem>
                     {configs.map((config) => (
                       <SelectItem key={config.id} value={config.id.toString()}>
                         {config.name} ({config.driver})
@@ -407,38 +459,114 @@ export default function EmailTemplatesPage() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Body *</Label>
-              <Textarea
-                placeholder={"Hello {{user_name}},\n\nWelcome to {{app_name}}!\n\nBest regards,\nThe {{app_name}} Team"}
-                value={form.body}
-                onChange={(e) => setForm({ ...form, body: e.target.value })}
-                rows={12}
-                className="font-mono text-sm"
+            {/* Available Variables - Enhanced with Click to Copy */}
+            <div className="p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-semibold">Available Variables</Label>
+                <span className="text-xs text-muted-foreground">
+                  Click any variable to copy
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {templateVariables.map((v) => (
+                  <Button
+                    key={v.key}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-auto py-2 px-3 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all"
+                    onClick={() => handleCopyVariable(v.key)}
+                    title={v.description}
+                  >
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-mono">
+                        {`{{${v.key}}}`}
+                      </code>
+                      {copiedVariable === v.key ? (
+                        <Check className="h-3 w-3 text-green-500" />
+                      ) : (
+                        <Copy className="h-3 w-3 opacity-50" />
+                      )}
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Variables will be replaced with actual values when sending emails
+              </p>
+            </div>
+
+            {/* HTML Structure Toggle */}
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+              <div className="space-y-0.5">
+                <Label htmlFor="html-structure" className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  Enable Full HTML Structure
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Include complete HTML document structure with head, body, and styling
+                </p>
+              </div>
+              <Switch
+                id="html-structure"
+                checked={enableHtmlStructure}
+                onCheckedChange={handleToggleHtmlStructure}
               />
             </div>
 
-            {/* Available Variables */}
-            <div className="p-3 bg-muted rounded-md">
-              <p className="text-sm font-medium mb-2">Available Variables (click to copy):</p>
-              <div className="flex flex-wrap gap-2">
-                {templateVariables.map((v) => (
-                  <Badge
-                    key={v.key}
-                    variant="secondary"
-                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`{{${v.key}}}`);
-                    }}
-                    title={v.description}
-                  >
-                    {`{{${v.key}}}`}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Use these variables in subject or body. They will be replaced with actual values when sending.
-              </p>
+            {/* Body Editor with Preview */}
+            <div className="space-y-2">
+              <Label>Body *</Label>
+              <Tabs value={bodyEditorTab} onValueChange={(v) => setBodyEditorTab(v as "editor" | "preview")} className="w-full">
+                <TabsList className="grid w-full max-w-md grid-cols-2">
+                  <TabsTrigger value="editor" className="flex items-center gap-2">
+                    <Code className="h-4 w-4" />
+                    HTML Editor
+                  </TabsTrigger>
+                  <TabsTrigger value="preview" className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="editor" className="space-y-2">
+                  <Textarea
+                    placeholder={
+                      enableHtmlStructure
+                        ? "<!-- Full HTML structure will be generated -->"
+                        : "Hello {{user_name}},\n\nWelcome to {{app_name}}!\n\nBest regards,\nThe {{app_name}} Team"
+                    }
+                    value={form.body}
+                    onChange={(e) => setForm({ ...form, body: e.target.value })}
+                    rows={16}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use variables like {`{{user_name}}`} in your email body
+                  </p>
+                </TabsContent>
+
+                <TabsContent value="preview" className="space-y-2">
+                  <div className="border rounded-lg p-6 min-h-[400px] bg-background overflow-auto">
+                    {enableHtmlStructure || form.body.includes("<html") ? (
+                      <iframe
+                        srcDoc={generateBodyPreview()}
+                        className="w-full min-h-[400px] border-0"
+                        title="Email Preview"
+                        sandbox="allow-same-origin"
+                      />
+                    ) : (
+                      <div
+                        className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: generateBodyPreview() }}
+                      />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Preview showing sample variable values
+                  </p>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
 
@@ -462,7 +590,7 @@ export default function EmailTemplatesPage() {
 
       {/* Preview Dialog */}
       <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Template Preview</DialogTitle>
             <DialogDescription>
@@ -472,14 +600,23 @@ export default function EmailTemplatesPage() {
           {previewContent && (
             <div className="space-y-4">
               <div className="space-y-1">
-                <Label className="text-muted-foreground">Subject:</Label>
-                <p className="font-medium">{previewContent.subject}</p>
+                <Label className="text-muted-foreground text-sm">Subject:</Label>
+                <p className="font-medium text-lg">{previewContent.subject}</p>
               </div>
               <div className="space-y-1">
-                <Label className="text-muted-foreground">Body:</Label>
-                <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap font-mono text-sm">
-                  {previewContent.body}
-                </div>
+                <Label className="text-muted-foreground text-sm">Body:</Label>
+                {previewContent.body.includes("<html") || previewContent.body.includes("<!DOCTYPE") ? (
+                  <iframe
+                    srcDoc={previewContent.body}
+                    className="w-full min-h-[500px] border rounded-lg"
+                    title="Email Body Preview"
+                    sandbox="allow-same-origin"
+                  />
+                ) : (
+                  <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap font-mono text-sm max-h-[500px] overflow-auto">
+                    {previewContent.body}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -552,4 +689,67 @@ export default function EmailTemplatesPage() {
       </Dialog>
     </div>
   );
+}
+
+function getDefaultHtmlStructure(bodyContent: string = ""): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Template</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .content {
+      background-color: #ffffff;
+      padding: 30px;
+      border: 1px solid #e9ecef;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #6c757d;
+      border-radius: 0 0 5px 5px;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #007bff;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>{{app_name}}</h1>
+  </div>
+  <div class="content">
+    ${bodyContent || `<p>Hello {{user_name}},</p>
+    <p>Welcome to {{app_name}}!</p>
+    <p>We're excited to have you on board.</p>
+    <a href="#" class="button">Get Started</a>`}
+  </div>
+  <div class="footer">
+    <p>&copy; 2024 {{app_name}}. All rights reserved.</p>
+  </div>
+</body>
+</html>`;
 }

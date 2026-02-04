@@ -2,8 +2,7 @@ import * as z from 'zod';
 
 // User validation schemas
 export const createUserSchema = z.object({
-  firstName: z.string().min(2, 'First name must be at least 2 characters'),
-  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
@@ -83,8 +82,7 @@ export const signInSchema = z.object({
 
 export const signUpSchema = z
   .object({
-    firstName: z.string().min(2, 'First name required'),
-    lastName: z.string().min(2, 'Last name required'),
+    fullName: z.string().min(2, 'Full name required'),
     email: z.string().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),

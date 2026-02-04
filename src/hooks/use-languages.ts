@@ -132,3 +132,25 @@ export function useSetDefaultLanguage() {
     },
   });
 }
+
+export function useToggleLanguageStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      languagesApi.update({
+        id,
+        data: { is_active },
+      }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.languages.all });
+      toast.success("Language status updated");
+    },
+
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || "Failed to update status");
+    },
+  });
+}
+

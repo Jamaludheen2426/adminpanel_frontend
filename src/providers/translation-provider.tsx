@@ -1,13 +1,15 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import type { TranslationMap } from '@/types';
 
 interface TranslationContextType {
   language: string;
   setLanguage: (lang: string) => void;
+  applyLanguage: (lang: string) => void;
   t: (key: string, defaultValueOrVariables?: string | Record<string, string | number>, variables?: Record<string, string | number>) => string;
   translations: TranslationMap;
   isLoading: boolean;
@@ -15,7 +17,6 @@ interface TranslationContextType {
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined);
 
-const LANGUAGE_STORAGE_KEY = 'preferred_language';
 const DEFAULT_LANGUAGE = 'en';
 
 interface TranslationProviderProps {
@@ -34,14 +35,39 @@ export function TranslationProvider({
   // Track reported missing keys to avoid duplicate reports in the same session
   const reportedKeysRef = useRef<Set<string>>(new Set());
 
-  // Initialize language from localStorage
+  // Fetch public settings to get the language preference
+  const { data: publicSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: queryKeys.settings.public(),
+    queryFn: async () => {
+      const response = await apiClient.get('/settings/public');
+      return response.data.data.settings as Record<string, string>;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+  });
+
+  // Mutation to update language setting
+  const updateLanguageMutation = useMutation({
+    mutationFn: async (lang: string) => {
+      await apiClient.put('/settings/language', { value: lang });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.settings.all });
+    },
+    onError: (error) => {
+      console.error('[Translation] Failed to save language preference:', error);
+    },
+  });
+
+  // Initialize language from public settings
   useEffect(() => {
-    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    if (storedLanguage) {
-      setLanguageState(storedLanguage);
+    if (publicSettings?.language) {
+      setLanguageState(publicSettings.language);
     }
-    setIsInitialized(true);
-  }, []);
+    if (!isLoadingSettings) {
+      setIsInitialized(true);
+    }
+  }, [publicSettings, isLoadingSettings]);
 
   // Fetch translations with forced refetch on language change
   const { data: translations = {}, isLoading, isFetching } = useQuery({
@@ -61,21 +87,34 @@ export function TranslationProvider({
     refetchOnWindowFocus: false,
   });
 
-  // Set language and force refetch
+  // Apply language without saving to settings (used when settings are saved separately)
+  const applyLanguage = useCallback((lang: string) => {
+    if (lang === language) return; // No change needed
+
+    console.log('[Translation] Applying language:', language, '→', lang);
+
+    // Update state
+    setLanguageState(lang);
+
+    // Invalidate cache to force refetch for new language
+    queryClient.invalidateQueries({ queryKey: ['translations', lang] });
+  }, [language, queryClient]);
+
+  // Set language and save to settings API
   const setLanguage = useCallback((lang: string) => {
     if (lang === language) return; // No change needed
 
     console.log('[Translation] Switching language:', language, '→', lang);
 
-    // Update state
+    // Update state immediately for responsive UI
     setLanguageState(lang);
-
-    // Persist to localStorage
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
 
     // Invalidate cache to force refetch for new language
     queryClient.invalidateQueries({ queryKey: ['translations', lang] });
-  }, [language, queryClient]);
+
+    // Save to settings API
+    updateLanguageMutation.mutate(lang);
+  }, [language, queryClient, updateLanguageMutation]);
 
   // Report missing key to backend (non-blocking)
   const reportMissingKey = useCallback((key: string, defaultValue?: string) => {
@@ -93,14 +132,16 @@ export function TranslationProvider({
       key,
       default_value: defaultValue || key,
       page_url: pageUrl,
-    }).catch(() => {
-      // Silently ignore errors - don't disrupt the app
+    }).then(() => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Translation] Missing key reported successfully:', key);
+      }
+    }).catch((error) => {
+      // Log error in development for debugging
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[Translation] Failed to report missing key:', key, error?.response?.data || error?.message);
+      }
     });
-
-    // Log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Translation] Missing key reported:', key);
-    }
   }, []);
 
   // Translation function with variable interpolation and missing key detection
@@ -125,8 +166,17 @@ export function TranslationProvider({
     let text = translationExists ? translations[key] : (defaultValue || key);
 
     // Report missing key if not found (only after translations are loaded)
-    if (!translationExists && isInitialized && !isLoading && Object.keys(translations).length > 0) {
-      reportMissingKey(key, defaultValue);
+    if (!translationExists) {
+      if (isInitialized && !isLoading && Object.keys(translations).length > 0) {
+        reportMissingKey(key, defaultValue);
+      } else if (process.env.NODE_ENV === 'development') {
+        // Debug: log why missing key wasn't reported
+        console.log('[Translation] Key not found but not reporting:', key, {
+          isInitialized,
+          isLoading,
+          translationsCount: Object.keys(translations).length
+        });
+      }
     }
 
     // Variable interpolation: {name} -> value
@@ -142,10 +192,11 @@ export function TranslationProvider({
   const contextValue = useMemo(() => ({
     language,
     setLanguage,
+    applyLanguage,
     t,
     translations,
     isLoading: !isInitialized || isLoading || isFetching,
-  }), [language, setLanguage, t, translations, isInitialized, isLoading, isFetching]);
+  }), [language, setLanguage, applyLanguage, t, translations, isInitialized, isLoading, isFetching]);
 
   // Debug: Log when translations are loaded
   useEffect(() => {

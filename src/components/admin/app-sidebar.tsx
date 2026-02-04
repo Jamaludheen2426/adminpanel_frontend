@@ -53,7 +53,11 @@ const menuItems: MenuItem[] = [
     children: [
       { labelKey: "nav.theme", href: "/admin/appearance/theme", icon: Brush },
       { labelKey: "nav.menu", href: "/admin/appearance/menu", icon: Menu },
-      { labelKey: "nav.theme_option", href: "/admin/appearance/theme-option", icon: SlidersHorizontal },
+      {
+        labelKey: "nav.theme_option",
+        href: "/admin/appearance/theme-option",
+        icon: SlidersHorizontal,
+      },
     ],
   },
   {
@@ -73,7 +77,12 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const { data: settings } = useSettingsByGroup("appearance");
 
-  const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Panel";
+  const adminTitle =
+    settings?.find((s) => s.key === "admin_title")?.value || "Admin Panel";
+  const adminLogoUrl =
+    settings?.find((s) => s.key === "admin_logo_url")?.value || "";
+  const logoHeight =
+    settings?.find((s) => s.key === "logo_height")?.value || "40";
 
   const isActive = (href?: string) => !!(href && pathname === href);
   const isChildActive = (children?: MenuItem[]) =>
@@ -84,11 +93,34 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/admin" className="flex items-center gap-2 px-2 py-4">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">{adminTitle.charAt(0).toUpperCase()}</span>
-              </div>
-              <span className="font-semibold text-lg">{adminTitle}</span>
+            <Link
+              href="/admin"
+              className="flex flex-col items-center gap-2 px-2 py-4"
+            >
+              {adminLogoUrl ? (
+                <>
+                  <img
+                    src={adminLogoUrl}
+                    alt={adminTitle}
+                    style={{ height: `${logoHeight}px` }}
+                    className="max-w-full object-contain"
+                  />
+                  <span className="font-semibold text-lg text-center">
+                    {adminTitle}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                    <span className="text-primary-foreground font-bold">
+                      {adminTitle.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-lg text-center">
+                    {adminTitle}
+                  </span>
+                </>
+              )}
             </Link>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -96,7 +128,7 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t('nav.navigation')}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t("nav.navigation")}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => {
@@ -119,7 +151,10 @@ export function AppSidebar() {
                           <SidebarMenuSub>
                             {item.children.map((child) => (
                               <SidebarMenuSubItem key={child.labelKey}>
-                                <SidebarMenuSubButton asChild isActive={isActive(child.href)}>
+                                <SidebarMenuSubButton
+                                  asChild
+                                  isActive={isActive(child.href)}
+                                >
                                   <Link href={child.href || "#"}>
                                     <child.icon className="w-4 h-4" />
                                     <span>{t(child.labelKey)}</span>

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, X } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Card,
   CardContent,
@@ -25,8 +24,8 @@ import {
   useSettingsByGroup,
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
-import { useActiveLanguages } from "@/hooks/use-languages";
-import { useUploadMedia, useUploadMultipleMedia } from "@/hooks/use-media";
+import { useUploadMedia } from "@/hooks/use-media";
+import { ImageCropper } from "@/components/common/image-cropper";
 
 const fonts = [
   { value: "inter", label: "Inter" },
@@ -39,10 +38,8 @@ const fonts = [
 
 export default function SiteSettingsPage() {
   const { data: settings, isLoading } = useSettingsByGroup("appearance");
-  const { data: languages = [] } = useActiveLanguages();
   const bulkUpdateMutation = useBulkUpdateSettings();
   const uploadMedia = useUploadMedia();
-  const uploadMultipleMedia = useUploadMultipleMedia();
   const [isSaving, setIsSaving] = useState(false);
 
   const [values, setValues] = useState({
@@ -51,12 +48,10 @@ export default function SiteSettingsPage() {
     logo_height: "63",
     admin_favicon: null as File | null,
     admin_favicon_url: "",
-    login_backgrounds: [] as File[],
-    login_background_urls: [] as string[],
+    login_background: null as File | null,
+    login_background_url: "",
     admin_title: "Shopper",
     primary_font: "inter",
-    admin_language: "en",
-    admin_direction: "ltr",
   });
 
   useEffect(() => {
@@ -70,39 +65,24 @@ export default function SiteSettingsPage() {
         admin_logo_url: settingsMap.admin_logo_url || "",
         logo_height: settingsMap.logo_height || "63",
         admin_favicon_url: settingsMap.admin_favicon_url || "",
-        login_background_urls: settingsMap.login_background_urls
-          ? settingsMap.login_background_urls.split(",")
-          : [],
+        login_background_url: settingsMap.login_background_url || "",
         admin_title: settingsMap.admin_title || "Shopper",
         primary_font: settingsMap.primary_font || "inter",
-        admin_language: settingsMap.admin_language || "en",
-        admin_direction: settingsMap.admin_direction || "ltr",
       }));
     }
   }, [settings]);
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setValues({ ...values, admin_logo: e.target.files[0] });
-    }
+  const handleLogoChange = (file: File) => {
+    setValues({ ...values, admin_logo: file });
   };
 
-  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setValues({ ...values, admin_favicon: e.target.files[0] });
-    }
+  const handleFaviconChange = (file: File) => {
+    setValues({ ...values, admin_favicon: file });
   };
 
-  const handleBackgroundsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  if (e.target.files) {
-    const filesArray = Array.from(e.target.files);
-    // Add new files to existing ones instead of replacing
-    setValues({ 
-      ...values, 
-      login_backgrounds: [...values.login_backgrounds, ...filesArray] 
-    });
-  }
-};
+  const handleBackgroundChange = (file: File) => {
+    setValues({ ...values, login_background: file });
+  };
 
   const removeLogo = () => {
     setValues({ ...values, admin_logo: null, admin_logo_url: "" });
@@ -112,12 +92,16 @@ export default function SiteSettingsPage() {
     setValues({ ...values, admin_favicon: null, admin_favicon_url: "" });
   };
 
+  const removeBackground = () => {
+    setValues({ ...values, login_background: null, login_background_url: "" });
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
       let logoUrl = values.admin_logo_url;
       let faviconUrl = values.admin_favicon_url;
-      let backgroundUrls = [...values.login_background_urls];
+      let backgroundUrl = values.login_background_url;
 
       if (values.admin_logo) {
         const result = await uploadMedia.mutateAsync({
@@ -135,12 +119,12 @@ export default function SiteSettingsPage() {
         faviconUrl = result.url;
       }
 
-      if (values.login_backgrounds.length > 0) {
-        const results = await uploadMultipleMedia.mutateAsync({
-          files: values.login_backgrounds,
+      if (values.login_background) {
+        const result = await uploadMedia.mutateAsync({
+          file: values.login_background,
           folder: "appearance/backgrounds",
         });
-        backgroundUrls = [...backgroundUrls, ...results.map((r) => r.url)];
+        backgroundUrl = result.url;
       }
 
       bulkUpdateMutation.mutate({
@@ -148,11 +132,9 @@ export default function SiteSettingsPage() {
         admin_logo_url: logoUrl,
         logo_height: values.logo_height,
         admin_favicon_url: faviconUrl,
-        login_background_urls: backgroundUrls.join(","),
+        login_background_url: backgroundUrl,
         admin_title: values.admin_title,
         primary_font: values.primary_font,
-        admin_language: values.admin_language,
-        admin_direction: values.admin_direction,
       });
 
       setValues((prev) => ({
@@ -161,8 +143,8 @@ export default function SiteSettingsPage() {
         admin_logo_url: logoUrl,
         admin_favicon: null,
         admin_favicon_url: faviconUrl,
-        login_backgrounds: [],
-        login_background_urls: backgroundUrls,
+        login_background: null,
+        login_background_url: backgroundUrl,
       }));
     } catch {
       // Error toasts handled by mutation hooks
@@ -179,6 +161,18 @@ export default function SiteSettingsPage() {
     );
   }
 
+  const currentLogoUrl = values.admin_logo
+    ? URL.createObjectURL(values.admin_logo)
+    : values.admin_logo_url;
+
+  const currentFaviconUrl = values.admin_favicon
+    ? URL.createObjectURL(values.admin_favicon)
+    : values.admin_favicon_url;
+
+  const currentBackgroundUrl = values.login_background
+    ? URL.createObjectURL(values.login_background)
+    : values.login_background_url;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -190,7 +184,7 @@ export default function SiteSettingsPage() {
         <div>
           <h1 className="text-3xl font-bold">Site Settings</h1>
           <p className="text-muted-foreground mt-1">
-            Configure logo, favicon, title, font, language, and layout
+            Configure logo, favicon, title, font
           </p>
         </div>
       </div>
@@ -199,107 +193,77 @@ export default function SiteSettingsPage() {
         {/* Admin Logo */}
         <Card>
           <CardHeader>
-            <CardTitle>Site Logo</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Site Logo
+              {currentLogoUrl && (
+                <a
+                  href={values.admin_logo_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-normal text-primary hover:underline flex items-center gap-1"
+                >
+                  View full image
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </CardTitle>
             <CardDescription>
-              Upload a custom logo. Recommended: 150x50px
+              Upload a custom logo for your site
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {(values.admin_logo || values.admin_logo_url) && (
-                <div className="relative inline-block">
-                  <div className="border rounded-lg p-4 bg-muted/50">
-                    <img
-                      src={
-                        values.admin_logo
-                          ? URL.createObjectURL(values.admin_logo)
-                          : values.admin_logo_url
-                      }
-                      alt="Admin logo"
-                      className="h-16 object-contain"
-                    />
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={removeLogo}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-              <Button variant="outline" asChild>
-                <label className="cursor-pointer">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Choose Image
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleLogoChange}
-                  />
-                </label>
-              </Button>
-            </div>
+            <ImageCropper
+              title="Logo Image"
+              description="Your site logo will be displayed in the header"
+              targetWidth={300}
+              targetHeight={100}
+              currentImage={currentLogoUrl}
+              onImageCropped={handleLogoChange}
+              onRemove={removeLogo}
+            />
           </CardContent>
         </Card>
 
         {/* Admin Favicon */}
         <Card>
           <CardHeader>
-            <CardTitle>Site Favicon</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Site Favicon
+              {currentFaviconUrl && (
+                <a
+                  href={values.admin_favicon_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-normal text-primary hover:underline flex items-center gap-1"
+                >
+                  View full image
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </CardTitle>
             <CardDescription>
               Icon shown in browser tabs and bookmarks
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {(values.admin_favicon || values.admin_favicon_url) && (
-                <div className="relative inline-block">
-                  <div className="border rounded-lg p-4 bg-muted/50">
-                    <img
-                      src={
-                        values.admin_favicon
-                          ? URL.createObjectURL(values.admin_favicon)
-                          : values.admin_favicon_url
-                      }
-                      alt="Favicon"
-                      className="h-16 w-16 object-contain"
-                    />
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute -top-2 -right-2 h-6 w-6"
-                    onClick={removeFavicon}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-              <Button variant="outline" asChild>
-                <label className="cursor-pointer">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Choose Image
-                  <input
-                    type="file"
-                    accept="image/*,.ico"
-                    className="hidden"
-                    onChange={handleFaviconChange}
-                  />
-                </label>
-              </Button>
-            </div>
+            <ImageCropper
+              title="Favicon"
+              description="Square icon for browser tabs"
+              targetWidth={64}
+              targetHeight={64}
+              currentImage={currentFaviconUrl}
+              onImageCropped={handleFaviconChange}
+              onRemove={removeFavicon}
+            />
           </CardContent>
         </Card>
 
         {/* Logo Height */}
         <Card>
           <CardHeader>
-            <CardTitle>Logo Height (px)</CardTitle>
+            <CardTitle>Logo Height</CardTitle>
             <CardDescription>
-              Display height of the logo. Default: 63px
+              Display height of the logo in pixels
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -315,6 +279,9 @@ export default function SiteSettingsPage() {
                 min="10"
                 max="200"
               />
+              <p className="text-xs text-muted-foreground">
+                Default: 63px. Range: 10-200px
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -335,6 +302,7 @@ export default function SiteSettingsPage() {
                 onChange={(e) =>
                   setValues({ ...values, admin_title: e.target.value })
                 }
+                placeholder="e.g., Shopper Admin"
               />
             </div>
           </CardContent>
@@ -369,149 +337,39 @@ export default function SiteSettingsPage() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Admin Language */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Admin Language</CardTitle>
-            <CardDescription>Language for the admin interface</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label>Language</Label>
-              <Select
-                value={values.admin_language}
-                onValueChange={(val) =>
-                  setValues({ ...values, admin_language: val })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang.code} value={lang.code}>
-                      {lang.name} - {lang.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Admin Direction */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Text Direction</CardTitle>
-            <CardDescription>
-              Text direction for the admin panel
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RadioGroup
-              value={values.admin_direction}
-              onValueChange={(val) =>
-                setValues({ ...values, admin_direction: val })
-              }
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="ltr" id="ltr" />
-                <Label htmlFor="ltr" className="cursor-pointer">
-                  Left to Right
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="rtl" id="rtl" />
-                <Label htmlFor="rtl" className="cursor-pointer">
-                  Right to Left
-                </Label>
-              </div>
-            </RadioGroup>
-          </CardContent>
-        </Card>
       </div>
 
-      {/* Login Screen Backgrounds (full width) */}
+      {/* Login Screen Background */}
       <Card>
         <CardHeader>
-          <CardTitle>Login Screen Backgrounds</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            Login Screen Background
+            {currentBackgroundUrl && (
+              <a
+                href={values.login_background_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-normal text-primary hover:underline flex items-center gap-1"
+              >
+                View full image
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </CardTitle>
           <CardDescription>
-            Upload background images for the login screen (~1366x768px). Images
-            rotate randomly.
+            Upload a background image for the login screen
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
-              <label className="cursor-pointer flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-muted-foreground" />
-                <span className="text-sm font-medium">Click to add images</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleBackgroundsChange}
-                />
-              </label>
-            </div>
-            {(values.login_background_urls.length > 0 ||
-              values.login_backgrounds.length > 0) && (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {/* Show existing saved backgrounds */}
-                {values.login_background_urls.map((url, index) => (
-                  <div key={`saved-${index}`} className="relative">
-                    <img
-                      src={url}
-                      alt={`Background ${index + 1}`}
-                      className="rounded-lg w-full h-32 object-cover"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6"
-                      onClick={() => {
-                        const newUrls = values.login_background_urls.filter(
-                          (_, i) => i !== index,
-                        );
-                        setValues({
-                          ...values,
-                          login_background_urls: newUrls,
-                        });
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-
-                {/* Show newly uploaded backgrounds (not yet saved) */}
-                {values.login_backgrounds.map((file, index) => (
-                  <div key={`new-${index}`} className="relative">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`New background ${index + 1}`}
-                      className="rounded-lg w-full h-32 object-cover"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6"
-                      onClick={() => {
-                        const newFiles = values.login_backgrounds.filter(
-                          (_, i) => i !== index,
-                        );
-                        setValues({ ...values, login_backgrounds: newFiles });
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <ImageCropper
+            title="Login Background"
+            description="Background image displayed on the login page"
+            targetWidth={1920}
+            targetHeight={1080}
+            currentImage={currentBackgroundUrl}
+            onImageCropped={handleBackgroundChange}
+            onRemove={removeBackground}
+          />
         </CardContent>
       </Card>
 
@@ -520,6 +378,7 @@ export default function SiteSettingsPage() {
         <Button
           onClick={handleSave}
           disabled={isSaving || bulkUpdateMutation.isPending}
+          size="lg"
         >
           <Save className="mr-2 h-4 w-4" />
           {isSaving

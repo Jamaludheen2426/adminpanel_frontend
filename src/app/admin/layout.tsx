@@ -9,6 +9,7 @@ import AdminFooter from "@/components/layout/footer";
 import { TopHeader } from "@/components/layout/top-header";
 import Breadcrumb from "@/components/layout/breadcrumb";
 import { AppearanceProvider } from "@/components/providers/appearance-provider";
+import { DynamicHead } from "@/components/providers/dynamic-head";
 
 export default function AdminLayout({
   children,
@@ -60,6 +61,7 @@ export default function AdminLayout({
 
   return (
     <AppearanceProvider>
+      <DynamicHead />
       <SidebarProvider>
         <div className="flex min-h-screen w-full bg-background">
           {/* Sidebar */}
