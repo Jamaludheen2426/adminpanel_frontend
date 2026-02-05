@@ -26,15 +26,6 @@ export default function HomePage() {
           className="w-full max-w-4xl"
           dangerouslySetInnerHTML={{ __html: comingSoonHTML }}
         />
-        
-        {/* Admin login link */}
-        <div className="mt-8">
-          <Link href="/auth/login">
-            <Button variant="outline" size="lg">
-              Admin Login
-            </Button>
-          </Link>
-        </div>
       </div>
     );
   }

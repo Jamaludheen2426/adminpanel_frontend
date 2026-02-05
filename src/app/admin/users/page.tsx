@@ -25,6 +25,7 @@ import {
 import { useUsers, useDeleteUser } from "@/hooks/use-users";
 import { UserForm } from "@/components/admin/users/user-form";
 import { useTranslation } from "@/hooks/use-translation";
+import { Spinner } from "@/components/ui/spinner";
 import type { User } from "@/types";
 
 export default function UsersPage() {
@@ -93,7 +94,7 @@ export default function UsersPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Spinner className="h-8 w-8" />
             </div>
           ) : (
             <>
@@ -118,7 +119,12 @@ export default function UsersPage() {
                         <Badge variant="outline">{user.role?.name || "N/A"}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.is_active ? "default" : "secondary"}>
+                        <Badge
+                          className={user.is_active
+                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
+                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+                          }
+                        >
                           {user.is_active ? t('common.active') : t('common.inactive')}
                         </Badge>
                       </TableCell>

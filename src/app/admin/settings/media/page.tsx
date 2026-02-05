@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import {
+  useSettingsByGroup,
+  useBulkUpdateSettings,
+} from "@/hooks/use-settings";
+import { Spinner } from "@/components/ui/spinner";
 
 const drivers = [
   { value: "local", label: "Local disk" },
@@ -80,11 +84,14 @@ export default function MediaSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Local Storage</CardTitle>
-            <CardDescription>Files will be stored on your local server</CardDescription>
+            <CardDescription>
+              Files will be stored on your local server
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              No additional configuration required. Files will be stored in the default storage directory.
+              No additional configuration required. Files will be stored in the
+              default storage directory.
             </p>
           </CardContent>
         </Card>
@@ -99,7 +106,9 @@ export default function MediaSettingsPage() {
           <CardHeader>
             <CardTitle>Access Key</CardTitle>
             <CardDescription>
-              {values.driver === "s3" ? "Your AWS Access Key ID" : "Your storage provider access key"}
+              {values.driver === "s3"
+                ? "Your AWS Access Key ID"
+                : "Your storage provider access key"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -110,7 +119,9 @@ export default function MediaSettingsPage() {
                 type="password"
                 placeholder="AKIAXXXXXXXXXXXXXXXX"
                 value={values.aws_access_key}
-                onChange={(e) => setValues({ ...values, aws_access_key: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, aws_access_key: e.target.value })
+                }
               />
             </div>
           </CardContent>
@@ -121,7 +132,9 @@ export default function MediaSettingsPage() {
           <CardHeader>
             <CardTitle>Secret Key</CardTitle>
             <CardDescription>
-              {values.driver === "s3" ? "Your AWS Secret Access Key" : "Your storage provider secret key"}
+              {values.driver === "s3"
+                ? "Your AWS Secret Access Key"
+                : "Your storage provider secret key"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -132,7 +145,9 @@ export default function MediaSettingsPage() {
                 type="password"
                 placeholder="••••••••••••••••••••"
                 value={values.aws_secret_key}
-                onChange={(e) => setValues({ ...values, aws_secret_key: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, aws_secret_key: e.target.value })
+                }
               />
             </div>
           </CardContent>
@@ -155,7 +170,9 @@ export default function MediaSettingsPage() {
                   type="text"
                   placeholder="your-cloudflare-account-id"
                   value={values.aws_account_id}
-                  onChange={(e) => setValues({ ...values, aws_account_id: e.target.value })}
+                  onChange={(e) =>
+                    setValues({ ...values, aws_account_id: e.target.value })
+                  }
                 />
               </div>
             </CardContent>
@@ -169,7 +186,7 @@ export default function MediaSettingsPage() {
               {values.driver === "s3" ? "AWS Region" : "Region"}
             </CardTitle>
             <CardDescription>
-              {values.driver === "s3" 
+              {values.driver === "s3"
                 ? "The AWS region where your S3 bucket is located"
                 : "The region where your storage bucket is located"}
             </CardDescription>
@@ -182,7 +199,9 @@ export default function MediaSettingsPage() {
                 type="text"
                 placeholder={values.driver === "s3" ? "eu-north-1" : "auto"}
                 value={values.aws_region}
-                onChange={(e) => setValues({ ...values, aws_region: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, aws_region: e.target.value })
+                }
               />
             </div>
           </CardContent>
@@ -194,9 +213,7 @@ export default function MediaSettingsPage() {
             <CardTitle>
               {values.driver === "s3" ? "AWS Bucket" : "Bucket Name"}
             </CardTitle>
-            <CardDescription>
-              The name of your storage bucket
-            </CardDescription>
+            <CardDescription>The name of your storage bucket</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-w-md">
@@ -206,7 +223,9 @@ export default function MediaSettingsPage() {
                 type="text"
                 placeholder="raiyaan-test"
                 value={values.aws_bucket}
-                onChange={(e) => setValues({ ...values, aws_bucket: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, aws_bucket: e.target.value })
+                }
               />
             </div>
           </CardContent>
@@ -230,7 +249,9 @@ export default function MediaSettingsPage() {
                 type="url"
                 placeholder="https://d2423c9j40z83w.cloudfront.net/"
                 value={values.aws_url}
-                onChange={(e) => setValues({ ...values, aws_url: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, aws_url: e.target.value })
+                }
               />
             </div>
           </CardContent>
@@ -241,10 +262,16 @@ export default function MediaSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {values.driver === "cloudflare" ? "Cloudflare" : 
-                 values.driver === "digitalocean" ? "DigitalOcean" :
-                 values.driver === "wasabi" ? "Wasabi" :
-                 values.driver === "backblaze" ? "Backblaze" : ""} Endpoint (Optional)
+                {values.driver === "cloudflare"
+                  ? "Cloudflare"
+                  : values.driver === "digitalocean"
+                    ? "DigitalOcean"
+                    : values.driver === "wasabi"
+                      ? "Wasabi"
+                      : values.driver === "backblaze"
+                        ? "Backblaze"
+                        : ""}{" "}
+                Endpoint (Optional)
               </CardTitle>
               <CardDescription>
                 Custom endpoint URL for your storage provider
@@ -258,7 +285,9 @@ export default function MediaSettingsPage() {
                   type="url"
                   placeholder="Optional"
                   value={values.aws_endpoint}
-                  onChange={(e) => setValues({ ...values, aws_endpoint: e.target.value })}
+                  onChange={(e) =>
+                    setValues({ ...values, aws_endpoint: e.target.value })
+                  }
                 />
               </div>
             </CardContent>
@@ -281,7 +310,9 @@ export default function MediaSettingsPage() {
                 type="text"
                 placeholder="Optional custom path in S3 bucket (e.g., uploads/media)"
                 value={values.custom_s3_path}
-                onChange={(e) => setValues({ ...values, custom_s3_path: e.target.value })}
+                onChange={(e) =>
+                  setValues({ ...values, custom_s3_path: e.target.value })
+                }
               />
               <p className="text-xs text-muted-foreground">
                 Optional custom path in S3 bucket (e.g., uploads/media)
@@ -303,7 +334,9 @@ export default function MediaSettingsPage() {
               <Label>Path Style Endpoint</Label>
               <Select
                 value={values.use_path_style_endpoint}
-                onValueChange={(val) => setValues({ ...values, use_path_style_endpoint: val })}
+                onValueChange={(val) =>
+                  setValues({ ...values, use_path_style_endpoint: val })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -322,66 +355,83 @@ export default function MediaSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="h-12 w-12" />
+          <p className="text-sm text-muted-foreground">
+            Loading media settings...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/settings">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
+    <>
+      {/* Loading Overlay - Shows when saving */}
+      {bulkUpdateMutation.isPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
+            <Spinner className="h-12 w-12" />
+            <p className="text-sm font-medium">Saving media settings...</p>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/settings">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Media Storage Settings</h1>
+            <p className="text-muted-foreground mt-1">
+              Configure where and how your media files are stored
+            </p>
+          </div>
+        </div>
+
+        {/* Driver Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Driver</CardTitle>
+            <CardDescription>Select your storage provider</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-w-md">
+              <Label>Storage Driver</Label>
+              <Select
+                value={values.driver}
+                onValueChange={(val) => setValues({ ...values, driver: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {drivers.map((driver) => (
+                    <SelectItem key={driver.value} value={driver.value}>
+                      {driver.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dynamic Fields Based on Driver */}
+        {renderDriverFields()}
+
+        {/* Save Button */}
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+            <Save className="mr-2 h-4 w-4" />
+            {bulkUpdateMutation.isPending ? "Saving..." : "Save Media Settings"}
           </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Media Storage Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure where and how your media files are stored
-          </p>
         </div>
       </div>
-
-      {/* Driver Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Driver</CardTitle>
-          <CardDescription>Select your storage provider</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-w-md">
-            <Label>Storage Driver</Label>
-            <Select
-              value={values.driver}
-              onValueChange={(val) => setValues({ ...values, driver: val })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {drivers.map((driver) => (
-                  <SelectItem key={driver.value} value={driver.value}>
-                    {driver.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dynamic Fields Based on Driver */}
-      {renderDriverFields()}
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-          <Save className="mr-2 h-4 w-4" />
-          {bulkUpdateMutation.isPending ? "Saving..." : "Save Media Settings"}
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }

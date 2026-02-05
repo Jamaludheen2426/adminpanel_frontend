@@ -3,6 +3,7 @@
 import { useActivityLogs } from "@/hooks";
 import { DataTable } from "@/components/ui/data-table";
 import { Card } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import { ColumnDef } from "@tanstack/react-table";
 import { ActivityLog } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -60,8 +61,8 @@ export default function ActivityLogsPage() {
 
       <Card className="p-6">
         {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">{t('activity.loading')}</p>
+          <div className="flex items-center justify-center py-8">
+            <Spinner className="h-8 w-8" />
           </div>
         ) : logs.length > 0 ? (
           <DataTable columns={columns} data={logs} />

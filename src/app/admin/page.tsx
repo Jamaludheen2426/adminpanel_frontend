@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks";
 import { useActivityLogs } from "@/hooks/use-activity-logs";
 import { useTranslation } from "@/hooks/use-translation";
 import { useMissingTranslationKeysCount } from "@/hooks/use-translations";
+import { Spinner } from "@/components/ui/spinner";
 import { format } from "date-fns";
 
 interface StatCard {
@@ -194,7 +195,7 @@ export default function DashboardPage() {
         <CardContent>
           {activityLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Spinner className="h-8 w-8" />
             </div>
           ) : activities.length > 0 ? (
             <Table>

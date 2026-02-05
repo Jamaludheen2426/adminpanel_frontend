@@ -26,6 +26,7 @@ import { useRoles, useDeleteRole } from "@/hooks/use-roles";
 import { RoleForm } from "@/components/admin/roles/role-form";
 import { RolePermissions } from "@/components/admin/roles/role-permissions";
 import { useTranslation } from "@/hooks/use-translation";
+import { Spinner } from "@/components/ui/spinner";
 import type { Role } from "@/types";
 
 export default function RolesPage() {
@@ -117,7 +118,7 @@ export default function RolesPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Spinner className="h-8 w-8" />
             </div>
           ) : (
             <>
@@ -144,7 +145,12 @@ export default function RolesPage() {
                         {role.description || "-"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={role.is_active ? "default" : "secondary"}>
+                        <Badge
+                          className={role.is_active
+                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
+                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+                          }
+                        >
                           {role.is_active ? t('common.active') : t('common.inactive')}
                         </Badge>
                       </TableCell>

@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { Spinner } from "@/components/ui/spinner";
 
 const lightColors = [
   { key: "primary_color", label: "Primary", defaultVal: "#208bc4" },
@@ -93,107 +94,122 @@ export default function ColorThemeSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="h-12 w-12" />
+          <p className="text-sm text-muted-foreground">Loading color theme settings...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/settings">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
+    <>
+      {/* Loading Overlay - Shows when saving */}
+      {bulkUpdateMutation.isPending && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
+            <Spinner className="h-12 w-12" />
+            <p className="text-sm font-medium">Saving color theme...</p>
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/settings">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard Color Theme</h1>
+            <p className="text-muted-foreground mt-1">
+              Customize colors for light and dark mode
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Light Mode Colors */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Light Mode Colors</CardTitle>
+              <CardDescription>
+                Colors applied in light mode
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                {lightColors.map((item) => (
+                  <div key={item.key} className="space-y-1">
+                    <Label className="text-xs font-medium">{item.label}</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={values[item.key] || item.defaultVal}
+                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                        className="w-12 h-9 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={values[item.key] || item.defaultVal}
+                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                        className="flex-1 h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dark Mode Colors */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dark Mode Colors</CardTitle>
+              <CardDescription>
+                Colors applied in dark mode
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-3">
+                {darkColors.map((item) => (
+                  <div key={item.key} className="space-y-1">
+                    <Label className="text-xs font-medium">{item.label}</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={values[item.key] || item.defaultVal}
+                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                        className="w-12 h-9 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={values[item.key] || item.defaultVal}
+                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                        className="flex-1 h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleReset} disabled={bulkUpdateMutation.isPending}>
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset to Defaults
           </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard Color Theme</h1>
-          <p className="text-muted-foreground mt-1">
-            Customize colors for light and dark mode
-          </p>
+          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+            <Save className="mr-2 h-4 w-4" />
+            {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}
+          </Button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Light Mode Colors */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Light Mode Colors</CardTitle>
-            <CardDescription>
-              Colors applied in light mode
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-3">
-              {lightColors.map((item) => (
-                <div key={item.key} className="space-y-1">
-                  <Label className="text-xs font-medium">{item.label}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={values[item.key] || item.defaultVal}
-                      onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                      className="w-12 h-9 cursor-pointer p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={values[item.key] || item.defaultVal}
-                      onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                      className="flex-1 h-9 text-sm"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Dark Mode Colors */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Dark Mode Colors</CardTitle>
-            <CardDescription>
-              Colors applied in dark mode
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-3">
-              {darkColors.map((item) => (
-                <div key={item.key} className="space-y-1">
-                  <Label className="text-xs font-medium">{item.label}</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={values[item.key] || item.defaultVal}
-                      onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                      className="w-12 h-9 cursor-pointer p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={values[item.key] || item.defaultVal}
-                      onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                      className="flex-1 h-9 text-sm"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={handleReset} disabled={bulkUpdateMutation.isPending}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reset to Defaults
-        </Button>
-        <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-          <Save className="mr-2 h-4 w-4" />
-          {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }

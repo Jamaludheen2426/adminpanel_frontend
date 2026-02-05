@@ -255,6 +255,7 @@ export interface UpdateEmailConfigDto {
 export interface EmailTemplate extends BaseEntity {
   name: string;
   slug: string;
+  type: 'header' | 'footer' | 'template';
   subject: string | null;
   body: string;
   variables: string[] | null;
@@ -262,6 +263,7 @@ export interface EmailTemplate extends BaseEntity {
   header_id: number | null;
   footer_id: number | null;
   email_config_id: number | null;
+  is_predefined: boolean;
   email_config?: EmailConfig;
   header?: { id: number; name: string };
   footer?: { id: number; name: string };
@@ -270,6 +272,7 @@ export interface EmailTemplate extends BaseEntity {
 export interface CreateEmailTemplateDto {
   name: string;
   slug?: string;
+  type?: 'header' | 'footer' | 'template';
   subject?: string;
   body: string;
   variables?: string[];
@@ -281,6 +284,7 @@ export interface CreateEmailTemplateDto {
 
 export interface UpdateEmailTemplateDto {
   name?: string;
+  type?: 'header' | 'footer' | 'template';
   subject?: string;
   body?: string;
   variables?: string[];

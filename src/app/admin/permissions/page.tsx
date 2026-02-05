@@ -4,6 +4,8 @@ import { usePermissions } from '@/hooks';
 import { DataTable } from '@/components/ui/data-table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -28,7 +30,16 @@ export default function PermissionsPage() {
     {
       accessorKey: 'is_active',
       header: t('common.status'),
-      cell: ({ row }) => (row.original.is_active ? t('common.active') : t('common.inactive')),
+      cell: ({ row }) => (
+        <Badge
+          className={row.original.is_active
+            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
+            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+          }
+        >
+          {row.original.is_active ? t('common.active') : t('common.inactive')}
+        </Badge>
+      ),
     },
     {
       id: 'actions',
@@ -65,8 +76,8 @@ export default function PermissionsPage() {
 
       <Card className="p-6">
         {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">{t('permissions.loading')}</p>
+          <div className="flex items-center justify-center py-8">
+            <Spinner className="h-8 w-8" />
           </div>
         ) : permissions.length > 0 ? (
           <DataTable columns={columns} data={permissions} />

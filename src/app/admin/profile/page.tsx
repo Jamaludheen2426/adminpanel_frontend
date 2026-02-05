@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth, useUpdateProfile, useChangePassword } from "@/hooks";
 import { useUploadMedia } from "@/hooks/use-media";
 import { useTranslation } from "@/hooks/use-translation";
+import { Spinner } from "@/components/ui/spinner";
 import { User, Mail, Phone, Shield, Calendar, Camera } from "lucide-react";
 import { format } from "date-fns";
 
@@ -100,7 +101,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <Spinner className="h-8 w-8" />
       </div>
     );
   }
@@ -149,7 +150,7 @@ export default function ProfilePage() {
                 />
                 {uploadMedia.isPending && (
                   <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white" />
+                    <Spinner className="h-6 w-6 text-white" />
                   </div>
                 )}
               </div>
@@ -170,7 +171,12 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">{t('common.status')}:</span>
-                <Badge variant={user?.is_active ? "default" : "secondary"}>
+                <Badge
+                  className={user?.is_active
+                    ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
+                    : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+                  }
+                >
                   {user?.is_active ? t('common.active') : t('common.inactive')}
                 </Badge>
               </div>

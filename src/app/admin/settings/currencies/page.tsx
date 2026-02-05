@@ -25,6 +25,7 @@ import {
 import { useCurrencies, useDeleteCurrency, useSetDefaultCurrency } from "@/hooks/use-currencies";
 import { CurrencyForm } from "@/components/admin/currencies/currency-form";
 import { useTranslation } from "@/hooks/use-translation";
+import { Spinner } from "@/components/ui/spinner";
 import type { Currency } from "@/types";
 
 export default function CurrenciesPage() {
@@ -98,7 +99,7 @@ export default function CurrenciesPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Spinner className="h-8 w-8" />
             </div>
           ) : (
             <>
@@ -132,7 +133,12 @@ export default function CurrenciesPage() {
                       <TableCell>{currency.symbol}</TableCell>
                       <TableCell>{currency.exchange_rate}</TableCell>
                       <TableCell>
-                        <Badge variant={currency.is_active ? "default" : "secondary"}>
+                        <Badge
+                          className={currency.is_active
+                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
+                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+                          }
+                        >
                           {currency.is_active ? t('common.active') : t('common.inactive')}
                         </Badge>
                       </TableCell>

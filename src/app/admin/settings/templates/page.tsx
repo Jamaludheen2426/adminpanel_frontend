@@ -11,6 +11,7 @@ import {
   Code,
   Copy,
   Check,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -72,9 +73,11 @@ import {
 } from "@/hooks/use-email-templates";
 import { useEmailConfigs } from "@/hooks/use-email-configs";
 import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
+import { Spinner } from "@/components/ui/spinner";
 
 const defaultForm: CreateEmailTemplateDto = {
   name: "",
+  type: "template",
   subject: "",
   body: "",
   description: "",
@@ -82,7 +85,16 @@ const defaultForm: CreateEmailTemplateDto = {
 };
 
 export default function EmailTemplatesPage() {
-  const { data: templatesData, isLoading } = useEmailTemplates();
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+
+  const { data: templatesData, isLoading } = useEmailTemplates({
+    page,
+    limit: 10,
+    search,
+    type: typeFilter !== "all" ? typeFilter : undefined
+  });
   const { data: configsData } = useEmailConfigs();
   const { data: templateVariables = [] } = useTemplateVariables();
   const createMutation = useCreateEmailTemplate();
@@ -126,6 +138,7 @@ export default function EmailTemplatesPage() {
     setEditingTemplate(template);
     setForm({
       name: template.name,
+      type: template.type || "template",
       subject: template.subject ?? "",
       body: template.body,
       description: template.description ?? "",
@@ -267,24 +280,60 @@ export default function EmailTemplatesPage() {
       {/* Templates List */}
       <Card>
         <CardHeader>
-          <CardTitle>Templates</CardTitle>
-          <CardDescription>
-            Email templates used for notifications and communications
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Templates</CardTitle>
+              <CardDescription>
+                Email templates used for notifications and communications
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-3">
+              <Select
+                value={typeFilter}
+                onValueChange={(val) => {
+                  setTypeFilter(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-36">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="template">Templates</SelectItem>
+                  <SelectItem value="header">Headers</SelectItem>
+                  <SelectItem value="footer">Footers</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search templates..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              <Spinner className="h-8 w-8" />
             </div>
           ) : templates.length > 0 ? (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Subject</TableHead>
                   <TableHead>Variables</TableHead>
-                  <TableHead>Email Config</TableHead>
                   <TableHead>Active</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -293,7 +342,27 @@ export default function EmailTemplatesPage() {
                 {templates.map((template) => (
                   <TableRow key={template.id}>
                     <TableCell className="font-medium">
-                      {template.name}
+                      <div className="flex items-center gap-2">
+                        {template.name}
+                        {template.is_predefined && (
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                            System
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {template.type === 'header' ? (
+                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-900 dark:text-purple-100">
+                          Header
+                        </Badge>
+                      ) : template.type === 'footer' ? (
+                        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-900 dark:text-orange-100">
+                          Footer
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">Template</Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground max-w-xs truncate">
                       {template.subject || "-"}
@@ -317,17 +386,6 @@ export default function EmailTemplatesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {template.email_config ? (
-                        <Badge variant="outline">
-                          {template.email_config.name}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          Default
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
                       <Switch
                         checked={template.is_active}
                         onCheckedChange={() => handleToggleActive(template.id)}
@@ -344,16 +402,18 @@ export default function EmailTemplatesPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => openSendTestDialog(template)}
-                          title="Send Test Email"
-                          className="bg-blue-500 hover:bg-blue-600 text-white"
-                        >
-                          <Mail className="h-4 w-4 mr-1" />
-                          Test
-                        </Button>
+                        {template.type === 'template' && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => openSendTestDialog(template)}
+                            title="Send Test Email"
+                            className="bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            <Mail className="h-4 w-4 mr-1" />
+                            Test
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -362,27 +422,57 @@ export default function EmailTemplatesPage() {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeletingId(template.id);
-                            setDeleteDialogOpen(true);
-                          }}
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        {!template.is_predefined && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setDeletingId(template.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+
+            {templatesData?.pagination && templatesData.pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Page {templatesData.pagination.page} of {templatesData.pagination.totalPages}
+                  {" "}({templatesData.pagination.totalItems} templates)
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={!templatesData.pagination.hasPrevPage}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={!templatesData.pagination.hasNextPage}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                No email templates yet. Create one to get started.
+                {search ? "No templates found matching your search." : "No email templates yet. Create one to get started."}
               </p>
             </div>
           )}
@@ -404,6 +494,42 @@ export default function EmailTemplatesPage() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Template Type Selection */}
+            {!editingTemplate?.is_predefined && (
+              <div className="flex items-center gap-6 p-4 bg-muted/50 rounded-lg border">
+                <Label className="text-sm font-medium">Template Type:</Label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.type === "header"}
+                      onChange={(e) =>
+                        setForm({ ...form, type: e.target.checked ? "header" : "template" })
+                      }
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <span className="text-sm">Header</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={form.type === "footer"}
+                      onChange={(e) =>
+                        setForm({ ...form, type: e.target.checked ? "footer" : "template" })
+                      }
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <span className="text-sm">Footer</span>
+                  </label>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {form.type === "header" && "Header content wraps body + footer"}
+                  {form.type === "footer" && "Footer content appears after header + body"}
+                  {form.type === "template" && "Regular email template"}
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Template Name *</Label>
@@ -411,24 +537,24 @@ export default function EmailTemplatesPage() {
                   placeholder="e.g. Welcome Email, Password Reset"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  disabled={editingTemplate?.is_predefined && (editingTemplate?.type === 'header' || editingTemplate?.type === 'footer')}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Email Sender</Label>
                 <Select
-                  value={form.email_config_id?.toString() || "default"}
+                  value={form.email_config_id?.toString() || ""}
                   onValueChange={(val) =>
                     setForm({
                       ...form,
-                      email_config_id: val === "default" ? undefined : parseInt(val),
+                      email_config_id: val ? parseInt(val) : undefined,
                     })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select email config" />
+                    <SelectValue placeholder="Select Sender Email" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Select Sender Email</SelectItem>
                     {configs.map((config) => (
                       <SelectItem key={config.id} value={config.id.toString()}>
                         {config.name} ({config.driver})
@@ -441,23 +567,27 @@ export default function EmailTemplatesPage() {
 
             <div className="space-y-2">
               <Label>Description</Label>
-              <Input
+              <Textarea
                 placeholder="Brief description of when this template is used"
                 value={form.description || ""}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
                 }
+                rows={2}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Subject *</Label>
-              <Input
-                placeholder="e.g. Welcome to {{app_name}}, {{user_name}}!"
-                value={form.subject || ""}
-                onChange={(e) => setForm({ ...form, subject: e.target.value })}
-              />
-            </div>
+            {/* Subject field - only for regular templates */}
+            {form.type === "template" && (
+              <div className="space-y-2">
+                <Label>Subject *</Label>
+                <Input
+                  placeholder="e.g. Welcome to {{app_name}}, {{user_name}}!"
+                  value={form.subject || ""}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                />
+              </div>
+            )}
 
             {/* Available Variables - Enhanced with Click to Copy */}
             <div className="p-4 bg-muted/50 rounded-lg border">

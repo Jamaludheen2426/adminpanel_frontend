@@ -17,12 +17,7 @@ import {
   Palette,
   Languages,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 
 interface SettingItem {
@@ -30,6 +25,7 @@ interface SettingItem {
   descriptionKey: string;
   href: string;
   icon: React.ElementType;
+  badge?: string; 
 }
 
 interface SettingGroup {
@@ -64,6 +60,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.phone_number_desc",
         href: "/admin/settings/phone",
         icon: Phone,
+        badge: "common.comming",
       },
       {
         labelKey: "settings.languages",
@@ -76,6 +73,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.currencies_desc",
         href: "/admin/settings/currencies",
         icon: DollarSign,
+        badge: "common.comming",
       },
       {
         labelKey: "settings.media",
@@ -88,6 +86,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.website_tracking_desc",
         href: "/admin/settings/website-tracking",
         icon: Globe,
+        badge: "common.comming",
       },
       {
         labelKey: "settings.dashboard_theme",
@@ -106,12 +105,14 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.email_campaigns_desc",
         href: "/admin/settings/email/campaigns",
         icon: Mail,
+        badge: "common.comming",
       },
       {
         labelKey: "settings.social_login",
         descriptionKey: "settings.social_login_desc",
         href: "/admin/settings/social-login",
         icon: Globe,
+        badge: "common.comming",
       },
     ],
   },
@@ -129,12 +130,14 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.locations_desc",
         href: "/admin/settings/locations",
         icon: MapPin,
+        badge: "common.comming",
       },
       {
         labelKey: "settings.timezone",
         descriptionKey: "settings.timezone_desc",
         href: "/admin/settings/timezone",
         icon: Globe,
+        badge: "common.comming",
       },
     ],
   },
@@ -152,6 +155,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.optimize_desc",
         href: "/admin/settings/optimize",
         icon: BarChart3,
+        badge: "common.comming",
       },
     ],
   },
@@ -163,10 +167,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('nav.settings')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('settings.page_desc')}
-        </p>
+        <h1 className="text-3xl font-bold">{t("nav.settings")}</h1>
+        <p className="text-muted-foreground mt-1">{t("settings.page_desc")}</p>
       </div>
 
       {settingGroups.map((group) => (
@@ -187,6 +189,12 @@ export default function SettingsPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-primary group-hover:underline">
                           {t(item.labelKey)}
+                          {item.badge && (
+                            <span className="text-muted-foreground font-normal">
+                              {" "}
+                              ({t(item.badge)})
+                            </span>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                           {t(item.descriptionKey)}
