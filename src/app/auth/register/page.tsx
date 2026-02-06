@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +31,8 @@ export default function RegisterPage() {
   const registerMutation = useRegister();
   const { data: settings } = useSettingsByGroup("appearance");
   const [backgroundImage, setBackgroundImage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -135,13 +139,22 @@ export default function RegisterPage() {
               <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
                 Password
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                {...register("password")}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}
@@ -152,13 +165,22 @@ export default function RegisterPage() {
               <Label htmlFor="confirmPassword" className="text-gray-700 text-sm font-medium">
                 Confirm Password
               </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                {...register("confirmPassword")}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 pr-10"
+                  {...register("confirmPassword")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-red-500">{errors.confirmPassword.message}</p>
               )}

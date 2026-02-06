@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +53,11 @@ export default function MediaSettingsPage() {
     use_path_style_endpoint: "no",
   });
 
+  const [showPasswords, setShowPasswords] = useState({
+    access_key: false,
+    secret_key: false,
+  });
+
   useEffect(() => {
     if (settings) {
       const settingsMap: Record<string, string> = {};
@@ -100,7 +105,7 @@ export default function MediaSettingsPage() {
 
     // S3-compatible storage (S3, Cloudflare R2, DigitalOcean, Wasabi, Backblaze)
     return (
-      <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Access Key */}
         <Card>
           <CardHeader>
@@ -112,17 +117,27 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="aws_access_key">Access Key</Label>
-              <Input
-                id="aws_access_key"
-                type="password"
-                placeholder="AKIAXXXXXXXXXXXXXXXX"
-                value={values.aws_access_key}
-                onChange={(e) =>
-                  setValues({ ...values, aws_access_key: e.target.value })
-                }
-              />
+              <div className="relative">
+                <Input
+                  id="aws_access_key"
+                  type={showPasswords.access_key ? "text" : "password"}
+                  placeholder="AKIAXXXXXXXXXXXXXXXX"
+                  value={values.aws_access_key}
+                  onChange={(e) =>
+                    setValues({ ...values, aws_access_key: e.target.value })
+                  }
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowPasswords({ ...showPasswords, access_key: !showPasswords.access_key })}
+                >
+                  {showPasswords.access_key ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -138,17 +153,27 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="aws_secret_key">Secret Key</Label>
-              <Input
-                id="aws_secret_key"
-                type="password"
-                placeholder="••••••••••••••••••••"
-                value={values.aws_secret_key}
-                onChange={(e) =>
-                  setValues({ ...values, aws_secret_key: e.target.value })
-                }
-              />
+              <div className="relative">
+                <Input
+                  id="aws_secret_key"
+                  type={showPasswords.secret_key ? "text" : "password"}
+                  placeholder="••••••••••••••••••••"
+                  value={values.aws_secret_key}
+                  onChange={(e) =>
+                    setValues({ ...values, aws_secret_key: e.target.value })
+                  }
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => setShowPasswords({ ...showPasswords, secret_key: !showPasswords.secret_key })}
+                >
+                  {showPasswords.secret_key ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -163,7 +188,7 @@ export default function MediaSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-w-md">
+              <div className="space-y-2">
                 <Label htmlFor="aws_account_id">Account ID</Label>
                 <Input
                   id="aws_account_id"
@@ -192,7 +217,7 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="aws_region">Region</Label>
               <Input
                 id="aws_region"
@@ -216,7 +241,7 @@ export default function MediaSettingsPage() {
             <CardDescription>The name of your storage bucket</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="aws_bucket">Bucket</Label>
               <Input
                 id="aws_bucket"
@@ -242,7 +267,7 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="aws_url">URL</Label>
               <Input
                 id="aws_url"
@@ -278,7 +303,7 @@ export default function MediaSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-w-md">
+              <div className="space-y-2">
                 <Label htmlFor="aws_endpoint">Endpoint</Label>
                 <Input
                   id="aws_endpoint"
@@ -303,20 +328,17 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label htmlFor="custom_s3_path">Custom Path</Label>
               <Input
                 id="custom_s3_path"
                 type="text"
-                placeholder="Optional custom path in S3 bucket (e.g., uploads/media)"
+                placeholder="uploads/media"
                 value={values.custom_s3_path}
                 onChange={(e) =>
                   setValues({ ...values, custom_s3_path: e.target.value })
                 }
               />
-              <p className="text-xs text-muted-foreground">
-                Optional custom path in S3 bucket (e.g., uploads/media)
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -330,7 +352,7 @@ export default function MediaSettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 max-w-md">
+            <div className="space-y-2">
               <Label>Path Style Endpoint</Label>
               <Select
                 value={values.use_path_style_endpoint}
@@ -349,7 +371,7 @@ export default function MediaSettingsPage() {
             </div>
           </CardContent>
         </Card>
-      </>
+      </div>
     );
   };
 

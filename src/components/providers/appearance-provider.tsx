@@ -207,6 +207,75 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
       root.style.setProperty("--admin-link-hover-color", linkHoverColor);
     }
 
+    // Apply button colors
+    // Primary button
+    const btnPrimaryBg = getColor("btn_primary_bg", "dark_btn_primary_bg");
+    if (btnPrimaryBg) {
+      const hsl = hexToHsl(btnPrimaryBg);
+      if (hsl) root.style.setProperty("--btn-primary-bg", hsl);
+    }
+    const btnPrimaryText = getColor("btn_primary_text", "dark_btn_primary_text");
+    if (btnPrimaryText) {
+      const hsl = hexToHsl(btnPrimaryText);
+      if (hsl) root.style.setProperty("--btn-primary-text", hsl);
+    }
+    const btnPrimaryHover = getColor("btn_primary_hover", "dark_btn_primary_hover");
+    if (btnPrimaryHover) {
+      const hsl = hexToHsl(btnPrimaryHover);
+      if (hsl) root.style.setProperty("--btn-primary-hover", hsl);
+    }
+
+    // Secondary button
+    const btnSecondaryBg = getColor("btn_secondary_bg", "dark_btn_secondary_bg");
+    if (btnSecondaryBg) {
+      const hsl = hexToHsl(btnSecondaryBg);
+      if (hsl) root.style.setProperty("--btn-secondary-bg", hsl);
+    }
+    const btnSecondaryText = getColor("btn_secondary_text", "dark_btn_secondary_text");
+    if (btnSecondaryText) {
+      const hsl = hexToHsl(btnSecondaryText);
+      if (hsl) root.style.setProperty("--btn-secondary-text", hsl);
+    }
+    const btnSecondaryHover = getColor("btn_secondary_hover", "dark_btn_secondary_hover");
+    if (btnSecondaryHover) {
+      const hsl = hexToHsl(btnSecondaryHover);
+      if (hsl) root.style.setProperty("--btn-secondary-hover", hsl);
+    }
+
+    // Destructive button
+    const btnDestructiveBg = getColor("btn_destructive_bg", "dark_btn_destructive_bg");
+    if (btnDestructiveBg) {
+      const hsl = hexToHsl(btnDestructiveBg);
+      if (hsl) root.style.setProperty("--btn-destructive-bg", hsl);
+    }
+    const btnDestructiveText = getColor("btn_destructive_text", "dark_btn_destructive_text");
+    if (btnDestructiveText) {
+      const hsl = hexToHsl(btnDestructiveText);
+      if (hsl) root.style.setProperty("--btn-destructive-text", hsl);
+    }
+    const btnDestructiveHover = getColor("btn_destructive_hover", "dark_btn_destructive_hover");
+    if (btnDestructiveHover) {
+      const hsl = hexToHsl(btnDestructiveHover);
+      if (hsl) root.style.setProperty("--btn-destructive-hover", hsl);
+    }
+
+    // Outline button
+    const btnOutlineBorder = getColor("btn_outline_border", "dark_btn_outline_border");
+    if (btnOutlineBorder) {
+      const hsl = hexToHsl(btnOutlineBorder);
+      if (hsl) root.style.setProperty("--btn-outline-border", hsl);
+    }
+    const btnOutlineText = getColor("btn_outline_text", "dark_btn_outline_text");
+    if (btnOutlineText) {
+      const hsl = hexToHsl(btnOutlineText);
+      if (hsl) root.style.setProperty("--btn-outline-text", hsl);
+    }
+    const btnOutlineHover = getColor("btn_outline_hover", "dark_btn_outline_hover");
+    if (btnOutlineHover) {
+      const hsl = hexToHsl(btnOutlineHover);
+      if (hsl) root.style.setProperty("--btn-outline-hover", hsl);
+    }
+
     // Apply font (theme-independent)
     if (settingsMap.primary_font && settingsMap.primary_font !== "poppins") {
       const fontUrl = fontUrlMap[settingsMap.primary_font];
@@ -253,6 +322,11 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
         "--foreground", "--card-foreground", "--popover-foreground",
         "--admin-heading-color",
         "--admin-link-color", "--admin-link-hover-color",
+        // Button colors
+        "--btn-primary-bg", "--btn-primary-text", "--btn-primary-hover",
+        "--btn-secondary-bg", "--btn-secondary-text", "--btn-secondary-hover",
+        "--btn-destructive-bg", "--btn-destructive-text", "--btn-destructive-hover",
+        "--btn-outline-border", "--btn-outline-text", "--btn-outline-hover",
       ];
       props.forEach((prop) => root.style.removeProperty(prop));
       document.body.style.fontFamily = "";

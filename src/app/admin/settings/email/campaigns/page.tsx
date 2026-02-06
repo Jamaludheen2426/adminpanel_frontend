@@ -144,7 +144,6 @@ export default function EmailCampaignsPage() {
   const templates = templatesData?.data || [];
   const configs = configsData?.data || [];
   const roles = rolesData?.data || [];
-
   const openCreateDialog = () => {
     setEditingCampaign(null);
     setForm(defaultForm);
@@ -639,7 +638,7 @@ export default function EmailCampaignsPage() {
                           key={config.id}
                           value={config.id.toString()}
                         >
-                          {config.name} ({config.driver})
+                          {config.from_email} ({config.driver})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -784,7 +783,10 @@ export default function EmailCampaignsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>

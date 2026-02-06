@@ -245,8 +245,16 @@ export default function LanguagesPage() {
                     <p className="text-muted-foreground">
                       Short ISO code like <b>en</b>, <b>ar</b>, <b>fr</b>.
                     </p>
-                  </div>
 
+                    <a
+                      href="https://www.loc.gov/standards/iso639-2/php/code_list.php"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-600 underline text-xs mt-1 inline-block"
+                    >
+                      📋 Find your language code here →
+                    </a>
+                  </div>
                   <div>
                     <p className="font-semibold">Native Name</p>
                     <p className="text-muted-foreground">
@@ -343,9 +351,6 @@ export default function LanguagesPage() {
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {language.name}
-                        {language.is_default && (
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -399,19 +404,25 @@ export default function LanguagesPage() {
                           Translate
                         </Button>
 
-                        {!language.is_default && (
+                        {!language.is_default ? (
                           <Button
                             size="sm"
                             onClick={() => handleSetDefault(language.id)}
                             disabled={setDefaultMutation.isPending}
                             title={t("languages.set_default", "Set as default")}
-                            className={`text-white ${
-                              language.is_default
-                                ? "bg-yellow-500 hover:bg-yellow-600"
-                                : "bg-blue-500 hover:bg-blue-600"
-                            }`}
+                            className="bg-yellow-500 hover:bg-blue-600 text-white"
                           >
                             <Star className="h-4 w-4 mr-1" />
+                            Default
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            disabled={true}
+                            title="This is the default language"
+                            className="bg-yellow-500 text-white cursor-not-allowed opacity-100 hover:bg-yellow-500"
+                          >
+                            <Star className="h-4 w-4 mr-1 fill-white" />
                             Default
                           </Button>
                         )}

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +20,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
   const { data: settings } = useSettingsByGroup("appearance");
 
@@ -29,7 +32,7 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
-  const adminLogoUrl = settings?.find((s) => s.key === "admin_logo_url")?.value || "";
+  const adminLogoUrl = settings?.find((s) => s.key === "site_logo_url")?.value || "";
   const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Login";
   const backgroundImage = settings?.find((s) => s.key === "login_background_url")?.value || "";
 
@@ -104,13 +107,22 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
                 Password
               </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
-                {...register("password")}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 pr-10"
+                  {...register("password")}
+                />
+                <button
+                  type="button"
+                  className="absolute right-0 top-0 h-full px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>
               )}

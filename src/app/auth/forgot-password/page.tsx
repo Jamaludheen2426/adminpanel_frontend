@@ -212,23 +212,25 @@ export default function ForgotPasswordPage() {
                 </Button>
 
                 <div className="text-center">
-                  <button
+                  <Button
                     type="button"
+                    variant="link"
                     onClick={handleResendOTP}
                     disabled={forgotPasswordMutation.isPending}
-                    className="text-sm text-indigo-600 hover:text-indigo-500"
+                    className="text-indigo-600 hover:text-indigo-500"
                   >
                     {forgotPasswordMutation.isPending ? "Sending..." : "Resend OTP"}
-                  </button>
+                  </Button>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="link"
                   onClick={() => setStep(1)}
-                  className="w-full text-sm text-gray-500 hover:text-gray-700"
+                  className="w-full text-gray-500 hover:text-gray-700"
                 >
                   Change email address
-                </button>
+                </Button>
               </form>
             </>
           )}

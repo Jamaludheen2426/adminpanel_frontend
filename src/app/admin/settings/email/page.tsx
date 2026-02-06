@@ -408,7 +408,7 @@ export default function EmailSettingsPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Driver</TableHead>
                     <TableHead>From Email</TableHead>
-                    <TableHead>Active</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -592,7 +592,10 @@ export default function EmailSettingsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
