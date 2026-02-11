@@ -1,7 +1,7 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useCreateRole } from '@/hooks';
+import { useRouter, useParams } from 'next/navigation';
+import { useRole, useUpdateRole } from '@/hooks';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useEffect } from 'react';
 import { useTranslation } from '@/hooks/use-translation';
 
 const roleSchema = z.object({
@@ -19,30 +20,58 @@ const roleSchema = z.object({
 
 type RoleFormData = z.infer<typeof roleSchema>;
 
-export default function CreateRolePage() {
+export default function EditRolePage() {
   const router = useRouter();
+  const params = useParams();
   const { t } = useTranslation();
-  const createRoleMutation = useCreateRole();
+  const roleId = Number(params.id);
+
+  const { data: roleData, isLoading } = useRole(roleId);
+  const updateRoleMutation = useUpdateRole();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<RoleFormData>({
     resolver: zodResolver(roleSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+    },
   });
 
+  useEffect(() => {
+    if (roleData) {
+      reset({
+        name: roleData.name || '',
+        description: roleData.description || '',
+      });
+    }
+  }, [roleData, reset]);
+
   const onSubmit = (data: RoleFormData) => {
-    createRoleMutation.mutate(data, {
-      onSuccess: () => router.push('/admin/roles'),
-    });
+    updateRoleMutation.mutate(
+      {
+        id: roleId,
+        data,
+      },
+      {
+        onSuccess: () => router.push('/admin/platform/roles'),
+      }
+    );
   };
+
+  if (isLoading) {
+    return <div className="text-center py-8">{t('common.loading', 'Loading...')}</div>;
+  }
 
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">{t('roles.create_role', 'Create Role')}</h1>
-        <p className="text-gray-600 mt-1">{t('roles.create_role_desc', 'Create a new role for user management')}</p>
+        <h1 className="text-3xl font-bold">{t('roles.edit_role', 'Edit Role')}</h1>
+        <p className="text-gray-600 mt-1">{t('roles.edit_role_desc', 'Update role information')}</p>
       </div>
 
       <Card className="p-6">
@@ -77,8 +106,8 @@ export default function CreateRolePage() {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <Button type="submit" disabled={createRoleMutation.isPending}>
-              {createRoleMutation.isPending ? t('common.creating', 'Creating...') : t('roles.create_role', 'Create Role')}
+            <Button type="submit" disabled={updateRoleMutation.isPending}>
+              {updateRoleMutation.isPending ? t('common.updating', 'Updating...') : t('roles.update_role', 'Update Role')}
             </Button>
             <Button
               type="button"

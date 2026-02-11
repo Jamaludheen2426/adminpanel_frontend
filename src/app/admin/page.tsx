@@ -11,6 +11,7 @@ import {
   TrendingUp,
   AlertTriangle,
   Languages,
+  Building2,
 } from "lucide-react";
 import {
   Table,
@@ -26,6 +27,8 @@ import { useAuth } from "@/hooks";
 import { useActivityLogs } from "@/hooks/use-activity-logs";
 import { useTranslation } from "@/hooks/use-translation";
 import { useMissingTranslationKeysCount } from "@/hooks/use-translations";
+import { useDeveloperDashboard } from "@/hooks/use-companies";
+import { useCompany } from "@/contexts/company-context";
 import { Spinner } from "@/components/ui/spinner";
 import { format } from "date-fns";
 
@@ -37,20 +40,20 @@ interface StatCard {
   href: string;
 }
 
-const stats: StatCard[] = [
+const defaultStats: StatCard[] = [
   {
     labelKey: "dashboard.total_users",
     value: "0",
     change: "+0%",
     icon: Users,
-    href: "/admin/users",
+    href: "/admin/platform/users",
   },
   {
     labelKey: "nav.roles",
     value: "0",
     change: "+0%",
     icon: Shield,
-    href: "/admin/roles",
+    href: "/admin/platform/roles",
   },
   {
     labelKey: "nav.locations",
@@ -68,7 +71,185 @@ const stats: StatCard[] = [
   },
 ];
 
-export default function DashboardPage() {
+// Developer Dashboard Component
+function DeveloperDashboard() {
+  const { t } = useTranslation();
+  const { data: dashboardData, isLoading } = useDeveloperDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  const stats = dashboardData?.stats;
+  const companies = dashboardData?.companies || [];
+
+  return (
+    <div className="space-y-6">
+      {/* Developer Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Companies
+                </p>
+                <p className="text-3xl font-bold mt-2">{stats?.total_companies || 0}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Building2 className="h-6 w-6 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Active Companies
+                </p>
+                <p className="text-3xl font-bold mt-2">{stats?.active_companies || 0}</p>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-green-500 mt-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Suspended
+                </p>
+                <p className="text-3xl font-bold mt-2">{stats?.suspended_companies || 0}</p>
+              </div>
+              <div className="h-2 w-2 rounded-full bg-red-500 mt-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total Users
+                </p>
+                <p className="text-3xl font-bold mt-2">{stats?.total_users || 0}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <Users className="h-6 w-6 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Active Users
+                </p>
+                <p className="text-3xl font-bold mt-2">{stats?.active_users || 0}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center">
+                <Users className="h-6 w-6 text-green-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Companies List */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>All Companies</CardTitle>
+            <Link href="/admin/companies">
+              <Button variant="ghost" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Company</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Users</TableHead>
+                <TableHead>Active Users</TableHead>
+                <TableHead>Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {companies.length > 0 ? (
+                companies.map((company) => (
+                  <TableRow key={company.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {company.logo ? (
+                          <img
+                            src={company.logo}
+                            alt={company.name}
+                            className="h-8 w-8 rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
+                            <Building2 className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+                        <div>
+                          <div>{company.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {company.slug}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={company.status === 'active' ? 'default' : 'secondary'}
+                      >
+                        {company.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{company.user_count || 0}</TableCell>
+                    <TableCell>{company.active_user_count || 0}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {company.created_at ? format(new Date(company.created_at), "MMM dd, yyyy") : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-8">
+                    <Building2 className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      No companies found
+                    </p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Company Dashboard Component
+function CompanyDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { data: activityData, isLoading: activityLoading } = useActivityLogs({ limit: 5 });
@@ -78,14 +259,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">{t('nav.dashboard')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('auth.welcome_back')}, {user?.full_name || "Admin"}
-        </p>
-      </div>
-
       {/* Missing Translation Keys Alert */}
       {missingKeysCount && missingKeysCount.unresolved > 0 && (
         <Card className="border-yellow-500/50 bg-yellow-500/5">
@@ -117,7 +290,7 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => {
+        {defaultStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link key={stat.labelKey} href={stat.href}>
@@ -152,13 +325,13 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Link href="/admin/users">
+            <Link href="/admin/platform/users">
               <Button variant="outline" className="w-full">
                 <Users className="mr-2 h-4 w-4" />
                 {t('users.manage_users')}
               </Button>
             </Link>
-            <Link href="/admin/roles">
+            <Link href="/admin/platform/roles">
               <Button variant="outline" className="w-full">
                 <Shield className="mr-2 h-4 w-4" />
                 {t('roles.manage_roles')}
@@ -236,6 +409,28 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// Main Dashboard Page
+export default function DashboardPage() {
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const { isDeveloper } = useCompany();
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">{t('nav.dashboard')}</h1>
+        <p className="text-muted-foreground mt-1">
+          {t('auth.welcome_back')}, {user?.full_name || "Admin"}
+        </p>
+      </div>
+
+      {/* Conditional Dashboard */}
+      {isDeveloper ? <DeveloperDashboard /> : <CompanyDashboard />}
     </div>
   );
 }

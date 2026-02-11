@@ -81,7 +81,7 @@ export default function EditUserPage() {
         },
       },
       {
-        onSuccess: () => router.push('/admin/users'),
+        onSuccess: () => router.push('/admin/platform/users'),
       }
     );
   };

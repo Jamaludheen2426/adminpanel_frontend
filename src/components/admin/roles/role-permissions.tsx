@@ -3,10 +3,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useRole, useAssignPermissions } from "@/hooks/use-roles";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Permission } from "@/types";
+import { ShieldAlert } from "lucide-react";
 
 interface RolePermissionsProps {
   roleId: number;
@@ -19,10 +21,21 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
   const assignPermissionsMutation = useAssignPermissions();
 
   const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  const [approvalModules, setApprovalModules] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (role?.permissions) {
       setSelectedPermissions(role.permissions.map((p) => p.id));
+
+      // Read requires_approval from the RolePermission join data
+      const modules: Record<string, boolean> = {};
+      role.permissions.forEach((p: Permission & { RolePermission?: { requires_approval?: boolean } }) => {
+        const mod = p.module || 'other';
+        if (p.RolePermission?.requires_approval) {
+          modules[mod] = true;
+        }
+      });
+      setApprovalModules(modules);
     }
   }, [role]);
 
@@ -46,9 +59,26 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
     }
   };
 
+  const handleApprovalToggle = (module: string) => {
+    setApprovalModules((prev) => ({
+      ...prev,
+      [module]: !prev[module],
+    }));
+  };
+
   const handleSave = () => {
+    // Build permissions array with requiresApproval flag per module
+    const permissionsPayload = selectedPermissions.map((permId) => {
+      const permission = permissionsData?.data?.find((p) => p.id === permId);
+      const mod = permission?.module || 'other';
+      return {
+        permissionId: permId,
+        requiresApproval: !!approvalModules[mod],
+      };
+    });
+
     assignPermissionsMutation.mutate(
-      { id: roleId, permissionIds: selectedPermissions },
+      { id: roleId, permissions: permissionsPayload },
       { onSuccess }
     );
   };
@@ -80,26 +110,45 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
         const moduleIds = permissions.map((p) => p.id);
         const allSelected = moduleIds.every((id) => selectedPermissions.includes(id));
         const someSelected = moduleIds.some((id) => selectedPermissions.includes(id)) && !allSelected;
+        const hasAnySelected = moduleIds.some((id) => selectedPermissions.includes(id));
 
         return (
           <div key={module} className="space-y-3">
-            <div className="flex items-center gap-2 border-b pb-2">
-              <Checkbox
-                id={`module-${module}`}
-                checked={allSelected}
-                ref={(el) => {
-                  if (el) {
-                    (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = someSelected;
-                  }
-                }}
-                onCheckedChange={() => handleSelectAll(module, permissions)}
-              />
-              <Label
-                htmlFor={`module-${module}`}
-                className="text-base font-semibold capitalize cursor-pointer"
-              >
-                {module.replace(/_/g, " ")}
-              </Label>
+            <div className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id={`module-${module}`}
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) {
+                      (el as HTMLButtonElement & { indeterminate: boolean }).indeterminate = someSelected;
+                    }
+                  }}
+                  onCheckedChange={() => handleSelectAll(module, permissions)}
+                />
+                <Label
+                  htmlFor={`module-${module}`}
+                  className="text-base font-semibold capitalize cursor-pointer"
+                >
+                  {module.replace(/_/g, " ")}
+                </Label>
+              </div>
+              {hasAnySelected && (
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <Label
+                    htmlFor={`approval-${module}`}
+                    className="text-xs font-medium text-yellow-700 dark:text-yellow-300 cursor-pointer"
+                  >
+                    Requires Approval
+                  </Label>
+                  <Switch
+                    id={`approval-${module}`}
+                    checked={!!approvalModules[module]}
+                    onCheckedChange={() => handleApprovalToggle(module)}
+                  />
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-2 pl-6">
               {permissions.map((permission) => (

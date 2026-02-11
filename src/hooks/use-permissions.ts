@@ -30,6 +30,11 @@ const permissionsApi = {
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/permissions/${id}`);
   },
+
+  toggleStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<Permission> => {
+    const response = await apiClient.put(`/permissions/${id}`, { is_active });
+    return response.data.data.permission;
+  },
 };
 
 // Get all permissions with pagination
@@ -78,6 +83,22 @@ export function useUpdatePermission() {
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to update permission');
+    },
+  });
+}
+
+// Toggle permission status
+export function useTogglePermissionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: permissionsApi.toggleStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.permissions.lists() });
+      toast.success('Permission status updated');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to update permission status');
     },
   });
 }

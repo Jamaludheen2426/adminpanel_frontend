@@ -64,6 +64,7 @@ export interface Permission extends BaseEntity {
   name: string;
   slug: string;
   module: string;
+  module_id: number | null;
   description: string | null;
 }
 
@@ -72,6 +73,14 @@ export interface CreatePermissionDto {
   slug?: string;
   module: string;
   description?: string;
+}
+
+// Module types
+export interface Module extends BaseEntity {
+  name: string;
+  slug: string;
+  description: string | null;
+  permissions?: Permission[];
 }
 
 // Setting types

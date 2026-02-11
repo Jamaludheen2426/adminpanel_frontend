@@ -57,7 +57,7 @@ export default function CreateUserPage() {
       role_id: parseInt(data.role_id, 10),
     };
     createUserMutation.mutate(payload, {
-      onSuccess: () => router.push('/admin/users'),
+      onSuccess: () => router.push('/admin/platform/users'),
     });
   };
 

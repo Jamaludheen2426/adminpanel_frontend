@@ -42,18 +42,23 @@ export default function AdminSidebar() {
     },
     {
       labelKey: 'nav.users',
-      href: '/admin/users',
+      href: '/admin/platform/users',
       icon: <Users size={20} />,
     },
     {
       labelKey: 'nav.access_control',
       icon: <Shield size={20} />,
       children: [
-        { labelKey: 'nav.roles', href: '/admin/roles', icon: <Lock size={20} /> },
+        { labelKey: 'nav.roles', href: '/admin/platform/roles', icon: <Lock size={20} /> },
         {
           labelKey: 'nav.permissions',
-          href: '/admin/permissions',
+          href: '/admin/platform/permissions',
           icon: <Lock size={20} />,
+        },
+        {
+          labelKey: 'nav.modules',
+          href: '/admin/platform/modules',
+          icon: <Shield size={20} />,
         },
       ],
     },

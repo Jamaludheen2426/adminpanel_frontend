@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, Shield } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
@@ -22,84 +23,62 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useRoles, useDeleteRole } from "@/hooks/use-roles";
-import { RoleForm } from "@/components/admin/roles/role-form";
-import { RolePermissions } from "@/components/admin/roles/role-permissions";
+import { useUsers, useDeleteUser, useToggleUserStatus } from "@/hooks/use-users";
+import { UserForm } from "@/components/admin/users/user-form";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
-import type { Role } from "@/types";
+import type { User } from "@/types";
 
-export default function RolesPage() {
+export default function UsersPage() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const { data, isLoading } = useRoles({ page, limit: 10, search });
-  const deleteRoleMutation = useDeleteRole();
+  const { data, isLoading } = useUsers({ page, limit: 10, search });
+  console.log("users",data);
+  const deleteUserMutation = useDeleteUser();
+  const toggleStatusMutation = useToggleUserStatus();
 
-  const handleEdit = (role: Role) => {
-    setSelectedRole(role);
+  const handleEdit = (user: User) => {
+    setSelectedUser(user);
     setIsDialogOpen(true);
   };
 
-  const handlePermissions = (role: Role) => {
-    setSelectedRole(role);
-    setIsPermissionsOpen(true);
-  };
-
   const handleDelete = async (id: number) => {
-    if (confirm(t('roles.delete_confirm'))) {
-      deleteRoleMutation.mutate(id);
+    if (confirm(t('users.delete_confirm'))) {
+      deleteUserMutation.mutate(id);
     }
   };
 
   const handleDialogClose = () => {
     setIsDialogOpen(false);
-    setSelectedRole(null);
+    setSelectedUser(null);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('nav.roles')}</h1>
+        <h1 className="text-3xl font-bold">{t('nav.users')}</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedRole(null)}>
+            <Button onClick={() => setSelectedUser(null)}>
               <Plus className="mr-2 h-4 w-4" />
-              {t('roles.add_role')}
+              {t('users.add_user')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{selectedRole ? t('roles.edit_role') : t('roles.add_role')}</DialogTitle>
+              <DialogTitle>{selectedUser ? t('users.edit_user') : t('users.add_user')}</DialogTitle>
               <DialogDescription>
-                {selectedRole ? t('roles.edit_desc') : t('roles.add_desc')}
+                {selectedUser ? t('users.edit_desc') : t('users.add_desc')}
               </DialogDescription>
             </DialogHeader>
-            <RoleForm role={selectedRole} onSuccess={handleDialogClose} />
+            <UserForm user={selectedUser} onSuccess={handleDialogClose} />
           </DialogContent>
         </Dialog>
       </div>
-
-      <Dialog open={isPermissionsOpen} onOpenChange={setIsPermissionsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('roles.manage_permissions')} - {selectedRole?.name}</DialogTitle>
-            <DialogDescription>
-              {t('roles.permissions_desc')}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedRole && (
-            <RolePermissions
-              roleId={selectedRole.id}
-              onSuccess={() => setIsPermissionsOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Card>
         <CardHeader>
@@ -107,7 +86,7 @@ export default function RolesPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder={t('roles.search')}
+                placeholder={t('users.search')}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
@@ -126,56 +105,45 @@ export default function RolesPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('common.slug')}</TableHead>
-                    <TableHead>{t('common.description')}</TableHead>
+                    <TableHead>{t('common.email')}</TableHead>
+                    <TableHead>{t('roles.role')}</TableHead>
                     <TableHead>{t('common.status')}</TableHead>
                     <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.data?.map((role) => (
-                    <TableRow key={role.id}>
-                      <TableCell className="font-medium">{role.name}</TableCell>
-                      <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
-                          {role.slug}
-                        </code>
+                  {data?.data?.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">
+                        {user.full_name}
                       </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {role.description || "-"}
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{user.role?.name || "N/A"}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge
-                          className={role.is_active
-                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
-                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
-                          }
-                        >
-                          {role.is_active ? t('common.active') : t('common.inactive')}
-                        </Badge>
+                        <Switch
+                          checked={user.is_active}
+                          disabled={toggleStatusMutation.isPending && toggleStatusMutation.variables?.id === user.id}
+                          onCheckedChange={(checked) => {
+                            toggleStatusMutation.mutate({ id: user.id, is_active: checked });
+                          }}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handlePermissions(role)}
-                            title="Manage Permissions"
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(role)}
+                            onClick={() => handleEdit(user)}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(role.id)}
-                            disabled={deleteRoleMutation.isPending}
+                            onClick={() => handleDelete(user.id)}
+                            disabled={deleteUserMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -186,7 +154,7 @@ export default function RolesPage() {
                   {data?.data?.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        {t('roles.no_roles_found')}
+                        {t('users.no_users_found')}
                       </TableCell>
                     </TableRow>
                   )}

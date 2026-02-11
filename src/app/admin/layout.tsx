@@ -10,6 +10,7 @@ import { TopHeader } from "@/components/layout/top-header";
 import Breadcrumb from "@/components/layout/breadcrumb";
 import { AppearanceProvider } from "@/components/providers/appearance-provider";
 import { DynamicHead } from "@/components/providers/dynamic-head";
+import { CompanyProvider } from "@/contexts/company-context";
 
 export default function AdminLayout({
   children,
@@ -62,32 +63,34 @@ export default function AdminLayout({
   return (
     <AppearanceProvider>
       <DynamicHead />
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          {/* Sidebar */}
-          <AppSidebar />
+      <CompanyProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full bg-background">
+            {/* Sidebar */}
+            <AppSidebar />
 
-          {/* Main Content */}
-          <SidebarInset className="flex flex-col flex-1">
-            {/* Top Header with Language, Currency, Theme */}
-            <TopHeader />
+            {/* Main Content */}
+            <SidebarInset className="flex flex-col flex-1">
+              {/* Top Header with Language, Currency, Theme */}
+              <TopHeader />
 
-            {/* Navbar */}
-            <AdminNavbar />
+              {/* Navbar */}
+              <AdminNavbar />
 
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto">
-              <div className="p-6">
-                <Breadcrumb />
-                {children}
-              </div>
-            </main>
+              {/* Main Content Area */}
+              <main className="flex-1 overflow-y-auto">
+                <div className="p-6">
+                  <Breadcrumb />
+                  {children}
+                </div>
+              </main>
 
-            {/* Footer */}
-            <AdminFooter />
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+              {/* Footer */}
+              <AdminFooter />
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </CompanyProvider>
     </AppearanceProvider>
   );
 }

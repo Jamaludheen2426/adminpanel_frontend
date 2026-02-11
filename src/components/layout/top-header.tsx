@@ -11,16 +11,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguages, useCurrencies } from "@/hooks";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAuth } from "@/hooks/use-auth";
+import { CompanySwitcher } from "@/components/company-switcher";
 import { useState, useEffect } from "react";
 
 export function TopHeader() {
   const { theme, setTheme } = useTheme();
   const { t, language, setLanguage } = useTranslation();
+  const { user } = useAuth();
   const { data: languagesData } = useLanguages({ limit: 100 });
   const { data: currenciesData } = useCurrencies({ limit: 100 });
 
   const [selectedCurrency, setSelectedCurrency] = useState<string>("USD");
   const [mounted, setMounted] = useState(false);
+
+  // Check if user is developer
+  const isDeveloper = user?.role?.slug === 'developer';
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +65,11 @@ export function TopHeader() {
         </div>
 
         <div className="flex items-center gap-1">
+          {/* Company Switcher - Only for Developer */}
+          {isDeveloper && (
+            <CompanySwitcher />
+          )}
+
           {/* Language Selector */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

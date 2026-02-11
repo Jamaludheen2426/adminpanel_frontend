@@ -35,6 +35,11 @@ const rolesApi = {
     const response = await apiClient.post(`/roles/${id}/permissions`, { permissionIds });
     return response.data.data.role;
   },
+
+  toggleStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<Role> => {
+    const response = await apiClient.put(`/roles/${id}`, { is_active });
+    return response.data.data.role;
+  },
 };
 
 // Get all roles with pagination
@@ -99,6 +104,22 @@ export function useDeleteRole() {
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to delete role');
+    },
+  });
+}
+
+// Toggle role status
+export function useToggleRoleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: rolesApi.toggleStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.roles.lists() });
+      toast.success('Role status updated');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to update role status');
     },
   });
 }

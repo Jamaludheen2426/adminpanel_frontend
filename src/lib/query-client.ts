@@ -51,6 +51,15 @@ export const queryKeys = {
     [...queryKeys.permissions.details(), id] as const,
   },
 
+  // Modules
+  modules: {
+    all: ['modules'] as const,
+    lists: () => [...queryKeys.modules.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.modules.lists(), params] as const,
+    details: () => [...queryKeys.modules.all, 'detail'] as const,
+    detail: (id: number) => [...queryKeys.modules.details(), id] as const,
+  },
+
   // Settings
   settings: {
     all: ['settings'] as const,

@@ -8,6 +8,7 @@ import {
   Database,
   Lock,
   UserCog,
+  Layers,
 } from "lucide-react";
 import {
   Card,
@@ -36,20 +37,26 @@ const platformGroups: PlatformGroup[] = [
       {
         labelKey: "nav.users",
         descriptionKey: "platform.users_desc",
-        href: "/admin/users",
+        href: "/admin/platform/users",
         icon: Users,
       },
       {
         labelKey: "nav.roles",
         descriptionKey: "platform.roles_desc",
-        href: "/admin/roles",
+        href: "/admin/platform/roles",
         icon: Shield,
       },
       {
         labelKey: "permissions.title",
         descriptionKey: "platform.permissions_desc",
-        href: "/admin/permissions",
+        href: "/admin/platform/permissions",
         icon: Lock,
+      },
+      {
+        labelKey: "nav.modules",
+        descriptionKey: "platform.modules_desc",
+        href: "/admin/platform/modules",
+        icon: Layers,
       },
       {
         labelKey: "profile.title",
@@ -65,7 +72,7 @@ const platformGroups: PlatformGroup[] = [
       {
         labelKey: "activity.logs",
         descriptionKey: "platform.activity_desc",
-        href: "/admin/activity-logs",
+        href: "/admin/platform/activity-logs",
         icon: Activity,
       },
       {

@@ -30,6 +30,14 @@ const usersApi = {
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/users/${id}`);
   },
+
+  toggleStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<User> => {
+    const response = await apiClient.patch(`/users/${id}/status`, {
+      is_active,
+      status: is_active ? 'active' : 'inactive',
+    });
+    return response.data.data.user;
+  },
 };
 
 // Get all users with pagination
@@ -78,6 +86,22 @@ export function useUpdateUser() {
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to update user');
+    },
+  });
+}
+
+// Toggle user status
+export function useToggleUserStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: usersApi.toggleStatus,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
+      toast.success('User status updated');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to update user status');
     },
   });
 }

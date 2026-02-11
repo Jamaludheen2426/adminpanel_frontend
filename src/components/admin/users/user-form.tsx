@@ -16,6 +16,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { useRoles } from "@/hooks/use-roles";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserRoleLevel } from "@/lib/auth-utils";
 import type { User } from "@/types";
 
 const userSchema = z.object({
@@ -35,6 +37,7 @@ interface UserFormProps {
 }
 
 export function UserForm({ user, onSuccess }: UserFormProps) {
+  const { user: currentUser } = useAuth();
   const createUserMutation = useCreateUser();
   const updateUserMutation = useUpdateUser();
   const { data: rolesData } = useRoles({ limit: 100 });
@@ -61,6 +64,20 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   });
 
   const isActive = watch("is_active");
+
+  // Get current user's role level
+  const currentUserLevel = getUserRoleLevel(currentUser);
+
+  // Filter roles to only show roles at or below current user's level
+  const availableRoles = rolesData?.data?.filter((role) => {
+    // Developer can see all roles
+    if (currentUser?.role?.slug === 'developer') {
+      return true;
+    }
+    
+    // Non-developers can only assign roles at or below their level
+    return role.level <= currentUserLevel;
+  }) || [];
 
   const onSubmit = (data: UserFormData) => {
     if (user) {
@@ -118,15 +135,31 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             <SelectValue placeholder="Select a role" />
           </SelectTrigger>
           <SelectContent>
-            {rolesData?.data?.map((role) => (
-              <SelectItem key={role.id} value={role.id.toString()}>
-                {role.name}
+            {availableRoles.length > 0 ? (
+              availableRoles.map((role) => (
+                <SelectItem key={role.id} value={role.id.toString()}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{role.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      Level {role.level}
+                    </span>
+                  </div>
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="no-roles" disabled>
+                No roles available
               </SelectItem>
-            ))}
+            )}
           </SelectContent>
         </Select>
         {errors.role_id && (
           <p className="text-sm text-destructive">{errors.role_id.message}</p>
+        )}
+        {availableRoles.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            You can only assign roles up to level {currentUserLevel}
+          </p>
         )}
       </div>
 

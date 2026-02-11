@@ -10,6 +10,9 @@ export * from './use-roles';
 // Permission hooks
 export * from './use-permissions';
 
+// Module hooks
+export * from './use-modules';
+
 // Settings hooks
 export * from './use-settings';
 
@@ -27,3 +30,12 @@ export * from './use-activity-logs';
 
 // Email template hooks
 export * from './use-email-templates';
+
+// Company hooks
+export * from './use-companies';
+
+// Approval hooks
+export * from './use-approvals';
+
+// Utility hooks
+export * from './use-debounce';
