@@ -1,6 +1,25 @@
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+import { toast } from 'sonner';
+import { queryClient, queryKeys } from '@/lib/query-client';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Custom error class for approval-required responses
+export class ApprovalRequiredError extends Error {
+  approval: unknown;
+  constructor(message: string, approval?: unknown) {
+    super(message);
+    this.name = 'ApprovalRequiredError';
+    this.approval = approval;
+  }
+}
+
+/**
+ * Type guard to check if an error is an ApprovalRequiredError
+ */
+export function isApprovalRequired(error: unknown): error is ApprovalRequiredError {
+  return error instanceof ApprovalRequiredError;
+}
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -11,9 +30,48 @@ export const apiClient = axios.create({
   },
 });
 
-// Response interceptor for error handling
+// Request interceptor to add X-Company-Id header
+apiClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Read currentCompanyId from localStorage
+    if (typeof window !== 'undefined') {
+      const currentCompanyId = localStorage.getItem('currentCompanyId');
+
+      // If present, add X-Company-Id header
+      if (currentCompanyId) {
+        config.headers['X-Company-Id'] = currentCompanyId;
+      }
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling and approval detection
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Detect approval-required responses (HTTP 202 or approval_required flag)
+    const data = response.data;
+    if (response.status === 202 || data?.approval_required === true) {
+      // Show info toast
+      toast.info(data?.message || 'Approval request submitted. Waiting for review.');
+
+      // Invalidate approval queries to update pending count
+      queryClient.invalidateQueries({ queryKey: queryKeys.approvals.pending() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.approvals.lists() });
+
+      // Throw custom error so mutation hooks know this was an approval, not a success
+      throw new ApprovalRequiredError(
+        data?.message || 'Approval required',
+        data?.data
+      );
+    }
+
+    return response;
+  },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Redirect to login if unauthorized
@@ -31,6 +89,7 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   data?: T;
   errors?: string[];
+  approval_required?: boolean;
 }
 
 export interface PaginatedResponse<T> {

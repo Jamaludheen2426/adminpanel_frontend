@@ -1,12 +1,58 @@
 // Common types
 export interface BaseEntity {
   id: number;
+  company_id: number | null;
   is_active: boolean;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
   created_by: number | null;
   updated_by: number | null;
+}
+
+// Company types
+export interface Company extends BaseEntity {
+  name: string;
+  slug: string;
+  domain: string | null;
+  logo: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  status: 'active' | 'inactive' | 'suspended';
+  settings: Record<string, unknown> | null;
+  max_users: number | null;
+}
+
+export interface CreateCompanyDto {
+  name: string;
+  slug: string;
+  domain?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  status?: 'active' | 'inactive' | 'suspended';
+  settings?: Record<string, unknown>;
+  max_users?: number;
+  // Initial super admin details
+  admin_full_name: string;
+  admin_email: string;
+  admin_password: string;
+}
+
+export interface UpdateCompanyDto {
+  name?: string;
+  slug?: string;
+  domain?: string;
+  logo?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  status?: 'active' | 'inactive' | 'suspended';
+  settings?: Record<string, unknown>;
+  max_users?: number;
+  is_active?: boolean;
 }
 
 // User types
@@ -20,6 +66,7 @@ export interface User extends BaseEntity {
   role_id: number;
   status: 'active' | 'inactive' | 'pending' | 'blocked';
   role?: Role;
+  company?: Company | null;
 }
 
 export interface CreateUserDto {
@@ -44,6 +91,7 @@ export interface Role extends BaseEntity {
   name: string;
   slug: string;
   description: string | null;
+  level: number;
   permissions?: Permission[];
 }
 
@@ -51,11 +99,13 @@ export interface CreateRoleDto {
   name: string;
   slug?: string;
   description?: string;
+  level?: number;
 }
 
 export interface UpdateRoleDto {
   name?: string;
   description?: string;
+  level?: number;
   is_active?: boolean;
 }
 
@@ -210,7 +260,7 @@ export interface ActivityLog {
 
 // Email Config types
 export interface EmailConfig extends BaseEntity {
-  has_api_key: boolean | null; // ✅ FIXED: Was EmailConfig, should be boolean
+  has_api_key: boolean | null;
   name: string;
   from_email: string;
   from_name: string;
@@ -224,7 +274,7 @@ export interface EmailConfig extends BaseEntity {
   domain: string | null;
   region: string | null;
   is_default: boolean;
-  is_active: boolean; // ✅ ADDED: Was missing
+  is_active: boolean;
 }
 
 export interface CreateEmailConfigDto {
@@ -236,7 +286,7 @@ export interface CreateEmailConfigDto {
   port?: number;
   username?: string;
   password?: string;
-  encryption?: 'tls' | 'ssl' | 'none'; // ✅ CHANGED: More specific
+  encryption?: 'tls' | 'ssl' | 'none';
   api_key?: string;
   domain?: string;
   region?: string;
@@ -252,7 +302,7 @@ export interface UpdateEmailConfigDto {
   port?: number;
   username?: string;
   password?: string;
-  encryption?: 'tls' | 'ssl' | 'none'; // ✅ CHANGED: More specific
+  encryption?: 'tls' | 'ssl' | 'none';
   api_key?: string;
   domain?: string;
   region?: string;
@@ -304,6 +354,53 @@ export interface UpdateEmailTemplateDto {
   is_active?: boolean;
 }
 
+// Approval types
+export interface ApprovalRequest {
+  id: number;
+  company_id: number | null;
+  requester_id: number;
+  approver_id: number | null;
+  module_slug: string;
+  permission_slug: string;
+  action: string;
+  resource_type: string;
+  resource_id: number | null;
+  request_data: unknown;
+  old_data: unknown | null;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewed_at: string | null;
+  review_notes: string | null;
+  created_at: string;
+  updated_at: string;
+  requester?: {
+    id: number;
+    full_name: string;
+    email: string;
+  };
+  approver?: {
+    id: number;
+    full_name: string;
+    email: string;
+  };
+}
+
+export interface ApprovalFilters {
+  status?: 'pending' | 'approved' | 'rejected';
+  module_slug?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateApprovalDto {
+  module_slug: string;
+  permission_slug: string;
+  action: string;
+  resource_type: string;
+  resource_id?: number;
+  request_data: unknown;
+  old_data?: unknown;
+}
+
 // Auth types
 export interface LoginDto {
   email: string;
@@ -346,6 +443,7 @@ export interface UpdateProfileDto {
 
 export interface AuthUser extends User {
   permissions?: string[];
+  company?: Company | null;
 }
 
 // Email Campaign types

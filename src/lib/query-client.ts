@@ -22,6 +22,16 @@ export const queryKeys = {
     me: () => [...queryKeys.auth.all, 'me'] as const,
   },
 
+  // Companies
+  companies: {
+    all: ['companies'] as const,
+    lists: () => [...queryKeys.companies.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.companies.lists(), params] as const,
+    details: () => [...queryKeys.companies.all, 'detail'] as const,
+    detail: (id: number) => [...queryKeys.companies.details(), id] as const,
+    dashboard: () => [...queryKeys.companies.all, 'dashboard'] as const,
+  },
+
   // Users
   users: {
     all: ['users'] as const,
@@ -149,6 +159,16 @@ export const queryKeys = {
     lists: () => [...queryKeys.translationKeys.all, 'list'] as const,
     list: (params: Record<string, unknown>) => [...queryKeys.translationKeys.lists(), params] as const,
     detail: (id: number) => [...queryKeys.translationKeys.all, 'detail', id] as const,
+  },
+
+  // Approvals
+  approvals: {
+    all: ['approvals'] as const,
+    lists: () => [...queryKeys.approvals.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.approvals.lists(), params] as const,
+    details: () => [...queryKeys.approvals.all, 'detail'] as const,
+    detail: (id: number) => [...queryKeys.approvals.details(), id] as const,
+    pending: () => [...queryKeys.approvals.all, 'pending'] as const,
   },
 
   // Missing Translation Keys

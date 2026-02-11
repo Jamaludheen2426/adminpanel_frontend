@@ -31,8 +31,8 @@ const rolesApi = {
     await apiClient.delete(`/roles/${id}`);
   },
 
-  assignPermissions: async ({ id, permissionIds }: { id: number; permissionIds: number[] }): Promise<Role> => {
-    const response = await apiClient.post(`/roles/${id}/permissions`, { permissionIds });
+  assignPermissions: async ({ id, permissions }: { id: number; permissions: { permissionId: number; requiresApproval: boolean }[] }): Promise<Role> => {
+    const response = await apiClient.post(`/roles/${id}/permissions`, { permissions });
     return response.data.data.role;
   },
 

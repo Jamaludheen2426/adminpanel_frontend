@@ -1,203 +1,97 @@
-import Cookies from 'js-cookie';
 import { AuthUser } from '@/types';
 
 /**
- * Permission and Authentication Utilities
+ * Check if user is a developer
  */
-
-export const hasPermission = (requiredPermission: string): boolean => {
-  const userStr = Cookies.get('user');
-  if (!userStr) return false;
-
-  try {
-    const user: AuthUser = JSON.parse(userStr);
-    if (!user.permissions) return false;
-
-    return user.permissions.some((p) => p === requiredPermission);
-  } catch (error) {
-    return false;
-  }
-};
-
-export const hasAnyPermission = (permissions: string[]): boolean => {
-  return permissions.some((p) => hasPermission(p));
-};
-
-export const hasAllPermissions = (permissions: string[]): boolean => {
-  return permissions.every((p) => hasPermission(p));
-};
-
-export const hasRole = (requiredRole: string): boolean => {
-  const userStr = Cookies.get('user');
-  if (!userStr) return false;
-
-  try {
-    const user: AuthUser = JSON.parse(userStr);
-    return user.role?.name === requiredRole;
-  } catch (error) {
-    return false;
-  }
-};
-
-export const hasAnyRole = (roles: string[]): boolean => {
-  const userStr = Cookies.get('user');
-  if (!userStr) return false;
-
-  try {
-    const user: AuthUser = JSON.parse(userStr);
-    return roles.includes(user.role?.name || '');
-  } catch (error) {
-    return false;
-  }
-};
-
-export const getCurrentUser = (): AuthUser | null => {
-  const userStr = Cookies.get('user');
-  if (!userStr) return null;
-
-  try {
-    return JSON.parse(userStr);
-  } catch (error) {
-    return null;
-  }
-};
-
-export const isAuthenticated = (): boolean => {
-  const token = Cookies.get('accessToken');
-  return !!token;
-};
-
-export const getAccessToken = (): string | undefined => {
-  return Cookies.get('accessToken');
-};
-
-export const getRefreshToken = (): string | undefined => {
-  return Cookies.get('refreshToken');
-};
-
-export const setTokens = (
-  accessToken: string,
-  refreshToken: string,
-  user?: AuthUser
-): void => {
-  Cookies.set('accessToken', accessToken, {
-    expires: 7,
-    secure: true,
-    sameSite: 'strict',
-  });
-  Cookies.set('refreshToken', refreshToken, {
-    expires: 30,
-    secure: true,
-    sameSite: 'strict',
-  });
-
-  if (user) {
-    Cookies.set('user', JSON.stringify(user), {
-      expires: 7,
-      secure: true,
-      sameSite: 'strict',
-    });
-  }
-};
-
-export const clearTokens = (): void => {
-  Cookies.remove('accessToken');
-  Cookies.remove('refreshToken');
-  Cookies.remove('user');
+export const isDeveloper = (user?: AuthUser | null): boolean => {
+  return user?.role?.slug === 'developer';
 };
 
 /**
- * Route Protection Utility
+ * Check if user is a super admin
  */
-
-export const isPrivateRoute = (path: string): boolean => {
-  return path.startsWith('/admin');
-};
-
-export const isAuthRoute = (path: string): boolean => {
-  return path.startsWith('/auth');
-};
-
-export const isPublicRoute = (path: string): boolean => {
-  const publicRoutes = ['/', '/coming-soon'];
-  return publicRoutes.includes(path);
+export const isSuperAdmin = (user?: AuthUser | null): boolean => {
+  return user?.role?.slug === 'super_admin';
 };
 
 /**
- * Error Handling Utilities
+ * Get current company ID from user
  */
-
-export const getErrorMessage = (error: unknown): string => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === 'string') {
-    return error;
-  }
-  return 'An unexpected error occurred';
-};
-
-export const logError = (error: unknown, context: string = ''): void => {
-  const message = getErrorMessage(error);
-  console.error(`[${context}] ${message}`, error);
+export const getCurrentCompanyId = (user?: AuthUser | null): number | null => {
+  return user?.company_id || null;
 };
 
 /**
- * Storage Utilities
+ * Check if user has minimum role level
  */
-
-export const setLocalStorage = <T>(key: string, value: T): void => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Failed to set localStorage:', error);
-  }
-};
-
-export const getLocalStorage = <T>(key: string, defaultValue?: T): T | null => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue ?? null;
-  } catch (error) {
-    console.error('Failed to get localStorage:', error);
-    return defaultValue ?? null;
-  }
-};
-
-export const removeLocalStorage = (key: string): void => {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    console.error('Failed to remove localStorage:', error);
-  }
+export const hasMinLevel = (user?: AuthUser | null, minLevel: number = 0): boolean => {
+  if (!user) return false;
+  
+  // Developer bypasses level checks
+  if (isDeveloper(user)) return true;
+  
+  const userLevel = user.role?.level || 0;
+  return userLevel >= minLevel;
 };
 
 /**
- * Session Storage Utilities
+ * Check if user has a specific permission
  */
-
-export const setSessionStorage = <T>(key: string, value: T): void => {
-  try {
-    sessionStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error('Failed to set sessionStorage:', error);
-  }
+export const hasPermission = (user?: AuthUser | null, permission: string): boolean => {
+  if (!user) return false;
+  
+  // Developer and Super Admin bypass permission checks
+  if (isDeveloper(user) || isSuperAdmin(user)) return true;
+  
+  const userPermissions = user.permissions || [];
+  return userPermissions.includes(permission);
 };
 
-export const getSessionStorage = <T>(key: string, defaultValue?: T): T | null => {
-  try {
-    const item = sessionStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue ?? null;
-  } catch (error) {
-    console.error('Failed to get sessionStorage:', error);
-    return defaultValue ?? null;
-  }
+/**
+ * Check if user has any of the specified permissions
+ */
+export const hasAnyPermission = (user?: AuthUser | null, permissions: string[]): boolean => {
+  if (!user) return false;
+  
+  // Developer and Super Admin bypass permission checks
+  if (isDeveloper(user) || isSuperAdmin(user)) return true;
+  
+  const userPermissions = user.permissions || [];
+  return permissions.some(p => userPermissions.includes(p));
 };
 
-export const removeSessionStorage = (key: string): void => {
-  try {
-    sessionStorage.removeItem(key);
-  } catch (error) {
-    console.error('Failed to remove sessionStorage:', error);
-  }
+/**
+ * Check if user has all of the specified permissions
+ */
+export const hasAllPermissions = (user?: AuthUser | null, permissions: string[]): boolean => {
+  if (!user) return false;
+  
+  // Developer and Super Admin bypass permission checks
+  if (isDeveloper(user) || isSuperAdmin(user)) return true;
+  
+  const userPermissions = user.permissions || [];
+  return permissions.every(p => userPermissions.includes(p));
+};
+
+/**
+ * Get user's role level
+ */
+export const getUserRoleLevel = (user?: AuthUser | null): number => {
+  return user?.role?.level || 0;
+};
+
+/**
+ * Check if user can manage another user (based on role level)
+ */
+export const canManageUser = (currentUser?: AuthUser | null, targetUserLevel?: number): boolean => {
+  if (!currentUser) return false;
+  
+  // Developer can manage anyone
+  if (isDeveloper(currentUser)) return true;
+  
+  const currentUserLevel = getUserRoleLevel(currentUser);
+  const targetLevel = targetUserLevel || 0;
+  
+  // Can only manage users with lower or equal level
+  return currentUserLevel >= targetLevel;
 };
