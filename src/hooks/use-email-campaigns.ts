@@ -122,7 +122,8 @@ export function useQueueStats() {
   return useQuery({
     queryKey: queryKeys.emailCampaigns.queueStats(),
     queryFn: emailCampaignsApi.getQueueStats,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 60000, // Refresh every 60 seconds (reduced frequency)
+    staleTime: 50000, // Consider data fresh for 50 seconds
   });
 }
 

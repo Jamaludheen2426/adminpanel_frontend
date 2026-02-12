@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, Shield } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { useRoles, useDeleteRole, useToggleRoleStatus } from "@/hooks/use-roles";
 import { RoleForm } from "@/components/admin/roles/role-form";
-import { RolePermissions } from "@/components/admin/roles/role-permissions";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import type { Role } from "@/types";
@@ -34,7 +33,6 @@ export default function RolesPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
 
   const { data, isLoading } = useRoles({ page, limit: 10, search });
@@ -44,11 +42,6 @@ export default function RolesPage() {
   const handleEdit = (role: Role) => {
     setSelectedRole(role);
     setIsDialogOpen(true);
-  };
-
-  const handlePermissions = (role: Role) => {
-    setSelectedRole(role);
-    setIsPermissionsOpen(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -73,7 +66,7 @@ export default function RolesPage() {
               {t('roles.add_role')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedRole ? t('roles.edit_role') : t('roles.add_role')}</DialogTitle>
               <DialogDescription>
@@ -84,23 +77,6 @@ export default function RolesPage() {
           </DialogContent>
         </Dialog>
       </div>
-
-      <Dialog open={isPermissionsOpen} onOpenChange={setIsPermissionsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t('roles.manage_permissions')} - {selectedRole?.name}</DialogTitle>
-            <DialogDescription>
-              {t('roles.permissions_desc')}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedRole && (
-            <RolePermissions
-              roleId={selectedRole.id}
-              onSuccess={() => setIsPermissionsOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Card>
         <CardHeader>
@@ -159,15 +135,8 @@ export default function RolesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handlePermissions(role)}
-                            title="Manage Permissions"
-                          >
-                            <Shield className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => handleEdit(role)}
+                            title="Edit Role"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -176,6 +145,7 @@ export default function RolesPage() {
                             size="icon"
                             onClick={() => handleDelete(role.id)}
                             disabled={deleteRoleMutation.isPending}
+                            title="Delete Role"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

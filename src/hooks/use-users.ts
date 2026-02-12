@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { User, CreateUserDto, UpdateUserDto } from '@/types';
@@ -68,6 +68,8 @@ export function useCreateUser() {
       toast.success('User created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create user');
     },
   });
@@ -85,6 +87,8 @@ export function useUpdateUser() {
       toast.success('User updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update user');
     },
   });
@@ -101,6 +105,8 @@ export function useToggleUserStatus() {
       toast.success('User status updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update user status');
     },
   });
@@ -117,6 +123,8 @@ export function useDeleteUser() {
       toast.success('User deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete user');
     },
   });

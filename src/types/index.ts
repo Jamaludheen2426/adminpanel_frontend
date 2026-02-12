@@ -130,6 +130,7 @@ export interface Module extends BaseEntity {
   name: string;
   slug: string;
   description: string | null;
+  requires_approval: boolean;
   permissions?: Permission[];
 }
 

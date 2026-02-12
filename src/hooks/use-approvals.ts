@@ -76,7 +76,8 @@ export function usePendingCount() {
   return useQuery({
     queryKey: queryKeys.approvals.pending(),
     queryFn: approvalsApi.getPendingCount,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 60000, // Refetch every 60 seconds (reduced frequency)
+    staleTime: 50000, // Consider data fresh for 50 seconds
   });
 }
 

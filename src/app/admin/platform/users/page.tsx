@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 import {
   Table,
   TableBody,
@@ -58,9 +59,10 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('nav.users')}</h1>
+    <PermissionGuard permission="users.view">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">{t('nav.users')}</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setSelectedUser(null)}>
@@ -191,5 +193,6 @@ export default function UsersPage() {
         </CardContent>
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

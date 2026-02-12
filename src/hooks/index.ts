@@ -39,3 +39,4 @@ export * from './use-approvals';
 
 // Utility hooks
 export * from './use-debounce';
+export * from './use-permission';

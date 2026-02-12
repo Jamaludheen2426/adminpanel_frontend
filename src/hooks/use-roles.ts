@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Role, CreateRoleDto, UpdateRoleDto } from '@/types';
@@ -70,6 +70,8 @@ export function useCreateRole() {
       toast.success('Role created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create role');
     },
   });
@@ -87,6 +89,8 @@ export function useUpdateRole() {
       toast.success('Role updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update role');
     },
   });
@@ -103,6 +107,8 @@ export function useDeleteRole() {
       toast.success('Role deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete role');
     },
   });
@@ -119,6 +125,8 @@ export function useToggleRoleStatus() {
       toast.success('Role status updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update role status');
     },
   });
@@ -135,6 +143,8 @@ export function useAssignPermissions() {
       toast.success('Permissions assigned successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to assign permissions');
     },
   });

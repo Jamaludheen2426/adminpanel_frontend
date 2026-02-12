@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { useAuth } from "@/hooks";
+import { useAuth, usePermissionCheck } from "@/hooks";
 import { useActivityLogs } from "@/hooks/use-activity-logs";
 import { useTranslation } from "@/hooks/use-translation";
 import { useMissingTranslationKeysCount } from "@/hooks/use-translations";
@@ -38,6 +38,7 @@ interface StatCard {
   change: string;
   icon: React.ElementType;
   href: string;
+  permission?: string;
 }
 
 const defaultStats: StatCard[] = [
@@ -47,6 +48,7 @@ const defaultStats: StatCard[] = [
     change: "+0%",
     icon: Users,
     href: "/admin/platform/users",
+    permission: "users.view",
   },
   {
     labelKey: "nav.roles",
@@ -54,6 +56,7 @@ const defaultStats: StatCard[] = [
     change: "+0%",
     icon: Shield,
     href: "/admin/platform/roles",
+    permission: "roles.view",
   },
   {
     labelKey: "nav.locations",
@@ -61,6 +64,7 @@ const defaultStats: StatCard[] = [
     change: "+0%",
     icon: MapPin,
     href: "/admin/locations",
+    permission: "locations.view",
   },
   {
     labelKey: "nav.settings",
@@ -68,6 +72,7 @@ const defaultStats: StatCard[] = [
     change: "+0%",
     icon: Settings,
     href: "/admin/settings",
+    permission: "settings.view",
   },
 ];
 
@@ -252,10 +257,25 @@ function DeveloperDashboard() {
 function CompanyDashboard() {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { hasPermission } = usePermissionCheck();
   const { data: activityData, isLoading: activityLoading } = useActivityLogs({ limit: 5 });
   const { data: missingKeysCount } = useMissingTranslationKeysCount();
 
   const activities = activityData?.data || [];
+
+  // Filter stats based on permissions
+  const visibleStats = defaultStats.filter(stat => hasPermission(stat.permission));
+
+  // Define quick actions with permissions
+  const quickActions = [
+    { href: "/admin/platform/users", icon: Users, labelKey: "users.manage_users", permission: "users.view" },
+    { href: "/admin/platform/roles", icon: Shield, labelKey: "roles.manage_roles", permission: "roles.view" },
+    { href: "/admin/settings", icon: Settings, labelKey: "nav.settings", permission: "settings.view" },
+    { href: "/admin/activity-logs", icon: Activity, labelKey: "activity.logs", permission: "activity_logs.view" },
+  ];
+
+  // Filter quick actions based on permissions
+  const visibleActions = quickActions.filter(action => hasPermission(action.permission));
 
   return (
     <div className="space-y-6">
@@ -290,7 +310,7 @@ function CompanyDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {defaultStats.map((stat) => {
+        {visibleStats.map((stat) => {
           const Icon = stat.icon;
           return (
             <Link key={stat.labelKey} href={stat.href}>
@@ -325,30 +345,17 @@ function CompanyDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Link href="/admin/platform/users">
-              <Button variant="outline" className="w-full">
-                <Users className="mr-2 h-4 w-4" />
-                {t('users.manage_users')}
-              </Button>
-            </Link>
-            <Link href="/admin/platform/roles">
-              <Button variant="outline" className="w-full">
-                <Shield className="mr-2 h-4 w-4" />
-                {t('roles.manage_roles')}
-              </Button>
-            </Link>
-            <Link href="/admin/settings">
-              <Button variant="outline" className="w-full">
-                <Settings className="mr-2 h-4 w-4" />
-                {t('nav.settings')}
-              </Button>
-            </Link>
-            <Link href="/admin/activity-logs">
-              <Button variant="outline" className="w-full">
-                <Activity className="mr-2 h-4 w-4" />
-                {t('activity.logs')}
-              </Button>
-            </Link>
+            {visibleActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link key={action.labelKey} href={action.href}>
+                  <Button variant="outline" className="w-full">
+                    <Icon className="mr-2 h-4 w-4" />
+                    {t(action.labelKey)}
+                  </Button>
+                </Link>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

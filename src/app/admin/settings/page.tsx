@@ -19,13 +19,15 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
+import { usePermissionCheck } from "@/hooks";
 
 interface SettingItem {
   labelKey: string;
   descriptionKey: string;
   href: string;
   icon: React.ElementType;
-  badge?: string; 
+  badge?: string;
+  permission?: string;
 }
 
 interface SettingGroup {
@@ -42,18 +44,21 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.general_desc",
         href: "/admin/settings/general",
         icon: Settings,
+        permission: "general_settings.view",
       },
       {
         labelKey: "settings.email",
         descriptionKey: "settings.email_desc",
         href: "/admin/settings/email",
         icon: Mail,
+        permission: "email_configs.view",
       },
       {
         labelKey: "settings.email_templates",
         descriptionKey: "settings.email_templates_desc",
         href: "/admin/settings/templates",
         icon: FileText,
+        permission: "email_templates.view",
       },
       {
         labelKey: "settings.phone_number",
@@ -61,12 +66,14 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/phone",
         icon: Phone,
         badge: "common.comming",
+        permission: "phone_settings.view",
       },
       {
         labelKey: "settings.languages",
         descriptionKey: "settings.languages_desc",
         href: "/admin/settings/languages",
         icon: Globe,
+        permission: "languages.view",
       },
       {
         labelKey: "settings.currencies",
@@ -74,12 +81,14 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/currencies",
         icon: DollarSign,
         badge: "common.comming",
+        permission: "currencies.view",
       },
       {
         labelKey: "settings.media",
         descriptionKey: "settings.media_desc",
         href: "/admin/settings/media",
         icon: Image,
+        permission: "media.view",
       },
       {
         labelKey: "settings.website_tracking",
@@ -87,18 +96,21 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/website-tracking",
         icon: Globe,
         badge: "common.comming",
+        permission: "tracking_settings.view",
       },
       {
         labelKey: "settings.dashboard_theme",
         descriptionKey: "settings.dashboard_theme_desc",
         href: "/admin/settings/admin-apperance",
         icon: Palette,
+        permission: "admin_appearance.view",
       },
       {
         labelKey: "settings.site_settings",
         descriptionKey: "settings.site_settings_desc",
         href: "/admin/settings/admin-settings",
         icon: Settings,
+        permission: "admin_settings.view",
       },
       {
         labelKey: "settings.email_campaigns",
@@ -106,6 +118,7 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/email/campaigns",
         icon: Mail,
         badge: "common.comming",
+        permission: "email_campaigns.view",
       },
       {
         labelKey: "settings.social_login",
@@ -113,6 +126,7 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/social-login",
         icon: Globe,
         badge: "common.comming",
+        permission: "social_login.view",
       },
     ],
   },
@@ -124,6 +138,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.translations_desc",
         href: "/admin/settings/translations",
         icon: Languages,
+        permission: "translations.view",
       },
       {
         labelKey: "settings.locations",
@@ -131,6 +146,7 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/locations",
         icon: MapPin,
         badge: "common.comming",
+        permission: "locations.view",
       },
       {
         labelKey: "settings.timezone",
@@ -138,6 +154,7 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/timezone",
         icon: Globe,
         badge: "common.comming",
+        permission: "timezone_settings.view",
       },
     ],
   },
@@ -149,6 +166,7 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.cache_desc",
         href: "/admin/settings/cache",
         icon: Database,
+        permission: "cache_settings.view",
       },
       {
         labelKey: "settings.optimize",
@@ -156,6 +174,7 @@ const settingGroups: SettingGroup[] = [
         href: "/admin/settings/optimize",
         icon: BarChart3,
         badge: "common.comming",
+        permission: "optimize_settings.view",
       },
     ],
   },
@@ -163,6 +182,20 @@ const settingGroups: SettingGroup[] = [
 
 export default function SettingsPage() {
   const { t } = useTranslation();
+  const { hasPermission } = usePermissionCheck();
+
+  // Filter setting items based on permissions
+  const filterItems = (items: SettingItem[]): SettingItem[] => {
+    return items.filter(item => hasPermission(item.permission));
+  };
+
+  // Filter groups that have at least one visible item
+  const visibleGroups = settingGroups
+    .map(group => ({
+      ...group,
+      items: filterItems(group.items),
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <div className="space-y-6">
@@ -171,7 +204,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground mt-1">{t("settings.page_desc")}</p>
       </div>
 
-      {settingGroups.map((group) => (
+      {visibleGroups.map((group) => (
         <Card key={group.titleKey}>
           <CardHeader>
             <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>

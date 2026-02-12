@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Permission, CreatePermissionDto } from '@/types';
@@ -65,6 +65,8 @@ export function useCreatePermission() {
       toast.success('Permission created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create permission');
     },
   });
@@ -82,6 +84,8 @@ export function useUpdatePermission() {
       toast.success('Permission updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update permission');
     },
   });
@@ -98,6 +102,8 @@ export function useTogglePermissionStatus() {
       toast.success('Permission status updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update permission status');
     },
   });
@@ -114,6 +120,8 @@ export function useDeletePermission() {
       toast.success('Permission deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      // Don't show error toast if it's an approval request (interceptor already showed info toast)
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete permission');
     },
   });

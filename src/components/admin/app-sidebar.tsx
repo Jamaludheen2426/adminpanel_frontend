@@ -42,6 +42,7 @@ import { useSettingsByGroup } from "@/hooks/use-settings";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { usePendingCount } from "@/hooks/use-approvals";
+import { usePermissionCheck } from "@/hooks";
 import { Badge } from "@/components/ui/badge";
 
 interface MenuItem {
@@ -160,40 +161,8 @@ export function AppSidebar() {
   const isChildActive = (children?: MenuItem[]) =>
     children?.some((child) => child.href && pathname.startsWith(child.href));
 
-  // Permission check helper
-  const hasPermission = (permission?: string): boolean => {
-    if (!user) return false;
-    
-    const roleSlug = user.role?.slug;
-    
-    // Developer and Super Admin always have access
-    if (roleSlug === 'developer' || roleSlug === 'super_admin') {
-      return true;
-    }
-    
-    // If no permission specified, allow access
-    if (!permission) return true;
-    
-    // Check user permissions
-    const userPermissions = user.permissions || [];
-    return userPermissions.includes(permission);
-  };
-
-  // Developer check helper
-  const isDeveloper = (): boolean => {
-    return user?.role?.slug === 'developer';
-  };
-
-  // Level check helper
-  const hasMinLevel = (minLevel?: number): boolean => {
-    if (!user || minLevel === undefined) return true;
-    
-    const roleSlug = user.role?.slug;
-    if (roleSlug === 'developer') return true;
-    
-    const userLevel = user.role?.level || 0;
-    return userLevel >= minLevel;
-  };
+  // Use shared permission check hook
+  const { hasPermission, isDeveloper, hasMinLevel } = usePermissionCheck();
 
   // Filter menu items based on permissions
   const filterMenuItem = (item: MenuItem): boolean => {

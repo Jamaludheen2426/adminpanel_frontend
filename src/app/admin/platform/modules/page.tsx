@@ -13,10 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { useModules, useToggleModuleStatus } from "@/hooks/use-modules";
-import { useTogglePermissionStatus } from "@/hooks/use-permissions";
+import { useModules } from "@/hooks/use-modules";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import React from "react";
@@ -28,8 +26,6 @@ export default function ModulesPage() {
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
 
   const { data, isLoading } = useModules({ page, limit: 50, search });
-  const toggleStatusMutation = useToggleModuleStatus();
-  const togglePermStatusMutation = useTogglePermissionStatus();
 
   const toggleExpand = (moduleId: number) => {
     setExpandedModules((prev) => {
@@ -48,7 +44,7 @@ export default function ModulesPage() {
       <div>
         <h1 className="text-3xl font-bold">Modules & Permissions</h1>
         <p className="text-muted-foreground mt-1">
-          System modules and their auto-generated permissions. Assign these permissions to roles.
+          System modules and their auto-generated permissions. Assign these to roles and configure approval requirements in Role Management.
         </p>
       </div>
 
@@ -80,12 +76,13 @@ export default function ModulesPage() {
                     <TableHead>Module Name</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Permissions</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data?.data?.map((mod) => {
                     const isExpanded = expandedModules.has(mod.id);
+
                     return (
                       <React.Fragment key={mod.id}>
                         <TableRow className="cursor-pointer hover:bg-muted/50" onClick={() => toggleExpand(mod.id)}>
@@ -103,14 +100,12 @@ export default function ModulesPage() {
                           <TableCell>
                             <Badge variant="secondary">{mod.permissions?.length || 0} permissions</Badge>
                           </TableCell>
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <Switch
-                              checked={mod.is_active}
-                              disabled={toggleStatusMutation.isPending && toggleStatusMutation.variables?.id === mod.id}
-                              onCheckedChange={(checked) => {
-                                toggleStatusMutation.mutate({ id: mod.id, is_active: checked });
-                              }}
-                            />
+                          <TableCell>
+                            {mod.is_active ? (
+                              <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-gray-500 border-gray-400">Inactive</Badge>
+                            )}
                           </TableCell>
                         </TableRow>
                         {isExpanded && mod.permissions && mod.permissions.length > 0 && (
@@ -127,13 +122,9 @@ export default function ModulesPage() {
                                       <p className="text-sm font-medium truncate">{perm.name}</p>
                                       <code className="text-xs text-muted-foreground">{perm.slug}</code>
                                     </div>
-                                    <Switch
-                                      checked={perm.is_active}
-                                      disabled={togglePermStatusMutation.isPending && togglePermStatusMutation.variables?.id === perm.id}
-                                      onCheckedChange={(checked) => {
-                                        togglePermStatusMutation.mutate({ id: perm.id, is_active: checked });
-                                      }}
-                                    />
+                                    {perm.is_active && (
+                                      <Badge variant="outline" className="text-xs text-green-600 border-green-600">Active</Badge>
+                                    )}
                                   </div>
                                 ))}
                               </div>

@@ -160,12 +160,20 @@ export default function PermissionsPage() {
             {t("permissions.description")}
           </p>
         </div>
-        <Link href="/admin/platform/permissions/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("permissions.add_permission")}
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin/platform/permissions/manage">
+            <Button variant="outline">
+              <Search className="mr-2 h-4 w-4" />
+              Permission Flags
+            </Button>
+          </Link>
+          <Link href="/admin/platform/permissions/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              {t("permissions.add_permission")}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Edit Modal */}

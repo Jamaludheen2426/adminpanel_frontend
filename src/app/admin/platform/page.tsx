@@ -17,12 +17,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
+import { usePermissionCheck } from "@/hooks";
 
 interface PlatformItem {
   labelKey: string;
   descriptionKey: string;
   href: string;
   icon: React.ElementType;
+  permission?: string;
 }
 
 interface PlatformGroup {
@@ -39,24 +41,28 @@ const platformGroups: PlatformGroup[] = [
         descriptionKey: "platform.users_desc",
         href: "/admin/platform/users",
         icon: Users,
+        permission: "users.view",
       },
       {
         labelKey: "nav.roles",
         descriptionKey: "platform.roles_desc",
         href: "/admin/platform/roles",
         icon: Shield,
+        permission: "roles.view",
       },
       {
         labelKey: "permissions.title",
         descriptionKey: "platform.permissions_desc",
         href: "/admin/platform/permissions",
         icon: Lock,
+        permission: "permissions.view",
       },
       {
         labelKey: "nav.modules",
         descriptionKey: "platform.modules_desc",
         href: "/admin/platform/modules",
         icon: Layers,
+        permission: "modules.view",
       },
       {
         labelKey: "profile.title",
@@ -74,6 +80,7 @@ const platformGroups: PlatformGroup[] = [
         descriptionKey: "platform.activity_desc",
         href: "/admin/platform/activity-logs",
         icon: Activity,
+        permission: "activity_logs.view",
       },
       {
         labelKey: "platform.cache_manager",
@@ -87,6 +94,20 @@ const platformGroups: PlatformGroup[] = [
 
 export default function PlatformPage() {
   const { t } = useTranslation();
+  const { hasPermission } = usePermissionCheck();
+
+  // Filter platform items based on permissions
+  const filterItems = (items: PlatformItem[]): PlatformItem[] => {
+    return items.filter(item => hasPermission(item.permission));
+  };
+
+  // Filter groups that have at least one visible item
+  const visibleGroups = platformGroups
+    .map(group => ({
+      ...group,
+      items: filterItems(group.items),
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <div className="space-y-6">
@@ -97,7 +118,7 @@ export default function PlatformPage() {
         </p>
       </div>
 
-      {platformGroups.map((group) => (
+      {visibleGroups.map((group) => (
         <Card key={group.titleKey}>
           <CardHeader>
             <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
