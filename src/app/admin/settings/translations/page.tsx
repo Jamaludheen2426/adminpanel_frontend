@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isApprovalRequired } from "@/lib/api-client";
 import Link from "next/link";
 import { Plus, Search, RefreshCw, Check, AlertCircle, Minus, Pencil, Trash2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -100,18 +101,14 @@ export default function TranslationsPage() {
 
   const handleCreateKey = () => {
     const groupToUse = newKey.group === "__custom__" ? customGroup : newKey.group;
+    const closeAdd = () => {
+      setIsAddDialogOpen(false);
+      setNewKey({ key: "", default_value: "", description: "", group: "", auto_translate: true });
+      setCustomGroup("");
+    };
     createKeyMutation.mutate({ ...newKey, group: groupToUse }, {
-      onSuccess: () => {
-        setIsAddDialogOpen(false);
-        setNewKey({
-          key: "",
-          default_value: "",
-          description: "",
-          group: "",
-          auto_translate: true,
-        });
-        setCustomGroup("");
-      },
+      onSuccess: closeAdd,
+      onError: (e) => { if (isApprovalRequired(e)) closeAdd(); },
     });
   };
 
@@ -134,14 +131,12 @@ export default function TranslationsPage() {
       value,
     }));
 
+    const closeEdit = () => { setIsEditDialogOpen(false); setSelectedKey(null); setEditTranslations({}); };
     updateTranslationsMutation.mutate(
       { id: selectedKey.id, translations },
       {
-        onSuccess: () => {
-          setIsEditDialogOpen(false);
-          setSelectedKey(null);
-          setEditTranslations({});
-        },
+        onSuccess: closeEdit,
+        onError: (e) => { if (isApprovalRequired(e)) closeEdit(); },
       }
     );
   };
@@ -279,7 +274,7 @@ export default function TranslationsPage() {
                     <SelectTrigger>
                       <SelectValue placeholder={t('translations.select_group', 'Select a group')} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="max-h-60 overflow-y-auto">
                       {groups.map((group) => (
                         <SelectItem key={group} value={group}>
                           {group.charAt(0).toUpperCase() + group.slice(1)}

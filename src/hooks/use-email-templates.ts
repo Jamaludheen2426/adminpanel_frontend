@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { EmailTemplate, CreateEmailTemplateDto, UpdateEmailTemplateDto } from '@/types';
@@ -93,6 +93,7 @@ export function useCreateEmailTemplate() {
       toast.success('Email template created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create email template');
     },
   });
@@ -110,6 +111,7 @@ export function useUpdateEmailTemplate() {
       toast.success('Email template updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update email template');
     },
   });
@@ -126,6 +128,7 @@ export function useToggleEmailTemplate() {
       toast.success('Template status updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update status');
     },
   });
@@ -142,6 +145,7 @@ export function useDeleteEmailTemplate() {
       toast.success('Email template deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete email template');
     },
   });
@@ -152,6 +156,7 @@ export function usePreviewEmailTemplate() {
   return useMutation({
     mutationFn: emailTemplatesApi.preview,
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to preview email template');
     },
   });
@@ -165,6 +170,7 @@ export function useSendEmailTemplate() {
       toast.success('Email sent successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to send email');
     },
   });

@@ -9,6 +9,7 @@ import { ActivityLog } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useTranslation } from "@/hooks/use-translation";
+import { Can } from "@/components/guards/permission-guard";
 
 export default function ActivityLogsPage() {
   const { t } = useTranslation();
@@ -51,27 +52,29 @@ export default function ActivityLogsPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t('activity.logs')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('activity.logs_desc')}
-        </p>
-      </div>
+    <Can permission="activity_logs.view">
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t('activity.logs')}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t('activity.logs_desc')}
+          </p>
+        </div>
 
-      <Card className="p-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Spinner className="h-8 w-8" />
-          </div>
-        ) : logs.length > 0 ? (
-          <DataTable columns={columns} data={logs} />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">{t('activity.no_activity')}</p>
-          </div>
-        )}
-      </Card>
-    </div>
+        <Card className="p-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Spinner className="h-8 w-8" />
+            </div>
+          ) : logs.length > 0 ? (
+            <DataTable columns={columns} data={logs} />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">{t('activity.no_activity')}</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </Can>
   );
 }

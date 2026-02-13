@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Country, State, City, Pincode } from '@/types';
@@ -134,6 +134,7 @@ export function useCreateCountry() {
       toast.success('Country created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create country');
     },
   });
@@ -149,6 +150,7 @@ export function useUpdateCountry() {
       toast.success('Country updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update country');
     },
   });
@@ -164,6 +166,7 @@ export function useDeleteCountry() {
       toast.success('Country deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete country');
     },
   });
@@ -190,6 +193,7 @@ export function useCreateState() {
       toast.success('State created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create state');
     },
   });
@@ -205,6 +209,7 @@ export function useUpdateState() {
       toast.success('State updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update state');
     },
   });
@@ -220,6 +225,7 @@ export function useDeleteState() {
       toast.success('State deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete state');
     },
   });
@@ -246,6 +252,7 @@ export function useCreateCity() {
       toast.success('City created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create city');
     },
   });
@@ -261,6 +268,7 @@ export function useUpdateCity() {
       toast.success('City updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update city');
     },
   });
@@ -276,6 +284,7 @@ export function useDeleteCity() {
       toast.success('City deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete city');
     },
   });
@@ -302,6 +311,7 @@ export function useCreatePincode() {
       toast.success('Pincode created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create pincode');
     },
   });
@@ -317,6 +327,7 @@ export function useUpdatePincode() {
       toast.success('Pincode updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update pincode');
     },
   });
@@ -332,6 +343,7 @@ export function useDeletePincode() {
       toast.success('Pincode deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete pincode');
     },
   });

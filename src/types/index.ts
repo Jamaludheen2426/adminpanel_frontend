@@ -370,8 +370,10 @@ export interface ApprovalRequest {
   old_data: unknown | null;
   status: 'pending' | 'approved' | 'rejected';
   reviewed_at: string | null;
+  reviewedAt?: string | null;
   review_notes: string | null;
   created_at: string;
+  createdAt?: string;
   updated_at: string;
   requester?: {
     id: number;

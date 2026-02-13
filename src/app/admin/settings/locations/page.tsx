@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isApprovalRequired } from "@/lib/api-client";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -165,90 +166,38 @@ export default function LocationsPage() {
 
   // Handlers
   const handleCountrySubmit = (data: CountryFormData) => {
+    const close = () => { setCountryDialogOpen(false); setEditingCountry(null); countryForm.reset(); };
     if (editingCountry) {
-      updateCountryMutation.mutate(
-        { id: editingCountry.id, data },
-        {
-          onSuccess: () => {
-            setCountryDialogOpen(false);
-            setEditingCountry(null);
-            countryForm.reset();
-          },
-        }
-      );
+      updateCountryMutation.mutate({ id: editingCountry.id, data }, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     } else {
-      createCountryMutation.mutate(data, {
-        onSuccess: () => {
-          setCountryDialogOpen(false);
-          countryForm.reset();
-        },
-      });
+      createCountryMutation.mutate(data, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     }
   };
 
   const handleStateSubmit = (data: StateFormData) => {
+    const close = () => { setStateDialogOpen(false); setEditingState(null); stateForm.reset(); };
     if (editingState) {
-      updateStateMutation.mutate(
-        { id: editingState.id, data },
-        {
-          onSuccess: () => {
-            setStateDialogOpen(false);
-            setEditingState(null);
-            stateForm.reset();
-          },
-        }
-      );
+      updateStateMutation.mutate({ id: editingState.id, data }, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     } else {
-      createStateMutation.mutate(data, {
-        onSuccess: () => {
-          setStateDialogOpen(false);
-          stateForm.reset();
-        },
-      });
+      createStateMutation.mutate(data, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     }
   };
 
   const handleCitySubmit = (data: CityFormData) => {
+    const close = () => { setCityDialogOpen(false); setEditingCity(null); cityForm.reset(); };
     if (editingCity) {
-      updateCityMutation.mutate(
-        { id: editingCity.id, data },
-        {
-          onSuccess: () => {
-            setCityDialogOpen(false);
-            setEditingCity(null);
-            cityForm.reset();
-          },
-        }
-      );
+      updateCityMutation.mutate({ id: editingCity.id, data }, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     } else {
-      createCityMutation.mutate(data, {
-        onSuccess: () => {
-          setCityDialogOpen(false);
-          cityForm.reset();
-        },
-      });
+      createCityMutation.mutate(data, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     }
   };
 
   const handlePincodeSubmit = (data: PincodeFormData) => {
+    const close = () => { setPincodeDialogOpen(false); setEditingPincode(null); pincodeForm.reset(); };
     if (editingPincode) {
-      updatePincodeMutation.mutate(
-        { id: editingPincode.id, data },
-        {
-          onSuccess: () => {
-            setPincodeDialogOpen(false);
-            setEditingPincode(null);
-            pincodeForm.reset();
-          },
-        }
-      );
+      updatePincodeMutation.mutate({ id: editingPincode.id, data }, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     } else {
-      createPincodeMutation.mutate(data, {
-        onSuccess: () => {
-          setPincodeDialogOpen(false);
-          pincodeForm.reset();
-        },
-      });
+      createPincodeMutation.mutate(data, { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } });
     }
   };
 

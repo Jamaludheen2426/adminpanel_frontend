@@ -6,7 +6,6 @@ import {
   Activity,
   Shield,
   Database,
-  Lock,
   UserCog,
   Layers,
 } from "lucide-react";
@@ -37,11 +36,11 @@ const platformGroups: PlatformGroup[] = [
     titleKey: "platform.user_management",
     items: [
       {
-        labelKey: "nav.users",
-        descriptionKey: "platform.users_desc",
+        labelKey: "nav.employees",
+        descriptionKey: "platform.employees_desc",
         href: "/admin/platform/users",
         icon: Users,
-        permission: "users.view",
+        permission: "employees.view",
       },
       {
         labelKey: "nav.roles",
@@ -50,13 +49,7 @@ const platformGroups: PlatformGroup[] = [
         icon: Shield,
         permission: "roles.view",
       },
-      {
-        labelKey: "permissions.title",
-        descriptionKey: "platform.permissions_desc",
-        href: "/admin/platform/permissions",
-        icon: Lock,
-        permission: "permissions.view",
-      },
+
       {
         labelKey: "nav.modules",
         descriptionKey: "platform.modules_desc",
@@ -135,10 +128,10 @@ export default function PlatformPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-primary group-hover:underline">
-                          {t(item.labelKey)}
+                          {item.labelKey === "nav.employees" ? "Employees" : t(item.labelKey)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {t(item.descriptionKey)}
+                          {item.labelKey === "nav.employees" ? "Manage employee accounts and access" : t(item.descriptionKey)}
                         </p>
                       </div>
                     </div>

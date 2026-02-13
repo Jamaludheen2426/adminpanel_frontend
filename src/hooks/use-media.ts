@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export interface MediaUploadResult {
@@ -50,6 +50,7 @@ export function useUploadMedia() {
     mutationFn: ({ file, folder }: { file: File; folder?: string }) =>
       mediaApi.upload(file, folder),
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to upload file');
     },
   });
@@ -61,6 +62,7 @@ export function useUploadMultipleMedia() {
     mutationFn: ({ files, folder }: { files: File[]; folder?: string }) =>
       mediaApi.uploadMultiple(files, folder),
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to upload files');
     },
   });
@@ -71,6 +73,7 @@ export function useDeleteMedia() {
   return useMutation({
     mutationFn: (path: string) => mediaApi.deleteFile(path),
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete file');
     },
   });

@@ -63,8 +63,8 @@ export default function AdminNavbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications - Pending Approvals */}
-          <DropdownMenu>
+          {/* Notifications - Pending Approvals (super_admin / developer only) */}
+          {((user?.role?.level ?? 0) >= 100 || user?.role?.slug === 'super_admin' || user?.role?.slug === 'developer') && <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
@@ -124,7 +124,7 @@ export default function AdminNavbar() {
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu>}
 
           {/* User Menu */}
           <DropdownMenu>

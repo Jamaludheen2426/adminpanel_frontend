@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Setting, UpdateSettingDto, BulkUpdateSettingsDto } from '@/types';
@@ -84,6 +84,7 @@ export function useUpdateSetting() {
       toast.success('Setting updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update setting');
     },
   });
@@ -100,6 +101,7 @@ export function useBulkUpdateSettings() {
       toast.success('Settings updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update settings');
     },
   });

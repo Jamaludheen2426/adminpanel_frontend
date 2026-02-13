@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type {
@@ -137,6 +137,7 @@ export function useCreateEmailCampaign() {
       toast.success('Email campaign created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create email campaign');
     },
   });
@@ -153,6 +154,7 @@ export function useUpdateEmailCampaign() {
       toast.success('Email campaign updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update email campaign');
     },
   });
@@ -168,6 +170,7 @@ export function useDeleteEmailCampaign() {
       toast.success('Email campaign deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete email campaign');
     },
   });
@@ -184,6 +187,7 @@ export function useActivateCampaign() {
       toast.success('Campaign activated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to activate campaign');
     },
   });
@@ -200,6 +204,7 @@ export function usePauseCampaign() {
       toast.success('Campaign paused successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to pause campaign');
     },
   });
@@ -217,6 +222,7 @@ export function useTriggerCampaign() {
       toast.success(`Campaign triggered: ${result.queued} emails queued, ${result.skipped} skipped`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to trigger campaign');
     },
   });
@@ -233,6 +239,7 @@ export function useProcessQueue() {
       toast.success(`Queue processed: ${result.sent} sent, ${result.failed} failed`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to process queue');
     },
   });

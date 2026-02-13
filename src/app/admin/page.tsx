@@ -48,7 +48,7 @@ const defaultStats: StatCard[] = [
     change: "+0%",
     icon: Users,
     href: "/admin/platform/users",
-    permission: "users.view",
+    permission: "employees.view",
   },
   {
     labelKey: "nav.roles",
@@ -268,10 +268,10 @@ function CompanyDashboard() {
 
   // Define quick actions with permissions
   const quickActions = [
-    { href: "/admin/platform/users", icon: Users, labelKey: "users.manage_users", permission: "users.view" },
+    { href: "/admin/platform/users", icon: Users, labelKey: "users.manage_users", permission: "employees.view" },
     { href: "/admin/platform/roles", icon: Shield, labelKey: "roles.manage_roles", permission: "roles.view" },
     { href: "/admin/settings", icon: Settings, labelKey: "nav.settings", permission: "settings.view" },
-    { href: "/admin/activity-logs", icon: Activity, labelKey: "activity.logs", permission: "activity_logs.view" },
+    { href: "/admin/platform/activity-logs", icon: Activity, labelKey: "activity.logs", permission: "activity_logs.view" },
   ];
 
   // Filter quick actions based on permissions
@@ -365,7 +365,7 @@ function CompanyDashboard() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{t('activity.recent')}</CardTitle>
-            <Link href="/admin/activity-logs">
+            <Link href="/admin/platform/activity-logs">
               <Button variant="ghost" size="sm">
                 {t('activity.view_all')}
               </Button>

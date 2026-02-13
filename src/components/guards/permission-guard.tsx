@@ -92,3 +92,24 @@ export function PermissionGuard({
   // Has access, render children
   return <>{children}</>;
 }
+
+/**
+ * Lightweight permission wrapper — simply hides children if user lacks permission.
+ * No loading state, no redirect. Use this to hide buttons/actions inline.
+ *
+ * Usage:
+ *   <Can permission="posts.create"><Button>Create</Button></Can>
+ *   <Can permission="posts.edit"><Button>Edit</Button></Can>
+ *   <Can permission="posts.delete"><Button>Delete</Button></Can>
+ */
+export function Can({
+  permission,
+  children,
+}: {
+  permission: string;
+  children: React.ReactNode;
+}) {
+  const { hasPermission } = usePermissionCheck();
+  if (!hasPermission(permission)) return null;
+  return <>{children}</>;
+}

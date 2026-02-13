@@ -67,6 +67,9 @@ export function ApprovalDetailDialog({
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approval Request Details</DialogTitle>
+          </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
@@ -79,7 +82,7 @@ export function ApprovalDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-full max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Approval Request Details</DialogTitle>
           <DialogDescription>
@@ -110,7 +113,7 @@ export function ApprovalDetailDialog({
                 Requested On
               </div>
               <p className="text-sm font-medium">
-                {new Date(approval.created_at).toLocaleString()}
+                {new Date(approval.createdAt || approval.created_at).toLocaleString()}
               </p>
             </div>
           </div>
@@ -121,33 +124,42 @@ export function ApprovalDetailDialog({
               <FileText className="mr-2 h-4 w-4" />
               Action Details
             </div>
-            <div className="grid gap-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Module:</span>
-                <span className="font-medium capitalize">{approval.module_slug.replace('_', ' ')}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Permission:</span>
-                <span className="font-medium">{approval.permission_slug}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Action:</span>
-                <span className="font-medium capitalize">{approval.action}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Resource:</span>
-                <span className="font-medium capitalize">{approval.resource_type}</span>
-              </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <span className="text-muted-foreground">Module</span>
+              <span className="font-medium capitalize">{approval.module_slug.replace(/_/g, ' ')}</span>
+              <span className="text-muted-foreground">Permission</span>
+              <span className="font-medium break-all">{approval.permission_slug}</span>
+              <span className="text-muted-foreground">Action</span>
+              <span className="font-medium capitalize">{approval.action}</span>
+              <span className="text-muted-foreground">Resource</span>
+              <span className="font-medium capitalize">{approval.resource_type}</span>
             </div>
           </div>
 
-          {/* Request Data */}
-          <div className="rounded-lg border p-4 space-y-2">
-            <div className="text-sm font-medium">Request Data</div>
-            <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">
-              {JSON.stringify(approval.request_data, null, 2)}
-            </pre>
-          </div>
+          {/* Old vs New Data comparison */}
+          {approval.old_data ? (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-red-200 dark:border-red-800 p-3 space-y-1">
+                <div className="text-xs font-semibold text-red-600 dark:text-red-400">Current (Before)</div>
+                <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                  {JSON.stringify(approval.old_data, null, 2)}
+                </pre>
+              </div>
+              <div className="rounded-lg border border-green-200 dark:border-green-800 p-3 space-y-1">
+                <div className="text-xs font-semibold text-green-600 dark:text-green-400">Requested (After)</div>
+                <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                  {JSON.stringify(approval.request_data, null, 2)}
+                </pre>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border p-4 space-y-2">
+              <div className="text-sm font-medium">Request Data</div>
+              <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                {JSON.stringify(approval.request_data, null, 2)}
+              </pre>
+            </div>
+          )}
 
           {/* Review Notes (if reviewed) */}
           {!isPending && approval.review_notes && (
@@ -157,7 +169,7 @@ export function ApprovalDetailDialog({
               {approval.approver && (
                 <p className="text-xs text-muted-foreground">
                   Reviewed by {approval.approver.full_name} on{' '}
-                  {new Date(approval.reviewed_at!).toLocaleString()}
+                  {new Date(approval.reviewedAt || approval.reviewed_at!).toLocaleString()}
                 </p>
               )}
             </div>

@@ -83,9 +83,8 @@ export function useUpdateRole() {
 
   return useMutation({
     mutationFn: rolesApi.update,
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.lists() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.detail(variables.id) });
       toast.success('Role updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {

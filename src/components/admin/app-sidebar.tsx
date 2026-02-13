@@ -18,6 +18,18 @@ import {
   Mail,
   Languages,
   DollarSign,
+  FileText,
+  BookOpen,
+  Star,
+  Megaphone,
+  BellRing,
+  HelpCircle,
+  MapPin,
+  Newspaper,
+  Phone,
+  Image,
+  Puzzle,
+  Wrench,
 } from "lucide-react";
 import {
   Sidebar,
@@ -74,10 +86,85 @@ const menuItems: MenuItem[] = [
     minLevel: 100, // Super admin only
   },
   {
-    labelKey: "nav.users",
+    labelKey: "nav.employees",
     href: "/admin/platform/users",
     icon: Users,
-    permission: "users.view",
+    permission: "employees.view",
+  },
+  {
+    labelKey: "nav.pages",
+    href: "/admin/pages",
+    icon: FileText,
+    permission: "pages.view",
+  },
+  {
+    labelKey: "nav.blog",
+    href: "/admin/blog",
+    icon: BookOpen,
+    permission: "blog.view",
+  },
+  {
+    labelKey: "nav.testimonials",
+    href: "/admin/testimonials",
+    icon: Star,
+    permission: "testimonials.view",
+  },
+  {
+    labelKey: "nav.ads",
+    href: "/admin/ads",
+    icon: Megaphone,
+    permission: "ads.view",
+  },
+  {
+    labelKey: "nav.announcements",
+    href: "/admin/announcements",
+    icon: BellRing,
+    permission: "announcements.view",
+  },
+  {
+    labelKey: "nav.faqs",
+    icon: HelpCircle,
+    permission: "faqs.view",
+    children: [
+      { labelKey: "nav.faq_list", href: "/admin/faqs", icon: HelpCircle, permission: "faqs.view" },
+      { labelKey: "nav.faq_categories", href: "/admin/faqs/categories", icon: HelpCircle, permission: "faqs.view" },
+    ],
+  },
+  {
+    labelKey: "nav.locations",
+    href: "/admin/locations",
+    icon: MapPin,
+    permission: "locations.view",
+  },
+  {
+    labelKey: "nav.newsletters",
+    href: "/admin/newsletters",
+    icon: Newspaper,
+    permission: "newsletters.view",
+  },
+  {
+    labelKey: "nav.contact",
+    href: "/admin/contact",
+    icon: Phone,
+    permission: "contact.view",
+  },
+  {
+    labelKey: "nav.media",
+    href: "/admin/media",
+    icon: Image,
+    permission: "media.view",
+  },
+  {
+    labelKey: "nav.plugins",
+    href: "/admin/plugins",
+    icon: Puzzle,
+    permission: "plugins.view",
+  },
+  {
+    labelKey: "nav.tools",
+    href: "/admin/tools",
+    icon: Wrench,
+    permission: "tools.view",
   },
   {
     labelKey: "nav.access_control",
@@ -90,12 +177,7 @@ const menuItems: MenuItem[] = [
         icon: Lock,
         permission: "roles.view",
       },
-      {
-        labelKey: "nav.permissions",
-        href: "/admin/platform/permissions",
-        icon: Lock,
-        permission: "permissions.view",
-      },
+
       {
         labelKey: "nav.modules",
         href: "/admin/platform/modules",

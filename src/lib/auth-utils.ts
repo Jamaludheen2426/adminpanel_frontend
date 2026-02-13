@@ -24,7 +24,7 @@ export const getCurrentCompanyId = (user?: AuthUser | null): number | null => {
 /**
  * Check if user has minimum role level
  */
-export const hasMinLevel = (user?: AuthUser | null, minLevel: number = 0): boolean => {
+export const hasMinLevel = (user: AuthUser | null | undefined, minLevel: number = 0): boolean => {
   if (!user) return false;
   
   // Developer bypasses level checks
@@ -37,7 +37,7 @@ export const hasMinLevel = (user?: AuthUser | null, minLevel: number = 0): boole
 /**
  * Check if user has a specific permission
  */
-export const hasPermission = (user?: AuthUser | null, permission: string): boolean => {
+export const hasPermission = (user: AuthUser | null | undefined, permission: string): boolean => {
   if (!user) return false;
   
   // Developer and Super Admin bypass permission checks
@@ -50,7 +50,7 @@ export const hasPermission = (user?: AuthUser | null, permission: string): boole
 /**
  * Check if user has any of the specified permissions
  */
-export const hasAnyPermission = (user?: AuthUser | null, permissions: string[]): boolean => {
+export const hasAnyPermission = (user: AuthUser | null | undefined, permissions: string[]): boolean => {
   if (!user) return false;
   
   // Developer and Super Admin bypass permission checks
@@ -63,7 +63,7 @@ export const hasAnyPermission = (user?: AuthUser | null, permissions: string[]):
 /**
  * Check if user has all of the specified permissions
  */
-export const hasAllPermissions = (user?: AuthUser | null, permissions: string[]): boolean => {
+export const hasAllPermissions = (user: AuthUser | null | undefined, permissions: string[]): boolean => {
   if (!user) return false;
   
   // Developer and Super Admin bypass permission checks
@@ -83,7 +83,7 @@ export const getUserRoleLevel = (user?: AuthUser | null): number => {
 /**
  * Check if user can manage another user (based on role level)
  */
-export const canManageUser = (currentUser?: AuthUser | null, targetUserLevel?: number): boolean => {
+export const canManageUser = (currentUser: AuthUser | null | undefined, targetUserLevel?: number): boolean => {
   if (!currentUser) return false;
   
   // Developer can manage anyone

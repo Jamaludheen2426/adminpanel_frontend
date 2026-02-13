@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, isApprovalRequired } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-client";
 import { toast } from "sonner";
 import type {
@@ -95,12 +95,9 @@ export function useCreateEmailConfig() {
       });
       toast.success("Email configuration created successfully");
     },
-    onError: (
-      error: Error & { response?: { data?: { message?: string } } },
-    ) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create email configuration",
-      );
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || "Failed to create email configuration");
     },
   });
 }
@@ -119,12 +116,9 @@ export function useUpdateEmailConfig() {
       });
       toast.success("Email configuration updated successfully");
     },
-    onError: (
-      error: Error & { response?: { data?: { message?: string } } },
-    ) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update email configuration",
-      );
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || "Failed to update email configuration");
     },
   });
 }
@@ -140,12 +134,9 @@ export function useDeleteEmailConfig() {
       });
       toast.success("Email configuration deleted successfully");
     },
-    onError: (
-      error: Error & { response?: { data?: { message?: string } } },
-    ) => {
-      toast.error(
-        error.response?.data?.message || "Failed to delete email configuration",
-      );
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || "Failed to delete email configuration");
     },
   });
 }
@@ -179,13 +170,9 @@ export function useToggleEmailConfig() {
       });
       toast.success("Email configuration status updated");
     },
-    onError: (
-      error: Error & { response?: { data?: { message?: string } } },
-    ) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to update email configuration status",
-      );
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || "Failed to update email configuration status");
     },
   });
 }

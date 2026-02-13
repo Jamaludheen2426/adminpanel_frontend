@@ -52,6 +52,7 @@ import { Progress } from "@/components/ui/progress";
 import type { Language } from "@/types";
 import { useToggleLanguageStatus } from "@/hooks/use-languages";
 import { Switch } from "@/components/ui/switch";
+import { isApprovalRequired } from "@/lib/api-client";
 import { HelpCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -367,6 +368,7 @@ export default function LanguagesPage() {
                     <TableCell>
                       <Switch
                         checked={language.is_active}
+                        pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === language.id}
                         disabled={
                           language.is_default ||
                           (toggleStatusMutation.isPending &&

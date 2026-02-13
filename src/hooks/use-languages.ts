@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Language, CreateLanguageDto, UpdateLanguageDto } from '@/types';
@@ -79,6 +79,7 @@ export function useCreateLanguage() {
       toast.success('Language created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create language');
     },
   });
@@ -96,6 +97,7 @@ export function useUpdateLanguage() {
       toast.success('Language updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update language');
     },
   });
@@ -112,6 +114,7 @@ export function useDeleteLanguage() {
       toast.success('Language deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete language');
     },
   });
@@ -128,6 +131,7 @@ export function useSetDefaultLanguage() {
       toast.success('Default language updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to set default language');
     },
   });
@@ -149,6 +153,7 @@ export function useToggleLanguageStatus() {
     },
 
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || "Failed to update status");
     },
   });

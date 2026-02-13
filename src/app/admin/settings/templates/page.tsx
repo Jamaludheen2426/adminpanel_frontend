@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { isApprovalRequired } from "@/lib/api-client";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Card,
@@ -151,25 +152,26 @@ export default function EmailTemplatesPage() {
   };
 
   const handleSubmit = () => {
+    const close = () => setDialogOpen(false);
     if (editingTemplate) {
       updateMutation.mutate(
         { id: editingTemplate.id, data: form },
-        { onSuccess: () => setDialogOpen(false) },
+        { onSuccess: close, onError: (e) => { if (isApprovalRequired(e)) close(); } },
       );
     } else {
       createMutation.mutate(form, {
-        onSuccess: () => setDialogOpen(false),
+        onSuccess: close,
+        onError: (e) => { if (isApprovalRequired(e)) close(); },
       });
     }
   };
 
   const handleDelete = () => {
     if (deletingId) {
+      const close = () => { setDeleteDialogOpen(false); setDeletingId(null); };
       deleteMutation.mutate(deletingId, {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-          setDeletingId(null);
-        },
+        onSuccess: close,
+        onError: (e) => { if (isApprovalRequired(e)) close(); },
       });
     }
   };
@@ -373,6 +375,7 @@ export default function EmailTemplatesPage() {
                       <TableCell>
                         <Switch
                           checked={template.is_active}
+                          pending={isApprovalRequired(toggleMutation.error) && toggleMutation.variables === template.id}
                           onCheckedChange={() =>
                             handleToggleActive(template.id)
                           }

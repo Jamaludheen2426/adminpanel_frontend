@@ -172,7 +172,7 @@ export default function ApprovalsPage() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
-                            {new Date(approval.created_at).toLocaleDateString()}
+                            {new Date(approval.createdAt || approval.created_at).toLocaleDateString()}
                           </span>
                         </TableCell>
                         <TableCell className="text-right">

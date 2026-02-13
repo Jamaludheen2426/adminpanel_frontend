@@ -53,6 +53,7 @@ import {
   useCreateAllMissingKeys,
   useDeleteMissingKey,
   useIgnoreMissingKey,
+  useTranslationGroups,
   type MissingTranslationKey,
 } from "@/hooks/use-translations";
 import { useTranslation } from "@/hooks/use-translation";
@@ -72,6 +73,7 @@ export default function MissingTranslationsPage() {
   // Queries
   const { data: countData } = useMissingTranslationKeysCount();
   const { data, isLoading } = useMissingTranslationKeys({ page, limit: 20 });
+  const { data: groups = [] } = useTranslationGroups();
 
   // Mutations
   const createFromMissingMutation = useCreateKeyFromMissing();
@@ -134,7 +136,7 @@ export default function MissingTranslationsPage() {
     <>
       {/* Loading Overlay - Shows when performing mutations */}
       {(createFromMissingMutation.isPending || createAllMutation.isPending || deleteMutation.isPending || ignoreMutation.isPending) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
             <Spinner className="h-12 w-12" />
             <p className="text-sm font-medium">
@@ -359,16 +361,12 @@ export default function MissingTranslationsPage() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="common">Common</SelectItem>
-                      <SelectItem value="auth">Auth</SelectItem>
-                      <SelectItem value="dashboard">Dashboard</SelectItem>
-                      <SelectItem value="settings">Settings</SelectItem>
-                      <SelectItem value="users">Users</SelectItem>
-                      <SelectItem value="roles">Roles</SelectItem>
-                      <SelectItem value="validation">Validation</SelectItem>
-                      <SelectItem value="navigation">Navigation</SelectItem>
-                      <SelectItem value="errors">Errors</SelectItem>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {groups.map((group) => (
+                        <SelectItem key={group} value={group}>
+                          {group.charAt(0).toUpperCase() + group.slice(1)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

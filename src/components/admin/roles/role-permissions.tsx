@@ -146,7 +146,7 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
     const modulesInGroup = Object.keys(groupedByModule).filter((mod) => {
       // Group by module category
       if (group.slug === "settings") return mod === "settings";
-      if (group.slug === "users_roles") return ["sub_admins", "roles", "permissions", "modules"].includes(mod);
+      if (group.slug === "users_roles") return ["employees", "roles", "permissions", "modules"].includes(mod);
       if (group.slug === "cms") return ["media", "translations", "languages"].includes(mod);
       if (group.slug === "localization") return ["locations", "currencies"].includes(mod);
       if (group.slug === "system") return ["activity_logs", "email_campaigns", "email_configs", "email_templates", "other"].includes(mod);

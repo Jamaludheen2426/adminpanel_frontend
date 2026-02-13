@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { Currency, CreateCurrencyDto, UpdateCurrencyDto } from '@/types';
@@ -79,6 +79,7 @@ export function useCreateCurrency() {
       toast.success('Currency created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create currency');
     },
   });
@@ -96,6 +97,7 @@ export function useUpdateCurrency() {
       toast.success('Currency updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update currency');
     },
   });
@@ -112,6 +114,7 @@ export function useDeleteCurrency() {
       toast.success('Currency deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete currency');
     },
   });
@@ -128,6 +131,7 @@ export function useSetDefaultCurrency() {
       toast.success('Default currency updated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to set default currency');
     },
   });

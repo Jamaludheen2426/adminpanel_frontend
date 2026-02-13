@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type {
@@ -172,6 +172,7 @@ export function useCreateTranslationKey() {
       toast.success('Translation key created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create translation key');
     },
   });
@@ -190,6 +191,7 @@ export function useUpdateTranslationKey() {
       toast.success('Translation key updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update translation key');
     },
   });
@@ -207,6 +209,7 @@ export function useDeleteTranslationKey() {
       toast.success('Translation key deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete translation key');
     },
   });
@@ -224,6 +227,7 @@ export function useUpdateTranslations() {
       toast.success('Translations updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to update translations');
     },
   });
@@ -241,6 +245,7 @@ export function useRetranslateKey() {
       toast.success('Translation updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to re-translate');
     },
   });
@@ -258,6 +263,7 @@ export function useRetranslateKeyToAll() {
       toast.success('All translations updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to re-translate');
     },
   });
@@ -282,6 +288,7 @@ export function useTranslateAllToLanguage() {
       }
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to translate');
     },
   });
@@ -299,6 +306,7 @@ export function useBulkImportTranslationKeys() {
       toast.success(`Import completed: ${data.created} created, ${data.skipped} skipped`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to import');
     },
   });
@@ -396,6 +404,7 @@ export function useCreateKeyFromMissing() {
       toast.success('Translation key created and translated');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create translation key');
     },
   });
@@ -414,6 +423,7 @@ export function useCreateAllMissingKeys() {
       toast.success(`Created ${data.created} translation keys`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to create translation keys');
     },
   });
@@ -430,6 +440,7 @@ export function useDeleteMissingKey() {
       toast.success('Missing key deleted');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete missing key');
     },
   });
@@ -446,6 +457,7 @@ export function useIgnoreMissingKey() {
       toast.success('Missing key ignored');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to ignore missing key');
     },
   });

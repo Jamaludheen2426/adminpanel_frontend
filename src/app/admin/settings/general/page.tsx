@@ -25,6 +25,8 @@ import {
   useSettingsByGroup,
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
+import { Can } from "@/components/guards/permission-guard";
+import { isApprovalRequired } from "@/lib/api-client";
 import { Spinner } from "@/components/ui/spinner";
 import { HtmlEditor } from "@/components/common/html-editor";
 
@@ -38,6 +40,7 @@ export default function GeneralSettingsPage() {
   });
 
   const [maintenanceDialogOpen, setMaintenanceDialogOpen] = useState(false);
+  const switchPending = isApprovalRequired(bulkUpdateMutation.error);
 
   useEffect(() => {
     if (settings) {
@@ -122,6 +125,7 @@ export default function GeneralSettingsPage() {
               <div className="flex items-center gap-3">
                 <Switch
                   checked={values.maintenance_enabled === "true"}
+                  pending={switchPending}
                   onCheckedChange={(checked) =>
                     setValues({
                       ...values,
@@ -130,32 +134,38 @@ export default function GeneralSettingsPage() {
                   }
                 />
                 <span className="text-sm text-muted-foreground">
-                  {values.maintenance_enabled === "true"
+                  {switchPending
+                    ? "Pending approval..."
+                    : values.maintenance_enabled === "true"
                     ? "Site is under maintenance"
                     : "Site is operating normally"}
                 </span>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMaintenanceDialogOpen(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
+              <Can permission="general_settings.edit">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setMaintenanceDialogOpen(true)}
+                >
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </Can>
             </div>
           </CardContent>
         </Card>
 
         {/* Save Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-            <Save className="mr-2 h-4 w-4" />
-            {bulkUpdateMutation.isPending
-              ? "Saving..."
-              : "Save General Settings"}
-          </Button>
-        </div>
+        <Can permission="general_settings.edit">
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+              <Save className="mr-2 h-4 w-4" />
+              {bulkUpdateMutation.isPending
+                ? "Saving..."
+                : "Save General Settings"}
+            </Button>
+          </div>
+        </Can>
       </div>
 
       {/* Maintenance Mode Edit Dialog */}
@@ -180,6 +190,7 @@ export default function GeneralSettingsPage() {
               <Label>Status:</Label>
               <Switch
                 checked={values.maintenance_enabled === "true"}
+                pending={switchPending}
                 onCheckedChange={(checked) =>
                   setValues({
                     ...values,
@@ -188,7 +199,7 @@ export default function GeneralSettingsPage() {
                 }
               />
               <span className="text-sm text-muted-foreground">
-                {values.maintenance_enabled === "true" ? "Active" : "Disabled"}
+                {switchPending ? "Pending approval..." : values.maintenance_enabled === "true" ? "Active" : "Disabled"}
               </span>
             </div>
 

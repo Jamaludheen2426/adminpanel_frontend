@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { isApprovalRequired } from "@/lib/api-client";
 import {
   Card,
   CardContent,
@@ -145,11 +146,15 @@ export default function EmailSettingsPage() {
     if (editingConfig) {
       updateMutation.mutate(
         { id: editingConfig.id, data: form },
-        { onSuccess: () => setDialogOpen(false) },
+        {
+          onSuccess: () => setDialogOpen(false),
+          onError: (error) => { if (isApprovalRequired(error)) setDialogOpen(false); },
+        },
       );
     } else {
       createMutation.mutate(form, {
         onSuccess: () => setDialogOpen(false),
+        onError: (error) => { if (isApprovalRequired(error)) setDialogOpen(false); },
       });
     }
   };
@@ -160,6 +165,12 @@ export default function EmailSettingsPage() {
         onSuccess: () => {
           setDeleteDialogOpen(false);
           setDeletingId(null);
+        },
+        onError: (error) => {
+          if (isApprovalRequired(error)) {
+            setDeleteDialogOpen(false);
+            setDeletingId(null);
+          }
         },
       });
     }
@@ -434,6 +445,10 @@ export default function EmailSettingsPage() {
                       <TableCell>
                         <Switch
                           checked={config.is_active}
+                          pending={
+                            (isApprovalRequired(toggleMutation.error) && toggleMutation.variables === config.id) ||
+                            (isApprovalRequired(updateMutation.error) && updateMutation.variables?.id === config.id)
+                          }
                           onCheckedChange={() => handleToggleActive(config.id)}
                           disabled={toggleMutation.isPending}
                         />
