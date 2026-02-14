@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,9 +37,13 @@ export function RolesContent() {
     router.push(`/admin/platform/roles/${role.id}/edit`);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("roles.delete_confirm"))) {
-      deleteRoleMutation.mutate(id);
+  const isSuperAdminOrDeveloper = (role: Role) =>
+    role.slug === "super_admin" || role.slug === "developer";
+
+  const handleDelete = async (role: Role) => {
+    if (isSuperAdminOrDeveloper(role)) return;
+    if (confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
+      deleteRoleMutation.mutate(role.id);
     }
   };
 
@@ -78,9 +82,9 @@ export function RolesContent() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("common.name")}</TableHead>
-                    <TableHead>{t("common.slug")}</TableHead>
                     <TableHead>{t("common.description")}</TableHead>
                     <TableHead>{t("common.status")}</TableHead>
+                    <TableHead>{t("common.approved", "Approved")}</TableHead>
                     <TableHead className="text-right">{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -88,24 +92,34 @@ export function RolesContent() {
                   {data?.data?.map((role) => (
                     <TableRow key={role.id}>
                       <TableCell className="font-medium">{role.name}</TableCell>
-                      <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">{role.slug}</code>
-                      </TableCell>
                       <TableCell className="max-w-xs truncate">
                         {role.description || "-"}
                       </TableCell>
                       <TableCell>
                         <Switch
-                          checked={role.is_active}
-                          pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === role.id}
+                          checked={role.is_active === 1}
+                          onText="ACTIVE"
+                          offText="INACTIVE"
+                          pending={role.is_active === 2 || (isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === role.id)}
                           disabled={
-                            toggleStatusMutation.isPending &&
-                            toggleStatusMutation.variables?.id === role.id
+                            isSuperAdminOrDeveloper(role) ||
+                            (toggleStatusMutation.isPending &&
+                            toggleStatusMutation.variables?.id === role.id)
                           }
                           onCheckedChange={(checked) => {
-                            toggleStatusMutation.mutate({ id: role.id, is_active: checked });
+                            toggleStatusMutation.mutate({ id: role.id, is_active: checked ? 1 : 0 });
                           }}
                         />
+                      </TableCell>
+                      <TableCell>
+                        {role.approved_at ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                            <Check className="h-3 w-3" />
+                            {new Date(role.approved_at).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -113,16 +127,17 @@ export function RolesContent() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEdit(role)}
-                            title="Edit Role"
+                            disabled={isSuperAdminOrDeveloper(role)}
+                            title={isSuperAdminOrDeveloper(role) ? "Cannot edit super admin" : "Edit Role"}
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDelete(role.id)}
-                            disabled={deleteRoleMutation.isPending}
-                            title="Delete Role"
+                            onClick={() => handleDelete(role)}
+                            disabled={isSuperAdminOrDeveloper(role) || deleteRoleMutation.isPending}
+                            title={isSuperAdminOrDeveloper(role) ? "Cannot delete super admin" : "Delete Role"}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

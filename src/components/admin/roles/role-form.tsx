@@ -68,9 +68,9 @@ function groupSettingsPermissions(permissions: Permission[]): { slug: string; na
     const name = p.name || "";
 
     // Extract section key from slug: "settings.optimize_settings_view" → "optimize_settings"
-    const slugPart = slug.replace(/^settings\./, "").replace(/_?(view|create|edit|delete|manage)$/i, "");
+    const slugPart = slug.replace(/^settings\./, "").replace(/_?(view|create|edit|delete|manage|all)$/i, "");
     // Extract display name from human name: "Optimize Settings View" → "Optimize Settings"
-    const namePart = name.replace(/\s*(View|Create|Edit|Delete|Manage)$/i, "").trim();
+    const namePart = name.replace(/\s*(View|Create|Edit|Delete|Manage|All)$/i, "").trim();
 
     const key = slugPart || namePart.toLowerCase().replace(/\s+/g, "_") || "general";
     const displayName = namePart || slugPart.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -169,6 +169,8 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     if (checked) {
       const all = new Set(permissionsData?.data?.map((p) => p.slug) || []);
       setSelectedPermissionKeys(all);
+      // Uncheck all requires approval when selecting all permissions
+      setApprovalModules({});
     } else {
       setSelectedPermissionKeys(new Set());
     }
@@ -435,28 +437,55 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                               {/* Children — appear directly below this chip */}
                               {isExpanded && (
                                 <div className="ml-[28px] flex flex-col gap-0.5 mt-0.5">
-                                  {subModule.permissions.map((permission) => {
-                                    const shortLabel =
-                                      permission.slug.split(".").pop() || permission.name;
-                                    return (
-                                      <div
-                                        key={permission.id}
-                                        className="flex items-center gap-2 py-0.5"
-                                      >
-                                        <Checkbox
-                                          id={`perm-${permission.id}`}
-                                          checked={selectedPermissionKeys.has(permission.slug)}
-                                          onCheckedChange={() => togglePermission(permission.slug)}
-                                        />
-                                        <label
-                                          htmlFor={`perm-${permission.id}`}
-                                          className="text-sm cursor-pointer capitalize text-foreground"
+                                  {/* Sort: "all" (manage) first, then the rest */}
+                                  {[...subModule.permissions]
+                                    .sort((a, b) => {
+                                      const aIsAll = a.slug.endsWith(".manage");
+                                      const bIsAll = b.slug.endsWith(".manage");
+                                      if (aIsAll && !bIsAll) return -1;
+                                      if (!aIsAll && bIsAll) return 1;
+                                      return 0;
+                                    })
+                                    .map((permission) => {
+                                      const rawLabel =
+                                        permission.slug.split(".").pop() || permission.name;
+                                      const isAllPerm = rawLabel === "manage";
+                                      const shortLabel = isAllPerm ? "all" : rawLabel;
+                                      return (
+                                        <div
+                                          key={permission.id}
+                                          className={cn(
+                                            "flex items-center gap-2 py-0.5",
+                                            isAllPerm && "mb-0.5"
+                                          )}
                                         >
-                                          {shortLabel}
-                                        </label>
-                                      </div>
-                                    );
-                                  })}
+                                          <Checkbox
+                                            id={`perm-${permission.id}`}
+                                            checked={selectedPermissionKeys.has(permission.slug)}
+                                            onCheckedChange={(checked) => {
+                                              if (isAllPerm && checked) {
+                                                // "all" selects all permissions in this sub-module
+                                                toggleSubModuleAll(subModule.permissions, true);
+                                              } else if (isAllPerm && !checked) {
+                                                // Unchecking "all" deselects all
+                                                toggleSubModuleAll(subModule.permissions, false);
+                                              } else {
+                                                togglePermission(permission.slug);
+                                              }
+                                            }}
+                                          />
+                                          <label
+                                            htmlFor={`perm-${permission.id}`}
+                                            className={cn(
+                                              "text-sm cursor-pointer capitalize",
+                                              isAllPerm ? "font-medium text-primary" : "text-foreground"
+                                            )}
+                                          >
+                                            {shortLabel}
+                                          </label>
+                                        </div>
+                                      );
+                                    })}
                                 </div>
                               )}
                             </div>

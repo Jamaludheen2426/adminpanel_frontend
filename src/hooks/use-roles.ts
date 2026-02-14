@@ -36,7 +36,7 @@ const rolesApi = {
     return response.data.data.role;
   },
 
-  toggleStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<Role> => {
+  toggleStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<Role> => {
     const response = await apiClient.put(`/roles/${id}`, { is_active });
     return response.data.data.role;
   },
@@ -119,9 +119,11 @@ export function useToggleRoleStatus() {
 
   return useMutation({
     mutationFn: rolesApi.toggleStatus,
-    onSuccess: () => {
+    onSuccess: (updatedRole, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.lists() });
-      toast.success('Role status updated');
+      const name = updatedRole?.name || 'Role';
+      const status = variables.is_active === 1 ? 'activated' : 'deactivated';
+      toast.success(`${name} ${status} successfully`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       // Don't show error toast if it's an approval request (interceptor already showed info toast)

@@ -33,7 +33,7 @@ interface PlatformGroup {
 
 const platformGroups: PlatformGroup[] = [
   {
-    titleKey: "platform.user_management",
+    titleKey: "platform.employee_management",
     items: [
       {
         labelKey: "nav.employees",
@@ -105,9 +105,9 @@ export function PlatformContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('nav.platform_admin')}</h1>
+        <h1 className="text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
         <p className="text-muted-foreground mt-1">
-          {t('platform.page_desc')}
+          {t('platform.page_desc', 'Manage employees, roles, and system administration')}
         </p>
       </div>
 
@@ -128,10 +128,10 @@ export function PlatformContent() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-primary group-hover:underline">
-                          {item.labelKey === "nav.employees" ? "Employees" : t(item.labelKey)}
+                          {t(item.labelKey)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {item.labelKey === "nav.employees" ? "Manage employee accounts and access" : t(item.descriptionKey)}
+                          {t(item.descriptionKey)}
                         </p>
                       </div>
                     </div>

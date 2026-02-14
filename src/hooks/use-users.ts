@@ -31,10 +31,9 @@ const usersApi = {
     await apiClient.delete(`/users/${id}`);
   },
 
-  toggleStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<User> => {
+  toggleStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<User> => {
     const response = await apiClient.patch(`/users/${id}/status`, {
       is_active,
-      status: is_active ? 'active' : 'inactive',
     });
     return response.data.data.user;
   },
@@ -65,12 +64,12 @@ export function useCreateUser() {
     mutationFn: usersApi.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
-      toast.success('User created successfully');
+      toast.success('Employee created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       // Don't show error toast if it's an approval request (interceptor already showed info toast)
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to create user');
+      toast.error(error.response?.data?.message || 'Failed to create employee');
     },
   });
 }
@@ -81,15 +80,22 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: usersApi.update,
-    onSuccess: (_, variables) => {
+    onSuccess: (updatedUser, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
-      toast.success('User updated successfully');
+      const name = updatedUser?.full_name || 'Employee';
+      if (variables.data.role_id) {
+        toast.success(`${name}'s role updated successfully`);
+      } else if (variables.data.login_access !== undefined) {
+        toast.success(`${name}'s login access ${variables.data.login_access === 1 ? 'enabled' : 'disabled'}`);
+      } else {
+        toast.success(`${name} updated successfully`);
+      }
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       // Don't show error toast if it's an approval request (interceptor already showed info toast)
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to update user');
+      toast.error(error.response?.data?.message || 'Failed to update employee');
     },
   });
 }
@@ -100,14 +106,16 @@ export function useToggleUserStatus() {
 
   return useMutation({
     mutationFn: usersApi.toggleStatus,
-    onSuccess: () => {
+    onSuccess: (updatedUser, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
-      toast.success('User status updated');
+      const name = updatedUser?.full_name || 'Employee';
+      const status = variables.is_active === 1 ? 'activated' : 'deactivated';
+      toast.success(`${name} ${status} successfully`);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       // Don't show error toast if it's an approval request (interceptor already showed info toast)
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to update user status');
+      toast.error(error.response?.data?.message || 'Failed to update employee status');
     },
   });
 }
@@ -120,12 +128,12 @@ export function useDeleteUser() {
     mutationFn: usersApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
-      toast.success('User deleted successfully');
+      toast.success('Employee deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       // Don't show error toast if it's an approval request (interceptor already showed info toast)
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to delete user');
+      toast.error(error.response?.data?.message || 'Failed to delete employee');
     },
   });
 }

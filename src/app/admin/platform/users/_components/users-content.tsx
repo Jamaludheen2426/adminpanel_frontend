@@ -18,18 +18,29 @@ import { Switch } from "@/components/ui/switch";
 import { isApprovalRequired } from "@/lib/api-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUsers, useDeleteUser, useToggleUserStatus, useUpdateUser } from "@/hooks/use-users";
 import { useRoles } from "@/hooks/use-roles";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Spinner } from "@/components/ui/spinner";
 import type { User } from "@/types";
+
+const isSuperAdminOrDeveloper = (user: User) =>
+  user.role?.slug === "super_admin" || user.role?.slug === "developer";
 
 export function UsersContent() {
   const { t } = useTranslation();
@@ -38,20 +49,46 @@ export function UsersContent() {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
+  // Role change confirmation state
+  const [roleChangeDialog, setRoleChangeDialog] = useState<{
+    user: User;
+    newRoleId: string;
+    newRoleName: string;
+  } | null>(null);
+
   const { data, isLoading } = useUsers({ page, limit: 10, search: debouncedSearch });
   const { data: rolesData } = useRoles({ limit: 100 });
   const deleteUserMutation = useDeleteUser();
   const toggleStatusMutation = useToggleUserStatus();
   const updateUserMutation = useUpdateUser();
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t("users.delete_confirm"))) {
-      deleteUserMutation.mutate(id);
+  const handleDelete = async (user: User) => {
+    if (isSuperAdminOrDeveloper(user)) return;
+    if (confirm(`Are you sure you want to delete "${user.full_name}"?`)) {
+      deleteUserMutation.mutate(user.id);
     }
   };
 
   const handleRoleChange = (user: User, roleId: string) => {
-    updateUserMutation.mutate({ id: user.id, data: { role_id: parseInt(roleId) } });
+    const newRole = rolesData?.data?.find((r) => r.id.toString() === roleId);
+    setRoleChangeDialog({
+      user,
+      newRoleId: roleId,
+      newRoleName: newRole?.name || "Unknown",
+    });
+  };
+
+  const confirmRoleChange = () => {
+    if (!roleChangeDialog) return;
+    updateUserMutation.mutate({
+      id: roleChangeDialog.user.id,
+      data: { role_id: parseInt(roleChangeDialog.newRoleId) },
+    });
+    setRoleChangeDialog(null);
+  };
+
+  const handleLoginAccessChange = (user: User, loginAccess: boolean) => {
+    updateUserMutation.mutate({ id: user.id, data: { login_access: loginAccess ? 1 : 0 } });
   };
 
   return (
@@ -89,7 +126,10 @@ export function UsersContent() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Designation</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Login Access</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -99,35 +139,76 @@ export function UsersContent() {
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name}</TableCell>
                         <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.department || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.designation || "—"}</TableCell>
                         <TableCell>
-                          {/* Inline role dropdown */}
-                          <Select
-                            value={user.role_id?.toString()}
-                            onValueChange={(v) => handleRoleChange(user, v)}
-                            disabled={updateUserMutation.isPending}
-                          >
-                            <SelectTrigger className="h-7 w-[140px] text-xs border-dashed">
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {rolesData?.data?.map((role) => (
-                                <SelectItem key={role.id} value={role.id.toString()}>
-                                  {role.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          {isSuperAdminOrDeveloper(user) ? (
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {user.role?.name || "—"}
+                            </span>
+                          ) : (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded border border-dashed border-border hover:bg-muted transition-colors"
+                                  disabled={updateUserMutation.isPending}
+                                >
+                                  {user.role?.name || "Select role"}
+                                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[180px] p-1" align="start">
+                                <div className="flex flex-col">
+                                  {rolesData?.data?.map((role) => (
+                                    <button
+                                      key={role.id}
+                                      type="button"
+                                      className={`text-left text-xs px-3 py-1.5 rounded hover:bg-muted transition-colors ${
+                                        role.id === user.role_id ? "bg-muted font-semibold" : ""
+                                      }`}
+                                      onClick={() => {
+                                        if (role.id !== user.role_id) {
+                                          handleRoleChange(user, role.id.toString());
+                                        }
+                                      }}
+                                    >
+                                      {role.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Switch
-                            checked={user.is_active}
-                            pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === user.id}
+                            checked={user.login_access === 1}
+                            onText="ON"
+                            offText="OFF"
                             disabled={
-                              toggleStatusMutation.isPending &&
-                              toggleStatusMutation.variables?.id === user.id
+                              isSuperAdminOrDeveloper(user) ||
+                              (updateUserMutation.isPending &&
+                              updateUserMutation.variables?.id === user.id)
                             }
                             onCheckedChange={(checked) =>
-                              toggleStatusMutation.mutate({ id: user.id, is_active: checked })
+                              handleLoginAccessChange(user, checked)
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={user.is_active === 1}
+                            onText="ACTIVE"
+                            offText="INACTIVE"
+                            pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === user.id}
+                            disabled={
+                              isSuperAdminOrDeveloper(user) ||
+                              (toggleStatusMutation.isPending &&
+                              toggleStatusMutation.variables?.id === user.id)
+                            }
+                            onCheckedChange={(checked) =>
+                              toggleStatusMutation.mutate({ id: user.id, is_active: checked ? 1 : 0 })
                             }
                           />
                         </TableCell>
@@ -144,9 +225,9 @@ export function UsersContent() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDelete(user.id)}
-                              disabled={deleteUserMutation.isPending}
-                              title="Delete Employee"
+                              onClick={() => handleDelete(user)}
+                              disabled={isSuperAdminOrDeveloper(user) || deleteUserMutation.isPending}
+                              title={isSuperAdminOrDeveloper(user) ? "Cannot delete super admin" : "Delete Employee"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -156,7 +237,7 @@ export function UsersContent() {
                     ))}
                     {data?.data?.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No employees found.
                         </TableCell>
                       </TableRow>
@@ -194,6 +275,24 @@ export function UsersContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Role Change Confirmation Dialog */}
+      <AlertDialog open={!!roleChangeDialog} onOpenChange={() => setRoleChangeDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to change <strong>{roleChangeDialog?.user.full_name}</strong>&apos;s role from{" "}
+              <strong>{roleChangeDialog?.user.role?.name || "Unknown"}</strong> to{" "}
+              <strong>{roleChangeDialog?.newRoleName}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PermissionGuard>
   );
 }

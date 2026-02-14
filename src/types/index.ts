@@ -56,17 +56,36 @@ export interface UpdateCompanyDto {
 }
 
 // User types
-export interface User extends BaseEntity {
+export interface User extends Omit<BaseEntity, 'is_active'> {
   full_name: string;
+  username: string | null;
   email: string;
   phone: string | null;
   avatar: string | null;
+  dob: string | null;
+  gender: 'male' | 'female' | 'other' | null;
+  marital_status: 'married' | 'unmarried' | null;
+  is_active: number; // 0=inactive, 1=active, 2=pending
+  country_id: number | null;
+  state_id: number | null;
+  city_id: number | null;
+  pincode_id: number | null;
+  pincode: string | null;
+  address: string | null;
+  department: string | null;
+  designation: string | null;
+  doj: string | null;
+  dor: string | null;
+  login_access: number;
   email_verified_at: string | null;
   last_login_at: string | null;
   role_id: number;
-  status: 'active' | 'inactive' | 'pending' | 'blocked';
   role?: Role;
   company?: Company | null;
+  country?: Country | null;
+  state?: State | null;
+  city?: City | null;
+  pincodeRef?: Pincode | null;
 }
 
 export interface CreateUserDto {
@@ -75,6 +94,22 @@ export interface CreateUserDto {
   password: string;
   phone?: string;
   role_id: number;
+  username?: string;
+  dob?: string;
+  gender?: string;
+  marital_status?: string;
+  country_id?: number;
+  state_id?: number;
+  city_id?: number;
+  pincode_id?: number;
+  pincode?: string;
+  address?: string;
+  department?: string;
+  designation?: string;
+  doj?: string;
+  dor?: string;
+  login_access?: number;
+  is_active?: number;
 }
 
 export interface UpdateUserDto {
@@ -82,16 +117,32 @@ export interface UpdateUserDto {
   email?: string;
   phone?: string;
   role_id?: number;
-  is_active?: boolean;
-  status?: string;
+  is_active?: number;
+  username?: string;
+  dob?: string;
+  gender?: string;
+  marital_status?: string;
+  country_id?: number;
+  state_id?: number;
+  city_id?: number;
+  pincode_id?: number;
+  pincode?: string;
+  address?: string;
+  department?: string;
+  designation?: string;
+  doj?: string;
+  dor?: string;
+  login_access?: number;
 }
 
 // Role types
-export interface Role extends BaseEntity {
+export interface Role extends Omit<BaseEntity, 'is_active'> {
   name: string;
   slug: string;
   description: string | null;
   level: number;
+  is_active: number; // 0=inactive, 1=active, 2=pending
+  approved_at: string | null;
   permissions?: Permission[];
 }
 
@@ -106,7 +157,7 @@ export interface UpdateRoleDto {
   name?: string;
   description?: string;
   level?: number;
-  is_active?: boolean;
+  is_active?: number;
 }
 
 // Permission types

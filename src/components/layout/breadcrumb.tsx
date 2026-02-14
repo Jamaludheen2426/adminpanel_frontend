@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/use-translation";
 // Map URL segments to translation keys
 const segmentTranslationMap: Record<string, string> = {
   // Main navigation
-  "users": "nav.users",
+  "users": "nav.employees",
   "roles": "nav.roles",
   "permissions": "nav.permissions",
   "settings": "nav.settings",

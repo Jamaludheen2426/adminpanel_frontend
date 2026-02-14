@@ -172,12 +172,12 @@ export function ProfileContent() {
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span className="text-muted-foreground">{t('common.status')}:</span>
                 <Badge
-                  className={user?.is_active
+                  className={user?.is_active === 1
                     ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
                     : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
                   }
                 >
-                  {user?.is_active ? t('common.active') : t('common.inactive')}
+                  {user?.is_active === 1 ? t('common.active') : t('common.inactive')}
                 </Badge>
               </div>
               {user?.phone && (

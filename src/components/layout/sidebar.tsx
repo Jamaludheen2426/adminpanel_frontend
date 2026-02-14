@@ -41,7 +41,7 @@ export default function AdminSidebar() {
       icon: <LayoutDashboard size={20} />,
     },
     {
-      labelKey: 'nav.users',
+      labelKey: 'nav.employees',
       href: '/admin/platform/users',
       icon: <Users size={20} />,
     },
