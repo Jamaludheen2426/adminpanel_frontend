@@ -34,6 +34,9 @@ export function TranslationProvider({
 
   // Track reported missing keys to avoid duplicate reports in the same session
   const reportedKeysRef = useRef<Set<string>>(new Set());
+  // Batch missing key reports to reduce API calls
+  const pendingReportsRef = useRef<Array<{ key: string; default_value: string; page_url: string }>>([]);
+  const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch public settings to get the language preference
   const { data: publicSettings, isLoading: isLoadingSettings } = useQuery({
@@ -81,9 +84,9 @@ export function TranslationProvider({
       return translationData as TranslationMap;
     },
     enabled: isInitialized && !!language,
-    staleTime: 0, // Always consider data stale
-    gcTime: 5 * 60 * 1000, // Cache for 5 minutes
-    refetchOnMount: true,
+    staleTime: 10 * 60 * 1000, // 10 minutes - translations rarely change
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 
@@ -116,7 +119,28 @@ export function TranslationProvider({
     updateLanguageMutation.mutate(lang);
   }, [language, queryClient, updateLanguageMutation]);
 
-  // Report missing key to backend (non-blocking)
+  // Flush batched missing key reports to backend
+  const flushMissingKeys = useCallback(() => {
+    const batch = pendingReportsRef.current;
+    if (batch.length === 0) return;
+
+    // Clear the batch
+    pendingReportsRef.current = [];
+    batchTimerRef.current = null;
+
+    // Send all at once (fire and forget)
+    Promise.all(
+      batch.map((report) =>
+        apiClient.post('/translations/report-missing', report).catch(() => {})
+      )
+    ).then(() => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Translation] Batch reported', batch.length, 'missing keys');
+      }
+    });
+  }, []);
+
+  // Report missing key to backend (batched, non-blocking)
   const reportMissingKey = useCallback((key: string, defaultValue?: string) => {
     // Skip if already reported in this session
     if (reportedKeysRef.current.has(key)) return;
@@ -127,22 +151,19 @@ export function TranslationProvider({
     // Get current page URL
     const pageUrl = typeof window !== 'undefined' ? window.location.pathname : '';
 
-    // Report asynchronously (fire and forget - don't block rendering)
-    apiClient.post('/translations/report-missing', {
+    // Add to batch
+    pendingReportsRef.current.push({
       key,
       default_value: defaultValue || key,
       page_url: pageUrl,
-    }).then(() => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Translation] Missing key reported successfully:', key);
-      }
-    }).catch((error) => {
-      // Log error in development for debugging
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[Translation] Failed to report missing key:', key, error?.response?.data || error?.message);
-      }
     });
-  }, []);
+
+    // Debounce: flush after 5 seconds of no new missing keys
+    if (batchTimerRef.current) {
+      clearTimeout(batchTimerRef.current);
+    }
+    batchTimerRef.current = setTimeout(flushMissingKeys, 5000);
+  }, [flushMissingKeys]);
 
   // Translation function with variable interpolation and missing key detection
   const t = useCallback((
