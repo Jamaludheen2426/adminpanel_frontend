@@ -1,11 +1,6 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import { UserForm } from "@/components/admin/users/user-form";
 
 export default function CreateEmployeePage() {
-  const router = useRouter();
-
   return (
     <div className="space-y-1">
       <div className="mb-6">
@@ -14,7 +9,7 @@ export default function CreateEmployeePage() {
           Create a new employee account
         </p>
       </div>
-      <UserForm onSuccess={() => router.push("/admin/platform/users")} />
+      <UserForm />
     </div>
   );
 }

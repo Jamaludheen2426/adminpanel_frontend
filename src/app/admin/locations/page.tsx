@@ -1,5 +1,3 @@
-"use client";
-
 import { MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 

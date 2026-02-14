@@ -1,5 +1,3 @@
-"use client";
-
 import { Phone } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 

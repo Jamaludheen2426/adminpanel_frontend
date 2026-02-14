@@ -1,5 +1,3 @@
-"use client";
-
 import { Puzzle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 

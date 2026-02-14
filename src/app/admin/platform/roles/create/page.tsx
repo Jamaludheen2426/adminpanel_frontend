@@ -1,11 +1,6 @@
-"use client";
-
-import { useRouter } from "next/navigation";
 import { RoleForm } from "@/components/admin/roles/role-form";
 
 export default function CreateRolePage() {
-  const router = useRouter();
-
   return (
     <div className="space-y-1">
       <div className="mb-6">
@@ -14,7 +9,7 @@ export default function CreateRolePage() {
           Define a role and assign permissions
         </p>
       </div>
-      <RoleForm onSuccess={() => router.push("/admin/platform/roles")} />
+      <RoleForm />
     </div>
   );
 }
