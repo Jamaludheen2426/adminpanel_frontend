@@ -25,6 +25,7 @@ import {
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const drivers = [
   { value: "local", label: "Local disk" },
@@ -389,6 +390,7 @@ export function MediaContent() {
   }
 
   return (
+    <PermissionGuard permission="media.view">
     <>
       {/* Loading Overlay - Shows when saving */}
       {bulkUpdateMutation.isPending && (
@@ -455,5 +457,6 @@ export function MediaContent() {
         </div>
       </div>
     </>
+    </PermissionGuard>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/admin/app-sidebar";
@@ -11,6 +11,7 @@ import Breadcrumb from "@/components/layout/breadcrumb";
 import { AppearanceProvider } from "@/components/providers/appearance-provider";
 import { DynamicHead } from "@/components/providers/dynamic-head";
 import { CompanyProvider } from "@/contexts/company-context";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function AdminLayout({
   children,
@@ -18,31 +19,13 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authenticated = localStorage.getItem("authenticated");
-
-        if (!authenticated) {
-          setTimeout(() => {
-            setIsLoading(false);
-            setIsAuthorized(true);
-          }, 500);
-        } else {
-          setIsAuthorized(true);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [router]);
+    if (!isLoading && !isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {
     return (
@@ -55,8 +38,7 @@ export default function AdminLayout({
     );
   }
 
-  if (!isAuthorized) {
-    router.push("/auth/signin");
+  if (!isAuthenticated) {
     return null;
   }
 

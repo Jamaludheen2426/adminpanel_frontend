@@ -11,7 +11,7 @@ export interface BaseEntity {
 }
 
 // Company types
-export interface Company extends BaseEntity {
+export interface Company extends Omit<BaseEntity, 'is_active'> {
   name: string;
   slug: string;
   domain: string | null;
@@ -19,7 +19,7 @@ export interface Company extends BaseEntity {
   email: string | null;
   phone: string | null;
   address: string | null;
-  status: 'active' | 'inactive' | 'suspended';
+  is_active: number; // 0=inactive/suspended, 1=active, 2=pending
   settings: Record<string, unknown> | null;
   max_users: number | null;
 }
@@ -32,7 +32,7 @@ export interface CreateCompanyDto {
   email?: string;
   phone?: string;
   address?: string;
-  status?: 'active' | 'inactive' | 'suspended';
+  is_active?: number;
   settings?: Record<string, unknown>;
   max_users?: number;
   // Initial super admin details
@@ -49,10 +49,9 @@ export interface UpdateCompanyDto {
   email?: string;
   phone?: string;
   address?: string;
-  status?: 'active' | 'inactive' | 'suspended';
+  is_active?: number;
   settings?: Record<string, unknown>;
   max_users?: number;
-  is_active?: boolean;
 }
 
 // User types
@@ -419,7 +418,7 @@ export interface ApprovalRequest {
   resource_id: number | null;
   request_data: unknown;
   old_data: unknown | null;
-  status: 'pending' | 'approved' | 'rejected';
+  is_active: number; // 0=rejected, 1=approved, 2=pending
   reviewed_at: string | null;
   reviewedAt?: string | null;
   review_notes: string | null;
@@ -439,7 +438,7 @@ export interface ApprovalRequest {
 }
 
 export interface ApprovalFilters {
-  status?: 'pending' | 'approved' | 'rejected';
+  is_active?: number; // 0=rejected, 1=approved, 2=pending
   module_slug?: string;
   page?: number;
   limit?: number;
@@ -517,7 +516,7 @@ export interface VariableMapping {
   value?: string;
 }
 
-export interface EmailCampaign extends BaseEntity {
+export interface EmailCampaign extends Omit<BaseEntity, 'is_active'> {
   name: string;
   slug: string;
   description: string | null;
@@ -534,7 +533,7 @@ export interface EmailCampaign extends BaseEntity {
   target_audience: 'all_users' | 'active_users' | 'verified_users' | 'custom';
   target_roles: number[] | null;
   variable_mappings: Record<string, VariableMapping> | null;
-  status: 'draft' | 'active' | 'paused' | 'completed';
+  is_active: number; // 0=paused/completed, 1=active, 2=draft/pending
   total_recipients: number;
   total_sent: number;
   total_failed: number;
@@ -559,7 +558,7 @@ export interface CreateEmailCampaignDto {
   target_audience: 'all_users' | 'active_users' | 'verified_users' | 'custom';
   target_roles?: number[];
   variable_mappings?: Record<string, VariableMapping>;
-  status?: 'draft' | 'active';
+  is_active?: number;
 }
 
 export interface UpdateEmailCampaignDto {
@@ -576,8 +575,7 @@ export interface UpdateEmailCampaignDto {
   target_audience?: 'all_users' | 'active_users' | 'verified_users' | 'custom';
   target_roles?: number[];
   variable_mappings?: Record<string, VariableMapping>;
-  status?: 'draft' | 'active' | 'paused';
-  is_active?: boolean;
+  is_active?: number;
 }
 
 export interface QueueStats {

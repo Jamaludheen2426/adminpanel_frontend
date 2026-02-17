@@ -3,6 +3,7 @@
 import { useUser } from "@/hooks";
 import { UserForm } from "@/components/admin/users/user-form";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 interface EditUserContentProps {
   userId: number;
@@ -26,6 +27,7 @@ export function EditUserContent({ userId }: EditUserContentProps) {
   }
 
   return (
+    <PermissionGuard permission="employees.view">
     <div className="space-y-1">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Edit Employee</h1>
@@ -35,5 +37,6 @@ export function EditUserContent({ userId }: EditUserContentProps) {
       </div>
       <UserForm user={userData} />
     </div>
+    </PermissionGuard>
   );
 }

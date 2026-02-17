@@ -25,6 +25,7 @@ import { ApprovalBadge } from '@/components/admin/approvals/approval-badge';
 import { ApprovalDetailDialog } from '@/components/admin/approvals/approval-detail-dialog';
 import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
+import { PermissionGuard } from '@/components/guards/permission-guard';
 
 export function ApprovalsContent() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -36,7 +37,7 @@ export function ApprovalsContent() {
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   const filters = {
-    status: statusFilter !== 'all' ? (statusFilter as 'pending' | 'approved' | 'rejected') : undefined,
+    is_active: statusFilter !== 'all' ? (statusFilter === 'pending' ? 2 : statusFilter === 'approved' ? 1 : 0) : undefined,
     module_slug: moduleFilter !== 'all' ? moduleFilter : undefined,
     page: currentPage,
     limit: 10,
@@ -55,6 +56,7 @@ export function ApprovalsContent() {
   };
 
   return (
+    <PermissionGuard minLevel={100}>
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Approval Requests</h1>
@@ -168,7 +170,7 @@ export function ApprovalsContent() {
                           <span className="capitalize">{approval.action}</span>
                         </TableCell>
                         <TableCell>
-                          <ApprovalBadge status={approval.status} />
+                          <ApprovalBadge status={approval.is_active} />
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
@@ -230,5 +232,6 @@ export function ApprovalsContent() {
         onOpenChange={handleDialogClose}
       />
     </div>
+    </PermissionGuard>
   );
 }

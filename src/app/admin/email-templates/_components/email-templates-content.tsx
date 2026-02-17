@@ -30,6 +30,7 @@ import {
   useSendEmailTemplate,
 } from "@/hooks";
 import { EmailTemplate } from "@/types";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const templateSchema = z.object({
   name: z.string().min(2, "Template name required"),
@@ -206,6 +207,7 @@ export function EmailTemplatesContent() {
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
+    <PermissionGuard permission="email_templates.read">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -415,5 +417,6 @@ export function EmailTemplatesContent() {
         )}
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

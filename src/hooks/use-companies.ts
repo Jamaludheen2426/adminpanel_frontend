@@ -61,8 +61,8 @@ const companiesApi = {
     await apiClient.delete(`/companies/${id}`);
   },
 
-  updateStatus: async ({ id, status }: { id: number; status: 'active' | 'inactive' | 'suspended' }): Promise<Company> => {
-    const response = await apiClient.patch(`/companies/${id}/status`, { status });
+  updateStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<Company> => {
+    const response = await apiClient.patch(`/companies/${id}/status`, { is_active });
     return response.data.data.company;
   },
 };

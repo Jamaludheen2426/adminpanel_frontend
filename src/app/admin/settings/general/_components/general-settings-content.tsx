@@ -25,7 +25,7 @@ import {
   useSettingsByGroup,
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
-import { Can } from "@/components/guards/permission-guard";
+import { Can, PermissionGuard } from "@/components/guards/permission-guard";
 import { isApprovalRequired } from "@/lib/api-client";
 import { Spinner } from "@/components/ui/spinner";
 import { HtmlEditor } from "@/components/common/html-editor";
@@ -83,6 +83,7 @@ export function GeneralSettingsContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <>
       {/* Loading Overlay - Shows when saving */}
       {bulkUpdateMutation.isPending && (
@@ -234,6 +235,7 @@ export function GeneralSettingsContent() {
         </DialogContent>
       </Dialog>
     </>
+    </PermissionGuard>
   );
 }
 

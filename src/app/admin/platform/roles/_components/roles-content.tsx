@@ -21,6 +21,7 @@ import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Spinner } from "@/components/ui/spinner";
 import type { Role } from "@/types";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function RolesContent() {
   const { t } = useTranslation();
@@ -48,6 +49,7 @@ export function RolesContent() {
   };
 
   return (
+    <PermissionGuard permission="roles.view">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t("nav.roles")}</h1>
@@ -186,5 +188,6 @@ export function RolesContent() {
         </CardContent>
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

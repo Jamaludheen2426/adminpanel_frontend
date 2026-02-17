@@ -3,6 +3,7 @@
 import { useRole } from "@/hooks/use-roles";
 import { RoleForm } from "@/components/admin/roles/role-form";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 interface EditRoleContentProps {
   roleId: number;
@@ -26,6 +27,7 @@ export function EditRoleContent({ roleId }: EditRoleContentProps) {
   }
 
   return (
+    <PermissionGuard permission="roles.view">
     <div className="space-y-1">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Edit Role</h1>
@@ -35,5 +37,6 @@ export function EditRoleContent({ roleId }: EditRoleContentProps) {
       </div>
       <RoleForm role={roleData} />
     </div>
+    </PermissionGuard>
   );
 }

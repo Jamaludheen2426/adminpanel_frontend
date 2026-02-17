@@ -43,6 +43,7 @@ import {
 import { Company } from '@/types';
 import { useDebounce } from '@/hooks/use-debounce';
 import { EditCompanyDialog } from '@/components/admin/companies/edit-company-dialog';
+import { PermissionGuard } from '@/components/guards/permission-guard';
 
 export function CompaniesContent() {
   const [search, setSearch] = useState('');
@@ -68,21 +69,30 @@ export function CompaniesContent() {
     }
   };
 
-  const handleStatusToggle = async (id: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    await updateStatus.mutateAsync({ id, status: newStatus as 'active' | 'suspended' });
+  const handleStatusToggle = async (id: number, currentIsActive: number) => {
+    const newIsActive = currentIsActive === 1 ? 0 : 1;
+    await updateStatus.mutateAsync({ id, is_active: newIsActive });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
+  const getStatusColor = (is_active: number) => {
+    switch (is_active) {
+      case 1:
         return 'bg-green-500';
-      case 'inactive':
-        return 'bg-gray-500';
-      case 'suspended':
+      case 0:
         return 'bg-red-500';
+      case 2:
+        return 'bg-yellow-500';
       default:
         return 'bg-gray-500';
+    }
+  };
+
+  const getStatusLabel = (is_active: number) => {
+    switch (is_active) {
+      case 1: return 'Active';
+      case 0: return 'Suspended';
+      case 2: return 'Pending';
+      default: return 'Unknown';
     }
   };
 
@@ -90,6 +100,7 @@ export function CompaniesContent() {
   const pagination = data?.pagination;
 
   return (
+    <PermissionGuard developerOnly>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -125,7 +136,7 @@ export function CompaniesContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {companies.filter(c => c.status === 'active').length}
+              {companies.filter(c => c.is_active === 1).length}
             </div>
           </CardContent>
         </Card>
@@ -136,7 +147,7 @@ export function CompaniesContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {companies.filter(c => c.status === 'suspended').length}
+              {companies.filter(c => c.is_active === 0).length}
             </div>
           </CardContent>
         </Card>
@@ -147,7 +158,7 @@ export function CompaniesContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {companies.filter(c => c.status === 'inactive').length}
+              {companies.filter(c => c.is_active === 2).length}
             </div>
           </CardContent>
         </Card>
@@ -228,10 +239,10 @@ export function CompaniesContent() {
                       <TableCell>{company.email || '—'}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={company.status === 'active' ? 'default' : 'secondary'}
-                          className={getStatusColor(company.status)}
+                          variant={company.is_active === 1 ? 'default' : 'secondary'}
+                          className={getStatusColor(company.is_active)}
                         >
-                          {company.status}
+                          {getStatusLabel(company.is_active)}
                         </Badge>
                       </TableCell>
                       <TableCell>{company.user_count || 0}</TableCell>
@@ -254,9 +265,9 @@ export function CompaniesContent() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleStatusToggle(company.id, company.status)}
+                              onClick={() => handleStatusToggle(company.id, company.is_active)}
                             >
-                              {company.status === 'active' ? 'Suspend' : 'Activate'}
+                              {company.is_active === 1 ? 'Suspend' : 'Activate'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -334,5 +345,6 @@ export function CompaniesContent() {
         onOpenChange={(open) => !open && setEditId(null)}
       />
     </div>
+    </PermissionGuard>
   );
 }

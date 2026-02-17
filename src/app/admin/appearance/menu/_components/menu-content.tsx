@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function MenuContent() {
   const { data: settings } = useSettingsByGroup("menu");
@@ -54,6 +55,7 @@ export function MenuContent() {
   };
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Menu</h1>
@@ -173,5 +175,6 @@ export function MenuContent() {
         </Button>
       </div>
     </div>
+    </PermissionGuard>
   );
 }

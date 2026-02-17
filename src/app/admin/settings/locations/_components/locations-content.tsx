@@ -59,6 +59,7 @@ import {
   useDeletePincode,
 } from "@/hooks";
 import { Country, State, City, Pincode } from "@/types";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 // Schemas
 const countrySchema = z.object({
@@ -271,6 +272,7 @@ export function LocationsContent() {
   };
 
   return (
+    <PermissionGuard permission="locations.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Locations</h1>
@@ -835,5 +837,6 @@ export function LocationsContent() {
         </TabsContent>
       </Tabs>
     </div>
+    </PermissionGuard>
   );
 }

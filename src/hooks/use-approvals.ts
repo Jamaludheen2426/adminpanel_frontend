@@ -9,7 +9,7 @@ import type { PaginatedResponse } from '@/lib/api-client';
 const approvalsApi = {
   getAll: async (filters: ApprovalFilters = {}): Promise<PaginatedResponse<ApprovalRequest>> => {
     const params = new URLSearchParams();
-    if (filters.status) params.append('status', filters.status);
+    if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString());
     if (filters.module_slug) params.append('module_slug', filters.module_slug);
     if (filters.page) params.append('page', filters.page.toString());
     if (filters.limit) params.append('limit', filters.limit.toString());

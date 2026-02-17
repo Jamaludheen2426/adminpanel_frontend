@@ -50,6 +50,7 @@ import {
 import { useActiveLanguages } from "@/hooks/use-languages";
 import { useTranslation } from "@/hooks/use-translation";
 import type { TranslationKey, Language } from "@/types";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function TranslationsContent() {
   const { t } = useTranslation();
@@ -196,6 +197,7 @@ export function TranslationsContent() {
   }
 
   return (
+    <PermissionGuard permission="translations.view">
     <>
       {/* Loading Overlay - Shows when performing mutations */}
       {(createKeyMutation.isPending || deleteKeyMutation.isPending || updateTranslationsMutation.isPending || retranslateAllMutation.isPending) && (
@@ -630,5 +632,6 @@ export function TranslationsContent() {
         </Dialog>
       </div>
     </>
+    </PermissionGuard>
   );
 }

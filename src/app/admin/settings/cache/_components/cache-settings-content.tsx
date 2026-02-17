@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function CacheSettingsContent() {
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +85,7 @@ export function CacheSettingsContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <>
       {/* Loading Overlay - Shows when clearing */}
       {isClearing && (
@@ -191,5 +193,6 @@ export function CacheSettingsContent() {
         </div>
       </div>
     </>
+    </PermissionGuard>
   );
 }

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const lightColors = [
   { key: "primary_color", label: "Primary", defaultVal: "#208bc4" },
@@ -165,6 +166,7 @@ export function AdminAppearanceContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <>
       {/* Loading Overlay - Shows when saving */}
       {bulkUpdateMutation.isPending && (
@@ -459,5 +461,6 @@ export function AdminAppearanceContent() {
         </div>
       </div>
     </>
+    </PermissionGuard>
   );
 }

@@ -18,6 +18,7 @@ import { useModules } from "@/hooks/use-modules";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import React from "react";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function ModulesContent() {
   const { t } = useTranslation();
@@ -40,6 +41,7 @@ export function ModulesContent() {
   };
 
   return (
+    <PermissionGuard permission="modules.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Modules & Permissions</h1>
@@ -174,5 +176,6 @@ export function ModulesContent() {
         </CardContent>
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

@@ -23,10 +23,9 @@ export default function AdminNavbar() {
   const { user } = useAuth();
   const logoutMutation = useLogout();
   const { data: pendingCount } = usePendingCount();
-  const { data: recentApprovals } = useApprovals({ status: 'pending', limit: 5 });
+  const { data: recentApprovals } = useApprovals({ is_active: 2, limit: 5 });
 
   const handleLogout = () => {
-    localStorage.removeItem("authenticated");
     logoutMutation.mutate();
   };
 

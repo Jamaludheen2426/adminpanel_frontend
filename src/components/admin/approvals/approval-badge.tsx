@@ -2,13 +2,13 @@ import { cn } from '@/lib/utils';
 import { Check, X, Clock } from 'lucide-react';
 
 interface ApprovalBadgeProps {
-  status?: 'pending' | 'approved' | 'rejected';
+  status?: number; // 0=rejected, 1=approved, 2=pending
   className?: string;
 }
 
-export function ApprovalBadge({ status = 'pending', className }: ApprovalBadgeProps) {
-  const config = {
-    pending: {
+export function ApprovalBadge({ status = 2, className }: ApprovalBadgeProps) {
+  const config: Record<number, { trackBg: string; thumbBg: string; thumbPosition: string; label: string; labelColor: string; icon: typeof Clock }> = {
+    2: {
       trackBg: 'bg-yellow-100 dark:bg-yellow-900/40',
       thumbBg: 'bg-yellow-400',
       thumbPosition: 'translate-x-[50%] left-1/2 -ml-2.5',
@@ -16,7 +16,7 @@ export function ApprovalBadge({ status = 'pending', className }: ApprovalBadgePr
       labelColor: 'text-yellow-600 dark:text-yellow-300',
       icon: Clock,
     },
-    approved: {
+    1: {
       trackBg: 'bg-green-100 dark:bg-green-900/40',
       thumbBg: 'bg-green-400',
       thumbPosition: 'translate-x-0 right-0.5',
@@ -24,7 +24,7 @@ export function ApprovalBadge({ status = 'pending', className }: ApprovalBadgePr
       labelColor: 'text-green-600 dark:text-green-300',
       icon: Check,
     },
-    rejected: {
+    0: {
       trackBg: 'bg-red-100 dark:bg-red-900/40',
       thumbBg: 'bg-red-400',
       thumbPosition: 'translate-x-0 left-0.5',
@@ -34,7 +34,7 @@ export function ApprovalBadge({ status = 'pending', className }: ApprovalBadgePr
     },
   };
 
-  const { trackBg, thumbBg, thumbPosition, label, labelColor, icon: Icon } = config[status];
+  const { trackBg, thumbBg, thumbPosition, label, labelColor, icon: Icon } = config[status] ?? config[2];
 
   return (
     <div className={cn('inline-flex items-center gap-2', className)}>

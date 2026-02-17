@@ -98,7 +98,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
 
   const [expandedSubModules, setExpandedSubModules] = useState<Set<string>>(new Set());
   const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<Set<string>>(new Set());
-  const [approvalModules, setApprovalModules] = useState<Record<string, boolean>>({});
+  const [approvalSubModules, setApprovalSubModules] = useState<Record<string, boolean>>({});
 
   const {
     register,
@@ -119,19 +119,44 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
   const isActive = watch("is_active");
 
   useEffect(() => {
-    if (role?.permissions) {
-      const keys = new Set<string>();
-      role.permissions.forEach((p: Permission) => keys.add(p.slug));
-      setSelectedPermissionKeys(keys);
+    if (!role?.permissions || !permissionsData?.data) return;
 
-      const modules: Record<string, boolean> = {};
-      role.permissions.forEach((p: Permission & { RolePermission?: { requires_approval?: boolean } }) => {
-        const mod = p.module || "other";
-        if (p.RolePermission?.requires_approval) modules[mod] = true;
-      });
-      setApprovalModules(modules);
-    }
-  }, [role]);
+    const keys = new Set<string>();
+    role.permissions.forEach((p: Permission) => keys.add(p.slug));
+    setSelectedPermissionKeys(keys);
+
+    // Build perm slug → subModuleSlug map from computed groups
+    const permToSubMod = new Map<string, string>();
+    const allGroups = moduleGroups.map((group) => {
+      const subModuleSlugs = getModulesForGroup(group.slug, Object.keys(
+        (permissionsData.data || []).reduce((acc, p) => { acc[p.module || "other"] = true; return acc; }, {} as Record<string, boolean>)
+      ));
+      let subMods: { slug: string; permissions: Permission[] }[];
+      if (group.slug === "settings") {
+        subMods = groupSettingsPermissions(permissionsData.data.filter((p) => p.module === "settings"));
+      } else {
+        const grouped = (permissionsData.data || []).reduce((acc, p) => {
+          const mod = p.module || "other";
+          if (!acc[mod]) acc[mod] = [];
+          acc[mod].push(p);
+          return acc;
+        }, {} as Record<string, Permission[]>);
+        subMods = subModuleSlugs.map((mod) => ({ slug: mod, permissions: grouped[mod] || [] }));
+      }
+      return subMods;
+    });
+    allGroups.forEach((subMods) => subMods.forEach((sm) => sm.permissions.forEach((p) => permToSubMod.set(p.slug, sm.slug))));
+
+    const approvals: Record<string, boolean> = {};
+    role.permissions.forEach((p: Permission & { RolePermission?: { requires_approval?: boolean } }) => {
+      if (p.RolePermission?.requires_approval) {
+        const subModSlug = permToSubMod.get(p.slug) || p.module || "other";
+        approvals[subModSlug] = true;
+      }
+    });
+    setApprovalSubModules(approvals);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, permissionsData]);
 
   const toggleSubModule = (slug: string) => {
     setExpandedSubModules((prev) => {
@@ -149,20 +174,36 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     });
   };
 
-  const toggleSubModuleAll = (permissions: Permission[], checked: boolean) => {
+  const toggleSubModuleAll = (subModuleSlug: string, permissions: Permission[], checked: boolean) => {
     setSelectedPermissionKeys((prev) => {
       const next = new Set(prev);
       permissions.forEach((p) => (checked ? next.add(p.slug) : next.delete(p.slug)));
       return next;
     });
+    // When selecting all permissions in a sub-module, auto-uncheck Requires Approval
+    if (checked) {
+      setApprovalSubModules((prev) => {
+        const next = { ...prev };
+        delete next[subModuleSlug];
+        return next;
+      });
+    }
   };
 
-  const toggleGroupAll = (permissions: Permission[], checked: boolean) => {
+  const toggleGroupAll = (subModuleSlugs: string[], permissions: Permission[], checked: boolean) => {
     setSelectedPermissionKeys((prev) => {
       const next = new Set(prev);
       permissions.forEach((p) => (checked ? next.add(p.slug) : next.delete(p.slug)));
       return next;
     });
+    // When selecting all in a group, auto-uncheck Requires Approval for all sub-modules
+    if (checked) {
+      setApprovalSubModules((prev) => {
+        const next = { ...prev };
+        subModuleSlugs.forEach((s) => delete next[s]);
+        return next;
+      });
+    }
   };
 
   const toggleAllPermissions = (checked: boolean) => {
@@ -170,38 +211,42 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
       const all = new Set(permissionsData?.data?.map((p) => p.slug) || []);
       setSelectedPermissionKeys(all);
       // Uncheck all requires approval when selecting all permissions
-      setApprovalModules({});
+      setApprovalSubModules({});
     } else {
       setSelectedPermissionKeys(new Set());
     }
   };
 
-  const handleApprovalToggle = (groupSlug: string, allModuleSlugs: string[]) => {
-    const modules = groupSlug === "settings" ? ["settings"] : getModulesForGroup(groupSlug, allModuleSlugs);
-    setApprovalModules((prev) => {
-      const isCurrentlyEnabled = modules.some((m) => prev[m]);
+  const toggleSubModuleApproval = (subModuleSlug: string, checked: boolean) => {
+    setApprovalSubModules((prev) => {
       const next = { ...prev };
-      modules.forEach((m) => { next[m] = !isCurrentlyEnabled; });
+      if (checked) next[subModuleSlug] = true;
+      else delete next[subModuleSlug];
       return next;
     });
   };
 
-  const isGroupApprovalEnabled = (groupSlug: string, allModuleSlugs: string[]) => {
-    const modules = groupSlug === "settings" ? ["settings"] : getModulesForGroup(groupSlug, allModuleSlugs);
-    return modules.some((m) => !!approvalModules[m]);
-  };
+  const buildPayload = (permKeys: Set<string>) => {
+    // Build perm slug → subModuleSlug map
+    const permToSubMod = new Map<string, string>();
+    groups.forEach((group) => {
+      group.subModules.forEach((sm) => {
+        sm.permissions.forEach((p) => permToSubMod.set(p.slug, sm.slug));
+      });
+    });
 
-  const buildPayload = (permKeys: Set<string>) =>
-    Array.from(permKeys)
+    return Array.from(permKeys)
       .map((slug) => {
         const permission = permissionsData?.data?.find((p) => p.slug === slug);
         if (!permission) return null;
+        const subModSlug = permToSubMod.get(slug) || permission.module || "other";
         return {
           permissionId: permission.id,
-          requiresApproval: !!approvalModules[permission.module || "other"],
+          requiresApproval: !!approvalSubModules[subModSlug],
         };
       })
       .filter(Boolean) as { permissionId: number; requiresApproval: boolean }[];
+  };
 
   const handleCancel = () => {
     if (onSuccess) {
@@ -367,27 +412,9 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                       <Checkbox
                         checked={groupAllSelected}
                         data-state={groupSomeSelected && !groupAllSelected ? "indeterminate" : undefined}
-                        onCheckedChange={(checked) => toggleGroupAll(group.allGroupPermissions, !!checked)}
+                        onCheckedChange={(checked) => toggleGroupAll(group.subModules.map((s) => s.slug), group.allGroupPermissions, !!checked)}
                       />
                       <span className={cn("font-semibold text-sm", group.color)}>{group.name}</span>
-
-                      {/* Requires Approval — always visible */}
-                      <div
-                        className="flex items-center gap-1.5 ml-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Checkbox
-                          id={`approval-${group.slug}`}
-                          checked={isGroupApprovalEnabled(group.slug, allModuleSlugs)}
-                          onCheckedChange={() => handleApprovalToggle(group.slug, allModuleSlugs)}
-                        />
-                        <label
-                          htmlFor={`approval-${group.slug}`}
-                          className="text-sm text-muted-foreground cursor-pointer"
-                        >
-                          Requires Approval
-                        </label>
-                      </div>
                     </div>
 
                     {/* Sub-Modules — grid of self-contained cells */}
@@ -423,7 +450,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                   checked={subAllSelected}
                                   data-state={subSomeSelected && !subAllSelected ? "indeterminate" : undefined}
                                   onCheckedChange={(checked) =>
-                                    toggleSubModuleAll(subModule.permissions, !!checked)
+                                    toggleSubModuleAll(subModule.slug, subModule.permissions, !!checked)
                                   }
                                 />
                                 <label
@@ -465,10 +492,10 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                             onCheckedChange={(checked) => {
                                               if (isAllPerm && checked) {
                                                 // "all" selects all permissions in this sub-module
-                                                toggleSubModuleAll(subModule.permissions, true);
+                                                toggleSubModuleAll(subModule.slug, subModule.permissions, true);
                                               } else if (isAllPerm && !checked) {
                                                 // Unchecking "all" deselects all
-                                                toggleSubModuleAll(subModule.permissions, false);
+                                                toggleSubModuleAll(subModule.slug, subModule.permissions, false);
                                               } else {
                                                 togglePermission(permission.slug);
                                               }
@@ -486,6 +513,23 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                         </div>
                                       );
                                     })}
+
+                                  {/* Requires Approval — at the bottom of expanded permissions */}
+                                  <div className="flex items-center gap-2 py-0.5 mt-0.5 border-t border-border/30 pt-1.5">
+                                    <Checkbox
+                                      id={`approval-${subModule.slug}`}
+                                      checked={!!approvalSubModules[subModule.slug]}
+                                      onCheckedChange={(checked) =>
+                                        toggleSubModuleApproval(subModule.slug, !!checked)
+                                      }
+                                    />
+                                    <label
+                                      htmlFor={`approval-${subModule.slug}`}
+                                      className="text-xs text-muted-foreground cursor-pointer whitespace-nowrap"
+                                    >
+                                      Requires Approval
+                                    </label>
+                                  </div>
                                 </div>
                               )}
                             </div>

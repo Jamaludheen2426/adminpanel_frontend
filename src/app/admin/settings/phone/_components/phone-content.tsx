@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const countries = [
   { code: "AF", name: "Afghanistan" },
@@ -299,6 +300,7 @@ export function PhoneContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/settings">
@@ -464,5 +466,6 @@ export function PhoneContent() {
         </Button>
       </div>
     </div>
+    </PermissionGuard>
   );
 }

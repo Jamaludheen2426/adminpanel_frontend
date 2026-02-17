@@ -223,9 +223,9 @@ function DeveloperDashboard() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={company.status === 'active' ? 'default' : 'secondary'}
+                        variant={company.is_active === 1 ? 'default' : 'secondary'}
                       >
-                        {company.status}
+                        {company.is_active === 1 ? 'Active' : company.is_active === 0 ? 'Suspended' : 'Pending'}
                       </Badge>
                     </TableCell>
                     <TableCell>{company.user_count || 0}</TableCell>

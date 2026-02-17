@@ -78,7 +78,7 @@ export function ApprovalDetailDialog({
     );
   }
 
-  const isPending = approval.status === 'pending';
+  const isPending = approval.is_active === 2;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,7 +93,7 @@ export function ApprovalDetailDialog({
         <div className="space-y-4">
           {/* Status */}
           <div>
-            <ApprovalBadge status={approval.status} />
+            <ApprovalBadge status={approval.is_active} />
           </div>
 
           {/* Request Info */}

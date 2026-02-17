@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { UpdateCompanyDto } from '@/types';
+import { PermissionGuard } from '@/components/guards/permission-guard';
 
 export function EditCompanyContent({ companyId }: { companyId: number }) {
   const router = useRouter();
@@ -48,7 +49,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
       phone: '',
       address: '',
       domain: '',
-      status: 'active',
+      is_active: 1,
       max_users: undefined,
     },
   });
@@ -63,7 +64,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
         phone: company.phone || '',
         address: company.address || '',
         domain: company.domain || '',
-        status: company.status,
+        is_active: company.is_active,
         max_users: company.max_users || undefined,
       });
     }
@@ -101,6 +102,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
   }
 
   return (
+    <PermissionGuard developerOnly>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -235,13 +237,13 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="is_active"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value?.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -249,9 +251,9 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="suspended">Suspended</SelectItem>
+                          <SelectItem value="1">Active</SelectItem>
+                          <SelectItem value="0">Suspended</SelectItem>
+                          <SelectItem value="2">Pending</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -331,5 +333,6 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
         </form>
       </Form>
     </div>
+    </PermissionGuard>
   );
 }

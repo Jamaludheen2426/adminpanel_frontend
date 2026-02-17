@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CreateCompanyDto } from '@/types';
+import { PermissionGuard } from '@/components/guards/permission-guard';
 
 export function CreateCompanyContent() {
   const router = useRouter();
@@ -47,7 +48,7 @@ export function CreateCompanyContent() {
       phone: '',
       address: '',
       domain: '',
-      status: 'active',
+      is_active: 1,
       max_users: undefined,
       admin_full_name: '',
       admin_email: '',
@@ -77,6 +78,7 @@ export function CreateCompanyContent() {
   };
 
   return (
+    <PermissionGuard developerOnly>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -218,13 +220,13 @@ export function CreateCompanyContent() {
               <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="is_active"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        defaultValue={field.value?.toString()}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -232,9 +234,9 @@ export function CreateCompanyContent() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="inactive">Inactive</SelectItem>
-                          <SelectItem value="suspended">Suspended</SelectItem>
+                          <SelectItem value="1">Active</SelectItem>
+                          <SelectItem value="0">Suspended</SelectItem>
+                          <SelectItem value="2">Pending</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -364,5 +366,6 @@ export function CreateCompanyContent() {
         </form>
       </Form>
     </div>
+    </PermissionGuard>
   );
 }

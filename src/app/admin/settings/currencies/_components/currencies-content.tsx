@@ -27,6 +27,7 @@ import { CurrencyForm } from "@/components/admin/currencies/currency-form";
 import { useTranslation } from "@/hooks/use-translation";
 import { Spinner } from "@/components/ui/spinner";
 import type { Currency } from "@/types";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function CurrenciesContent() {
   const { t } = useTranslation();
@@ -60,6 +61,7 @@ export function CurrenciesContent() {
   };
 
   return (
+    <PermissionGuard permission="currencies.view">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t('currencies.title')}</h1>
@@ -214,5 +216,6 @@ export function CurrenciesContent() {
         </CardContent>
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

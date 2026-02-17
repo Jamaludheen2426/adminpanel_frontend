@@ -100,9 +100,9 @@ export function CompanySwitcher() {
                   <Building2 className="mr-2 h-4 w-4" />
                   <div className="flex flex-col flex-1 min-w-0">
                     <span className="truncate">{company.name}</span>
-                    {company.status !== 'active' && (
+                    {company.is_active !== 1 && (
                       <span className="text-xs text-muted-foreground">
-                        ({company.status})
+                        ({company.is_active === 0 ? 'suspended' : 'pending'})
                       </span>
                     )}
                   </div>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function SocialLoginContent() {
   const { data: settings, isLoading } = useSettingsByGroup("social_login");
@@ -80,6 +81,7 @@ export function SocialLoginContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/settings">
@@ -306,5 +308,6 @@ export function SocialLoginContent() {
         </Button>
       </div>
     </div>
+    </PermissionGuard>
   );
 }

@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function ThemeOptionContent() {
   const { data: settings } = useSettingsByGroup("theme_options");
@@ -56,6 +57,7 @@ export function ThemeOptionContent() {
   };
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Theme Options</h1>
@@ -225,5 +227,6 @@ export function ThemeOptionContent() {
         </Button>
       </div>
     </div>
+    </PermissionGuard>
   );
 }

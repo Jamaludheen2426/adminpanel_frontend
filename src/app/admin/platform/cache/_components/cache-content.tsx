@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 interface CacheItem {
   id: string;
@@ -73,6 +74,7 @@ export function CacheContent() {
   };
 
   return (
+    <PermissionGuard minLevel={100}>
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/platform">
@@ -129,5 +131,6 @@ export function CacheContent() {
         })}
       </div>
     </div>
+    </PermissionGuard>
   );
 }

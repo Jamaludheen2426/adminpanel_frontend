@@ -68,6 +68,7 @@ import {
 import { useEmailTemplates } from "@/hooks/use-email-templates";
 import type { EmailConfig, CreateEmailConfigDto } from "@/types";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const drivers = [
   { value: "smtp", label: "SMTP (Generic)", free: true },
@@ -355,6 +356,7 @@ export function EmailConfigContent() {
   }
 
   return (
+    <PermissionGuard permission="email_configs.view">
     <>
       {/* Loading Overlay */}
       {(createMutation.isPending ||
@@ -910,5 +912,6 @@ export function EmailConfigContent() {
         </Dialog>
       </div>
     </>
+    </PermissionGuard>
   );
 }

@@ -27,6 +27,7 @@ import {
 import { useUploadMedia } from "@/hooks/use-media";
 import { ImageCropper } from "@/components/common/image-cropper";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const fonts = [
   { value: "inter", label: "Inter" },
@@ -210,6 +211,7 @@ export function AdminSettingsContent() {
     : values.login_background_url;
 
   return (
+    <PermissionGuard permission="settings.view">
     <>
       {/* Loading Overlay - Shows when saving */}
       {(isSaving || bulkUpdateMutation.isPending) && (
@@ -489,5 +491,6 @@ export function AdminSettingsContent() {
         </div>
       </div>
     </>
+    </PermissionGuard>
   );
 }

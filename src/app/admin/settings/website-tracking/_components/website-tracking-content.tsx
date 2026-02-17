@@ -19,6 +19,7 @@ import {
   useSettingsByGroup,
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function WebsiteTrackingContent() {
   const { data: settings, isLoading } = useSettingsByGroup("analytics");
@@ -68,6 +69,7 @@ export function WebsiteTrackingContent() {
   }
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/admin/settings">
@@ -632,5 +634,6 @@ export function WebsiteTrackingContent() {
         </Button>
       </div>
     </div>
+    </PermissionGuard>
   );
 }

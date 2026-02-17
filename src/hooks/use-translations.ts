@@ -331,7 +331,7 @@ export interface MissingTranslationKey {
   report_count: number;
   first_reported_at: string;
   last_reported_at: string;
-  is_resolved: boolean;
+  is_active: number; // 0=resolved/ignored, 1=pending, 2=in-progress
   created_at: string;
   updated_at: string;
 }

@@ -20,6 +20,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { usePermissionCheck } from "@/hooks";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 interface SettingItem {
   labelKey: string;
@@ -198,6 +199,7 @@ export function SettingsContent() {
     .filter(group => group.items.length > 0);
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">{t("nav.settings")}</h1>
@@ -242,5 +244,6 @@ export function SettingsContent() {
         </Card>
       ))}
     </div>
+    </PermissionGuard>
   );
 }

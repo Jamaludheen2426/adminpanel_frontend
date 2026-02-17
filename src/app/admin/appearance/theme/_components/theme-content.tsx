@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const themeOptions = [
   {
@@ -69,6 +70,7 @@ export function ThemeContent() {
   };
 
   return (
+    <PermissionGuard permission="settings.view">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Theme</h1>
@@ -236,5 +238,6 @@ export function ThemeContent() {
         </CardContent>
       </Card>
     </div>
+    </PermissionGuard>
   );
 }

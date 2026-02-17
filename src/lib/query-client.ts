@@ -180,4 +180,10 @@ export const queryKeys = {
     list: (params: Record<string, unknown>) => [...queryKeys.missingTranslationKeys.lists(), params] as const,
     count: () => [...queryKeys.missingTranslationKeys.all, 'count'] as const,
   },
+
+  setup: {
+    all: ['setup'] as const,
+    status: () => [...queryKeys.setup.all, 'status'] as const,
+    preflight: () => [...queryKeys.setup.all, 'preflight'] as const,
+  },
 };

@@ -80,6 +80,7 @@ import { useEmailConfigs } from "@/hooks/use-email-configs";
 import { useRoles } from "@/hooks/use-roles";
 import type { EmailCampaign, CreateEmailCampaignDto } from "@/types";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const campaignTypes = [
   { value: "holiday", label: "Holiday Campaign" },
@@ -94,11 +95,16 @@ const targetAudiences = [
   { value: "custom", label: "Custom (Select Roles)" },
 ];
 
-const statusColors: Record<string, string> = {
-  draft: "secondary",
-  active: "default",
-  paused: "outline",
-  completed: "secondary",
+const statusColors: Record<number, string> = {
+  2: "secondary",  // draft/pending
+  1: "default",    // active
+  0: "outline",    // paused/completed
+};
+
+const statusLabels: Record<number, string> = {
+  2: "Draft",
+  1: "Active",
+  0: "Paused",
 };
 
 const defaultForm: CreateEmailCampaignDto = {
@@ -112,7 +118,7 @@ const defaultForm: CreateEmailCampaignDto = {
   scheduled_time: "08:00",
   target_audience: "active_users",
   target_roles: [],
-  status: "draft",
+  is_active: 2,
 };
 
 export function EmailCampaignsContent() {
@@ -163,10 +169,7 @@ export function EmailCampaignsContent() {
       scheduled_time: campaign.scheduled_time || "08:00",
       target_audience: campaign.target_audience,
       target_roles: campaign.target_roles || [],
-      status:
-        campaign.status === "completed" || campaign.status === "paused"
-          ? "draft"
-          : campaign.status,
+      is_active: campaign.is_active === 1 ? 1 : 2,
     });
     setDialogOpen(true);
   };
@@ -216,6 +219,7 @@ export function EmailCampaignsContent() {
   }
 
   return (
+    <PermissionGuard permission="email_campaigns.read">
     <>
       {/* Loading Overlay */}
       {(createMutation.isPending ||
@@ -385,13 +389,13 @@ export function EmailCampaignsContent() {
                       <TableCell>
                         <Badge
                           variant={
-                            statusColors[campaign.status] as
+                            statusColors[campaign.is_active] as
                               | "default"
                               | "secondary"
                               | "outline"
                           }
                         >
-                          {campaign.status}
+                          {statusLabels[campaign.is_active]}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
@@ -410,7 +414,7 @@ export function EmailCampaignsContent() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {campaign.status === "active" ? (
+                          {campaign.is_active === 1 ? (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -420,7 +424,7 @@ export function EmailCampaignsContent() {
                             >
                               <Pause className="h-4 w-4" />
                             </Button>
-                          ) : campaign.status !== "completed" ? (
+                          ) : campaign.is_active !== 0 ? (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -794,5 +798,6 @@ export function EmailCampaignsContent() {
         </AlertDialog>
       </div>
     </>
+    </PermissionGuard>
   );
 }

@@ -55,6 +55,7 @@ import { Switch } from "@/components/ui/switch";
 import { isApprovalRequired } from "@/lib/api-client";
 import { HelpCircle } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function LanguagesContent() {
   const { t } = useTranslation();
@@ -165,6 +166,7 @@ export function LanguagesContent() {
   }
 
   return (
+    <PermissionGuard permission="languages.view">
     <>
       {/* Loading Overlay */}
       {(deleteLanguageMutation.isPending ||
@@ -607,5 +609,6 @@ export function LanguagesContent() {
         </AlertDialog>
       </div>
     </>
+    </PermissionGuard>
   );
 }

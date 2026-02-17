@@ -58,6 +58,7 @@ import {
 } from "@/hooks/use-translations";
 import { useTranslation } from "@/hooks/use-translation";
 import { formatDistanceToNow } from "date-fns";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 export function MissingTranslationsContent() {
   const { t } = useTranslation();
@@ -133,6 +134,7 @@ export function MissingTranslationsContent() {
   }
 
   return (
+    <PermissionGuard permission="translations.view">
     <>
       {/* Loading Overlay - Shows when performing mutations */}
       {(createFromMissingMutation.isPending || createAllMutation.isPending || deleteMutation.isPending || ignoreMutation.isPending) && (
@@ -216,12 +218,12 @@ export function MissingTranslationsContent() {
               </TableHeader>
               <TableBody>
                 {data?.data?.map((item) => (
-                  <TableRow key={item.id} className={item.is_resolved ? "opacity-50" : ""}>
+                  <TableRow key={item.id} className={item.is_active === 0 ? "opacity-50" : ""}>
                     <TableCell>
                       <code className="text-sm bg-muted px-2 py-1 rounded">
                         {item.key}
                       </code>
-                      {item.is_resolved && (
+                      {item.is_active === 0 && (
                         <Badge variant="outline" className="ml-2 text-xs">
                           Ignored
                         </Badge>
@@ -257,7 +259,7 @@ export function MissingTranslationsContent() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {!item.is_resolved && (
+                        {item.is_active !== 0 && (
                           <>
                             <Button
                               variant="ghost"
@@ -395,5 +397,6 @@ export function MissingTranslationsContent() {
         </Dialog>
       </div>
     </>
+    </PermissionGuard>
   );
 }

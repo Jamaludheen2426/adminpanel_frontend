@@ -74,6 +74,7 @@ import { useEmailConfigs } from "@/hooks/use-email-configs";
 import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
 import { Spinner } from "@/components/ui/spinner";
 import { HtmlEditor } from "@/components/common/html-editor";
+import { PermissionGuard } from "@/components/guards/permission-guard";
 
 const defaultForm: CreateEmailTemplateDto = {
   name: "",
@@ -251,6 +252,7 @@ export function TemplatesContent() {
   };
 
   return (
+    <PermissionGuard permission="email_templates.read">
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -799,6 +801,7 @@ export function TemplatesContent() {
         </DialogContent>
       </Dialog>
     </div>
+    </PermissionGuard>
   );
 }
 
