@@ -39,25 +39,27 @@ async function forwardRequest(request: NextRequest, path: string, method: string
     const headers = new Headers(request.headers);
     headers.delete('host');
     headers.delete('connection');
-
-    // Always set JSON content type for non-file requests
-    if (body && !headers.get('content-type')?.includes('multipart/form-data')) {
-      headers.set('content-type', 'application/json');
-    }
+    headers.delete('content-length'); // CRITICAL: Fetch recalculates this. Old length causes backend hangs.
 
     // Make the request to backend
     const backendResponse = await fetch(backendUrl, {
       method,
       headers,
-      body,
-      credentials: 'include', // Include cookies in backend request
+      body: body || undefined,
+      credentials: 'include',
     });
 
-    // Copy response status and basic headers
-    const responseHeaders = new Headers(backendResponse.headers);
+    // Copy response headers (skip problematic ones)
+    const responseHeaders = new Headers();
+    backendResponse.headers.forEach((value, key) => {
+      const lowerKey = key.toLowerCase();
+      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(lowerKey)) {
+        responseHeaders.append(key, value);
+      }
+    });
 
     // CRITICAL: Forward Set-Cookie headers from backend
-    // These will be set on the Vercel domain (same domain as frontend)
+    // These will be set on the Vercel domain so Middleware can read them
     const setCookieHeaders = backendResponse.headers.getSetCookie?.();
     if (setCookieHeaders && setCookieHeaders.length > 0) {
       setCookieHeaders.forEach(cookie => {
@@ -65,19 +67,19 @@ async function forwardRequest(request: NextRequest, path: string, method: string
       });
     }
 
-    // Create response with forwarded body and headers
-    const response = new NextResponse(backendResponse.body, {
+    // Read full body and create response (avoids streaming hangs in Next.js)
+    const responseData = await backendResponse.arrayBuffer();
+
+    return new NextResponse(responseData, {
       status: backendResponse.status,
       statusText: backendResponse.statusText,
       headers: responseHeaders,
     });
-
-    return response;
   } catch (error) {
     console.error('[API Proxy Error]', error);
     return NextResponse.json(
-      { success: false, message: 'Proxy request failed', error: String(error) },
-      { status: 500 }
+      { success: false, message: 'Proxy request failed: Backend unreachable or timed out' },
+      { status: 504 }
     );
   }
 }
