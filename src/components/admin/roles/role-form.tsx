@@ -13,7 +13,11 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Minus } from "lucide-react";
-import { useCreateRole, useUpdateRole, useAssignPermissions } from "@/hooks/use-roles";
+import {
+  useCreateRole,
+  useUpdateRole,
+  useAssignPermissions,
+} from "@/hooks/use-roles";
 import { usePermissions } from "@/hooks/use-permissions";
 import { cn } from "@/lib/utils";
 import type { Role, Permission } from "@/types";
@@ -40,26 +44,91 @@ interface ModuleGroup {
 }
 
 const moduleGroups: ModuleGroup[] = [
-  { name: "Settings", slug: "settings", color: "text-foreground", bgColor: "bg-muted/40" },
-  { name: "Users & Roles", slug: "users_roles", color: "text-foreground", bgColor: "bg-muted/40" },
-  { name: "Content", slug: "cms", color: "text-foreground", bgColor: "bg-muted/40" },
-  { name: "Localization", slug: "localization", color: "text-foreground", bgColor: "bg-muted/40" },
-  { name: "Appearance", slug: "appearance", color: "text-foreground", bgColor: "bg-muted/40" },
-  { name: "System", slug: "system", color: "text-foreground", bgColor: "bg-muted/40" },
+  {
+    name: "Settings",
+    slug: "settings",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
+  {
+    name: "Users & Roles",
+    slug: "users_roles",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
+  {
+    name: "Content",
+    slug: "cms",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
+  {
+    name: "Localization",
+    slug: "localization",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
+  {
+    name: "Appearance",
+    slug: "appearance",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
+  {
+    name: "System",
+    slug: "system",
+    color: "text-foreground",
+    bgColor: "bg-muted/40",
+  },
 ];
 
 function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
-  if (groupSlug === "settings") return allModules.filter((m) => m === "settings");
-  if (groupSlug === "users_roles") return allModules.filter((m) => ["employees", "roles", "permissions", "modules", "approvals"].includes(m));
-  if (groupSlug === "cms") return allModules.filter((m) => ["media", "translations", "languages", "pages", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact"].includes(m));
-  if (groupSlug === "localization") return allModules.filter((m) => ["locations", "currencies"].includes(m));
-  if (groupSlug === "appearance") return allModules.filter((m) => ["appearance"].includes(m));
-  if (groupSlug === "system") return allModules.filter((m) => ["activity_logs", "email_campaigns", "email_configs", "email_templates", "plugins", "tools", "platform", "other"].includes(m));
+  if (groupSlug === "settings")
+    return allModules.filter((m) => m === "settings");
+  if (groupSlug === "users_roles")
+    return allModules.filter((m) =>
+      ["employees", "roles", "permissions", "modules", "approvals"].includes(m),
+    );
+  if (groupSlug === "cms")
+    return allModules.filter((m) =>
+      [
+        "media",
+        "translations",
+        "languages",
+        "pages",
+        "blog",
+        "testimonials",
+        "ads",
+        "announcements",
+        "faqs",
+        "newsletters",
+        "contact",
+      ].includes(m),
+    );
+  if (groupSlug === "localization")
+    return allModules.filter((m) => ["locations", "currencies"].includes(m));
+  if (groupSlug === "appearance")
+    return allModules.filter((m) => ["appearance"].includes(m));
+  if (groupSlug === "system")
+    return allModules.filter((m) =>
+      [
+        "activity_logs",
+        "email_campaigns",
+        "email_configs",
+        "email_templates",
+        "plugins",
+        "tools",
+        "platform",
+        "other",
+      ].includes(m),
+    );
   return [];
 }
 
 // For Settings: group permissions into virtual sub-modules by their section prefix
-function groupSettingsPermissions(permissions: Permission[]): { slug: string; name: string; permissions: Permission[] }[] {
+function groupSettingsPermissions(
+  permissions: Permission[],
+): { slug: string; name: string; permissions: Permission[] }[] {
   const sectionMap: Record<string, Permission[]> = {};
   const displayNames: Record<string, string> = {};
 
@@ -68,12 +137,19 @@ function groupSettingsPermissions(permissions: Permission[]): { slug: string; na
     const name = p.name || "";
 
     // Extract section key from slug: "settings.optimize_settings_view" → "optimize_settings"
-    const slugPart = slug.replace(/^settings\./, "").replace(/_?(view|create|edit|delete|manage|all)$/i, "");
+    const slugPart = slug
+      .replace(/^settings\./, "")
+      .replace(/_?(view|create|edit|delete|manage|all)$/i, "");
     // Extract display name from human name: "Optimize Settings View" → "Optimize Settings"
-    const namePart = name.replace(/\s*(View|Create|Edit|Delete|Manage|All)$/i, "").trim();
+    const namePart = name
+      .replace(/\s*(View|Create|Edit|Delete|Manage|All)$/i, "")
+      .trim();
 
-    const key = slugPart || namePart.toLowerCase().replace(/\s+/g, "_") || "general";
-    const displayName = namePart || slugPart.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const key =
+      slugPart || namePart.toLowerCase().replace(/\s+/g, "_") || "general";
+    const displayName =
+      namePart ||
+      slugPart.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
     if (!sectionMap[key]) {
       sectionMap[key] = [];
@@ -84,7 +160,9 @@ function groupSettingsPermissions(permissions: Permission[]): { slug: string; na
 
   return Object.entries(sectionMap).map(([key, perms]) => ({
     slug: `settings_${key}`,
-    name: displayNames[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    name:
+      displayNames[key] ||
+      key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     permissions: perms,
   }));
 }
@@ -94,11 +172,18 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
   const createRoleMutation = useCreateRole();
   const updateRoleMutation = useUpdateRole();
   const assignPermissionsMutation = useAssignPermissions();
-  const { data: permissionsData, isLoading: permissionsLoading } = usePermissions({ limit: 500 });
+  const { data: permissionsData, isLoading: permissionsLoading } =
+    usePermissions({ limit: 500 });
 
-  const [expandedSubModules, setExpandedSubModules] = useState<Set<string>>(new Set());
-  const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<Set<string>>(new Set());
-  const [approvalSubModules, setApprovalSubModules] = useState<Record<string, boolean>>({});
+  const [expandedSubModules, setExpandedSubModules] = useState<Set<string>>(
+    new Set(),
+  );
+  const [selectedPermissionKeys, setSelectedPermissionKeys] = useState<
+    Set<string>
+  >(new Set());
+  const [approvalSubModules, setApprovalSubModules] = useState<
+    Record<string, boolean>
+  >({});
 
   const {
     register,
@@ -112,7 +197,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
       name: role?.name || "",
       slug: role?.slug || "",
       description: role?.description || "",
-      is_active: role?.is_active ?? true,
+      is_active: role ? Boolean(role.is_active) : true,
     },
   });
 
@@ -128,34 +213,59 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     // Build perm slug → subModuleSlug map from computed groups
     const permToSubMod = new Map<string, string>();
     const allGroups = moduleGroups.map((group) => {
-      const subModuleSlugs = getModulesForGroup(group.slug, Object.keys(
-        (permissionsData.data || []).reduce((acc, p) => { acc[p.module || "other"] = true; return acc; }, {} as Record<string, boolean>)
-      ));
+      const subModuleSlugs = getModulesForGroup(
+        group.slug,
+        Object.keys(
+          (permissionsData.data || []).reduce(
+            (acc, p) => {
+              acc[p.module || "other"] = true;
+              return acc;
+            },
+            {} as Record<string, boolean>,
+          ),
+        ),
+      );
       let subMods: { slug: string; permissions: Permission[] }[];
       if (group.slug === "settings") {
-        subMods = groupSettingsPermissions(permissionsData.data.filter((p) => p.module === "settings"));
+        subMods = groupSettingsPermissions(
+          permissionsData.data.filter((p) => p.module === "settings"),
+        );
       } else {
-        const grouped = (permissionsData.data || []).reduce((acc, p) => {
-          const mod = p.module || "other";
-          if (!acc[mod]) acc[mod] = [];
-          acc[mod].push(p);
-          return acc;
-        }, {} as Record<string, Permission[]>);
-        subMods = subModuleSlugs.map((mod) => ({ slug: mod, permissions: grouped[mod] || [] }));
+        const grouped = (permissionsData.data || []).reduce(
+          (acc, p) => {
+            const mod = p.module || "other";
+            if (!acc[mod]) acc[mod] = [];
+            acc[mod].push(p);
+            return acc;
+          },
+          {} as Record<string, Permission[]>,
+        );
+        subMods = subModuleSlugs.map((mod) => ({
+          slug: mod,
+          permissions: grouped[mod] || [],
+        }));
       }
       return subMods;
     });
-    allGroups.forEach((subMods) => subMods.forEach((sm) => sm.permissions.forEach((p) => permToSubMod.set(p.slug, sm.slug))));
+    allGroups.forEach((subMods) =>
+      subMods.forEach((sm) =>
+        sm.permissions.forEach((p) => permToSubMod.set(p.slug, sm.slug)),
+      ),
+    );
 
     const approvals: Record<string, boolean> = {};
-    role.permissions.forEach((p: Permission & { RolePermission?: { requires_approval?: boolean } }) => {
-      if (p.RolePermission?.requires_approval) {
-        const subModSlug = permToSubMod.get(p.slug) || p.module || "other";
-        approvals[subModSlug] = true;
-      }
-    });
+    role.permissions.forEach(
+      (
+        p: Permission & { RolePermission?: { requires_approval?: boolean } },
+      ) => {
+        if (p.RolePermission?.requires_approval) {
+          const subModSlug = permToSubMod.get(p.slug) || p.module || "other";
+          approvals[subModSlug] = true;
+        }
+      },
+    );
     setApprovalSubModules(approvals);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role, permissionsData]);
 
   const toggleSubModule = (slug: string) => {
@@ -174,10 +284,16 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     });
   };
 
-  const toggleSubModuleAll = (subModuleSlug: string, permissions: Permission[], checked: boolean) => {
+  const toggleSubModuleAll = (
+    subModuleSlug: string,
+    permissions: Permission[],
+    checked: boolean,
+  ) => {
     setSelectedPermissionKeys((prev) => {
       const next = new Set(prev);
-      permissions.forEach((p) => (checked ? next.add(p.slug) : next.delete(p.slug)));
+      permissions.forEach((p) =>
+        checked ? next.add(p.slug) : next.delete(p.slug),
+      );
       return next;
     });
     // When selecting all permissions in a sub-module, auto-uncheck Requires Approval
@@ -190,10 +306,16 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     }
   };
 
-  const toggleGroupAll = (subModuleSlugs: string[], permissions: Permission[], checked: boolean) => {
+  const toggleGroupAll = (
+    subModuleSlugs: string[],
+    permissions: Permission[],
+    checked: boolean,
+  ) => {
     setSelectedPermissionKeys((prev) => {
       const next = new Set(prev);
-      permissions.forEach((p) => (checked ? next.add(p.slug) : next.delete(p.slug)));
+      permissions.forEach((p) =>
+        checked ? next.add(p.slug) : next.delete(p.slug),
+      );
       return next;
     });
     // When selecting all in a group, auto-uncheck Requires Approval for all sub-modules
@@ -239,7 +361,8 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
       .map((slug) => {
         const permission = permissionsData?.data?.find((p) => p.slug === slug);
         if (!permission) return null;
-        const subModSlug = permToSubMod.get(slug) || permission.module || "other";
+        const subModSlug =
+          permToSubMod.get(slug) || permission.module || "other";
         return {
           permissionId: permission.id,
           requiresApproval: !!approvalSubModules[subModSlug],
@@ -258,21 +381,35 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
 
   const onSubmit = async (data: RoleFormData) => {
     const payload = buildPayload(selectedPermissionKeys);
-
+    const apiData = { ...data, is_active: data.is_active ? 1 : 0 };
     if (role) {
       updateRoleMutation.mutate(
-        { id: role.id, data },
+        { id: role.id, data: apiData },
         {
           onSuccess: () => {
-            assignPermissionsMutation.mutate({ id: role.id, permissions: payload }, { onSuccess: () => { onSuccess?.() ?? router.push("/admin/platform/roles"); } });
+            assignPermissionsMutation.mutate(
+              { id: role.id, permissions: payload },
+              {
+                onSuccess: () => {
+                  onSuccess?.() ?? router.push("/admin/platform/roles");
+                },
+              },
+            );
           },
-        }
+        },
       );
     } else {
       createRoleMutation.mutate(data, {
         onSuccess: (newRole) => {
           if (payload.length > 0) {
-            assignPermissionsMutation.mutate({ id: newRole.id, permissions: payload }, { onSuccess: () => { onSuccess?.() ?? router.push("/admin/platform/roles"); } });
+            assignPermissionsMutation.mutate(
+              { id: newRole.id, permissions: payload },
+              {
+                onSuccess: () => {
+                  onSuccess?.() ?? router.push("/admin/platform/roles");
+                },
+              },
+            );
           } else {
             onSuccess?.() ?? router.push("/admin/platform/roles");
           }
@@ -281,7 +418,10 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     }
   };
 
-  const isPending = createRoleMutation.isPending || updateRoleMutation.isPending || assignPermissionsMutation.isPending;
+  const isPending =
+    createRoleMutation.isPending ||
+    updateRoleMutation.isPending ||
+    assignPermissionsMutation.isPending;
 
   // Group permissions by module slug
   const groupedByModule = (permissionsData?.data || []).reduce(
@@ -291,7 +431,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
       acc[mod].push(permission);
       return acc;
     },
-    {} as Record<string, Permission[]>
+    {} as Record<string, Permission[]>,
   );
 
   const allModuleSlugs = Object.keys(groupedByModule);
@@ -301,7 +441,11 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     .map((group) => {
       const subModuleSlugs = getModulesForGroup(group.slug, allModuleSlugs);
 
-      let subModules: { slug: string; name: string; permissions: Permission[] }[];
+      let subModules: {
+        slug: string;
+        name: string;
+        permissions: Permission[];
+      }[];
       if (group.slug === "settings") {
         // Split settings permissions into virtual sub-modules by section
         const settingsPerms = groupedByModule["settings"] || [];
@@ -320,8 +464,12 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     .filter((g) => g.subModules.length > 0);
 
   const allPermissions = permissionsData?.data || [];
-  const allSelected = allPermissions.length > 0 && allPermissions.every((p) => selectedPermissionKeys.has(p.slug));
-  const someSelected = allPermissions.some((p) => selectedPermissionKeys.has(p.slug));
+  const allSelected =
+    allPermissions.length > 0 &&
+    allPermissions.every((p) => selectedPermissionKeys.has(p.slug));
+  const someSelected = allPermissions.some((p) =>
+    selectedPermissionKeys.has(p.slug),
+  );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -333,12 +481,19 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
               Name <span className="text-destructive">*</span>
             </Label>
             <Input id="name" placeholder="Name" {...register("name")} />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" placeholder="Short description" {...register("description")} rows={3} />
+            <Textarea
+              id="description"
+              placeholder="Short description"
+              {...register("description")}
+              rows={3}
+            />
           </div>
 
           <div className="flex items-center gap-3">
@@ -365,10 +520,15 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                 <Checkbox
                   id="all-permissions"
                   checked={allSelected}
-                  data-state={someSelected && !allSelected ? "indeterminate" : undefined}
+                  data-state={
+                    someSelected && !allSelected ? "indeterminate" : undefined
+                  }
                   onCheckedChange={(checked) => toggleAllPermissions(!!checked)}
                 />
-                <label htmlFor="all-permissions" className="text-sm cursor-pointer">
+                <label
+                  htmlFor="all-permissions"
+                  className="text-sm cursor-pointer"
+                >
                   All Permissions
                 </label>
               </div>
@@ -385,7 +545,9 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                   type="button"
                   className="text-primary hover:underline"
                   onClick={() => {
-                    const all = groups.flatMap((g) => g.subModules.map((s) => s.slug));
+                    const all = groups.flatMap((g) =>
+                      g.subModules.map((s) => s.slug),
+                    );
                     setExpandedSubModules(new Set(all));
                   }}
                 >
@@ -396,25 +558,53 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
           </div>
 
           {permissionsLoading ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">Loading permissions...</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">
+              Loading permissions...
+            </div>
           ) : (
             <div className="border rounded-md overflow-hidden">
               {groups.map((group) => {
                 const groupAllSelected =
                   group.allGroupPermissions.length > 0 &&
-                  group.allGroupPermissions.every((p) => selectedPermissionKeys.has(p.slug));
-                const groupSomeSelected = group.allGroupPermissions.some((p) => selectedPermissionKeys.has(p.slug));
+                  group.allGroupPermissions.every((p) =>
+                    selectedPermissionKeys.has(p.slug),
+                  );
+                const groupSomeSelected = group.allGroupPermissions.some((p) =>
+                  selectedPermissionKeys.has(p.slug),
+                );
 
                 return (
-                  <div key={group.slug} className={cn("border-b last:border-b-0")}>
+                  <div
+                    key={group.slug}
+                    className={cn("border-b last:border-b-0")}
+                  >
                     {/* Module Group Header Row */}
-                    <div className={cn("flex items-center gap-3 px-4 py-2.5", group.bgColor)}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-2.5",
+                        group.bgColor,
+                      )}
+                    >
                       <Checkbox
                         checked={groupAllSelected}
-                        data-state={groupSomeSelected && !groupAllSelected ? "indeterminate" : undefined}
-                        onCheckedChange={(checked) => toggleGroupAll(group.subModules.map((s) => s.slug), group.allGroupPermissions, !!checked)}
+                        data-state={
+                          groupSomeSelected && !groupAllSelected
+                            ? "indeterminate"
+                            : undefined
+                        }
+                        onCheckedChange={(checked) =>
+                          toggleGroupAll(
+                            group.subModules.map((s) => s.slug),
+                            group.allGroupPermissions,
+                            !!checked,
+                          )
+                        }
                       />
-                      <span className={cn("font-semibold text-sm", group.color)}>{group.name}</span>
+                      <span
+                        className={cn("font-semibold text-sm", group.color)}
+                      >
+                        {group.name}
+                      </span>
                     </div>
 
                     {/* Sub-Modules — grid of self-contained cells */}
@@ -423,20 +613,29 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                         {group.subModules.map((subModule) => {
                           const subAllSelected =
                             subModule.permissions.length > 0 &&
-                            subModule.permissions.every((p) => selectedPermissionKeys.has(p.slug));
-                          const subSomeSelected = subModule.permissions.some((p) =>
-                            selectedPermissionKeys.has(p.slug)
+                            subModule.permissions.every((p) =>
+                              selectedPermissionKeys.has(p.slug),
+                            );
+                          const subSomeSelected = subModule.permissions.some(
+                            (p) => selectedPermissionKeys.has(p.slug),
                           );
-                          const isExpanded = expandedSubModules.has(subModule.slug);
+                          const isExpanded = expandedSubModules.has(
+                            subModule.slug,
+                          );
 
                           return (
                             // Each sub-module is a self-contained cell: chip + children below
-                            <div key={subModule.slug} className="flex flex-col min-w-[120px]">
+                            <div
+                              key={subModule.slug}
+                              className="flex flex-col min-w-[120px]"
+                            >
                               {/* Chip row */}
                               <div className="flex items-center gap-1.5 py-1">
                                 <button
                                   type="button"
-                                  onClick={() => toggleSubModule(subModule.slug)}
+                                  onClick={() =>
+                                    toggleSubModule(subModule.slug)
+                                  }
                                   className="w-[18px] h-[18px] rounded border border-border/70 flex items-center justify-center text-muted-foreground hover:bg-muted/60 transition-colors flex-shrink-0"
                                 >
                                   {isExpanded ? (
@@ -448,9 +647,17 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                 <Checkbox
                                   id={`submod-${subModule.slug}`}
                                   checked={subAllSelected}
-                                  data-state={subSomeSelected && !subAllSelected ? "indeterminate" : undefined}
+                                  data-state={
+                                    subSomeSelected && !subAllSelected
+                                      ? "indeterminate"
+                                      : undefined
+                                  }
                                   onCheckedChange={(checked) =>
-                                    toggleSubModuleAll(subModule.slug, subModule.permissions, !!checked)
+                                    toggleSubModuleAll(
+                                      subModule.slug,
+                                      subModule.permissions,
+                                      !!checked,
+                                    )
                                   }
                                 />
                                 <label
@@ -475,29 +682,47 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                     })
                                     .map((permission) => {
                                       const rawLabel =
-                                        permission.slug.split(".").pop() || permission.name;
+                                        permission.slug.split(".").pop() ||
+                                        permission.name;
                                       const isAllPerm = rawLabel === "manage";
-                                      const shortLabel = isAllPerm ? "all" : rawLabel;
+                                      const shortLabel = isAllPerm
+                                        ? "all"
+                                        : rawLabel;
                                       return (
                                         <div
                                           key={permission.id}
                                           className={cn(
                                             "flex items-center gap-2 py-0.5",
-                                            isAllPerm && "mb-0.5"
+                                            isAllPerm && "mb-0.5",
                                           )}
                                         >
                                           <Checkbox
                                             id={`perm-${permission.id}`}
-                                            checked={selectedPermissionKeys.has(permission.slug)}
+                                            checked={selectedPermissionKeys.has(
+                                              permission.slug,
+                                            )}
                                             onCheckedChange={(checked) => {
                                               if (isAllPerm && checked) {
                                                 // "all" selects all permissions in this sub-module
-                                                toggleSubModuleAll(subModule.slug, subModule.permissions, true);
-                                              } else if (isAllPerm && !checked) {
+                                                toggleSubModuleAll(
+                                                  subModule.slug,
+                                                  subModule.permissions,
+                                                  true,
+                                                );
+                                              } else if (
+                                                isAllPerm &&
+                                                !checked
+                                              ) {
                                                 // Unchecking "all" deselects all
-                                                toggleSubModuleAll(subModule.slug, subModule.permissions, false);
+                                                toggleSubModuleAll(
+                                                  subModule.slug,
+                                                  subModule.permissions,
+                                                  false,
+                                                );
                                               } else {
-                                                togglePermission(permission.slug);
+                                                togglePermission(
+                                                  permission.slug,
+                                                );
                                               }
                                             }}
                                           />
@@ -505,7 +730,9 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                             htmlFor={`perm-${permission.id}`}
                                             className={cn(
                                               "text-sm cursor-pointer capitalize",
-                                              isAllPerm ? "font-medium text-primary" : "text-foreground"
+                                              isAllPerm
+                                                ? "font-medium text-primary"
+                                                : "text-foreground",
                                             )}
                                           >
                                             {shortLabel}
@@ -518,9 +745,14 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
                                   <div className="flex items-center gap-2 py-0.5 mt-0.5 border-t border-border/30 pt-1.5">
                                     <Checkbox
                                       id={`approval-${subModule.slug}`}
-                                      checked={!!approvalSubModules[subModule.slug]}
+                                      checked={
+                                        !!approvalSubModules[subModule.slug]
+                                      }
                                       onCheckedChange={(checked) =>
-                                        toggleSubModuleApproval(subModule.slug, !!checked)
+                                        toggleSubModuleApproval(
+                                          subModule.slug,
+                                          !!checked,
+                                        )
                                       }
                                     />
                                     <label
@@ -550,7 +782,12 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
         <Button type="submit" disabled={isPending}>
           {isPending ? "Saving..." : role ? "Update Role" : "Create Role"}
         </Button>
-        <Button type="button" variant="outline" onClick={handleCancel} disabled={isPending}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCancel}
+          disabled={isPending}
+        >
           Cancel
         </Button>
       </div>

@@ -98,40 +98,96 @@ export function CompanyStep({ data, onNext, onBack }: CompanyStepProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Basic info */}
+
+        {/* ── Card 1: Company Name + Logo + Favicon ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Branding</CardTitle>
+            <CardDescription>Company name, logo and favicon</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Company Name row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">
+                  Company Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="Acme Inc."
+                  {...register('name')}
+                  onChange={handleNameChange}
+                />
+                {errors.name && (
+                  <p className="text-xs text-destructive">{errors.name.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="slug">
+                  Slug <span className="text-destructive">*</span>
+                </Label>
+                <Input id="slug" placeholder="acme-inc" {...register('slug')} />
+                {errors.slug && (
+                  <p className="text-xs text-destructive">{errors.slug.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Logo + Favicon row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ImageCropper
+                title="Company Logo"
+                description="Company logo (160×160 px)"
+                targetWidth={160}
+                targetHeight={160}
+                currentImage={logoPreview}
+                onImageCropped={handleLogoCropped}
+                onRemove={() => { setLogoFile(null); setLogoPreview(undefined); }}
+              />
+              <ImageCropper
+                title="Favicon"
+                description="Browser tab icon (.ico files only)"
+                targetWidth={32}
+                targetHeight={32}
+                accept=".ico"
+                skipCrop
+                currentImage={faviconPreview}
+                onImageCropped={handleFaviconCropped}
+                onRemove={() => { setFaviconFile(null); setFaviconPreview(undefined); }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Card 2: Remaining Company Information ── */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Company Information</CardTitle>
-            <CardDescription>Basic details about your company</CardDescription>
+            <CardDescription>Additional details about your company</CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name">Company Name <span className="text-destructive">*</span></Label>
-              <Input
-                id="name"
-                placeholder="Acme Inc."
-                {...register('name')}
-                onChange={handleNameChange}
-              />
-              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="slug">Slug <span className="text-destructive">*</span></Label>
-              <Input id="slug" placeholder="acme-inc" {...register('slug')} />
-              {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="copyright">Copyright Name <span className="text-destructive">*</span></Label>
+              <Label htmlFor="copyright">
+                Copyright Name <span className="text-destructive">*</span>
+              </Label>
               <Input id="copyright" placeholder="© Acme Inc." {...register('copyright')} />
-              {errors.copyright && <p className="text-xs text-destructive">{errors.copyright.message}</p>}
+              {errors.copyright && (
+                <p className="text-xs text-destructive">{errors.copyright.message}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="email">Company Email</Label>
-              <Input id="email" type="email" placeholder="contact@acme.com" {...register('email')} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                placeholder="contact@acme.com"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -141,7 +197,7 @@ export function CompanyStep({ data, onNext, onBack }: CompanyStepProps) {
           </CardContent>
         </Card>
 
-        {/* Regional */}
+        {/* ── Card 3: Regional Settings ── */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Regional Settings</CardTitle>
@@ -165,7 +221,9 @@ export function CompanyStep({ data, onNext, onBack }: CompanyStepProps) {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.timezone && <p className="text-xs text-destructive">{errors.timezone.message}</p>}
+              {errors.timezone && (
+                <p className="text-xs text-destructive">{errors.timezone.message}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -186,7 +244,9 @@ export function CompanyStep({ data, onNext, onBack }: CompanyStepProps) {
                   <SelectItem value="hi">Hindi</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.language && <p className="text-xs text-destructive">{errors.language.message}</p>}
+              {errors.language && (
+                <p className="text-xs text-destructive">{errors.language.message}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -207,36 +267,10 @@ export function CompanyStep({ data, onNext, onBack }: CompanyStepProps) {
                   <SelectItem value="SAR">SAR — Saudi Riyal</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.currency && <p className="text-xs text-destructive">{errors.currency.message}</p>}
+              {errors.currency && (
+                <p className="text-xs text-destructive">{errors.currency.message}</p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Branding — using the existing ImageCropper component */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Branding</CardTitle>
-            <CardDescription>Logo and favicon (optional — with crop & resize)</CardDescription>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ImageCropper
-              title="Company Logo"
-              description="Logo shown in admin sidebar (150×50 px)"
-              targetWidth={150}
-              targetHeight={50}
-              currentImage={logoPreview}
-              onImageCropped={handleLogoCropped}
-              onRemove={() => { setLogoFile(null); setLogoPreview(undefined); }}
-            />
-            <ImageCropper
-              title="Favicon"
-              description="Square icon for browser tabs (32×32 px)"
-              targetWidth={32}
-              targetHeight={32}
-              currentImage={faviconPreview}
-              onImageCropped={handleFaviconCropped}
-              onRemove={() => { setFaviconFile(null); setFaviconPreview(undefined); }}
-            />
           </CardContent>
         </Card>
 

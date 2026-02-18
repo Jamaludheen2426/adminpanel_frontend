@@ -265,9 +265,9 @@ export function AdminSettingsContent() {
             <CardContent className="space-y-6">
               <ImageCropper
                 title="Site Logo"
-                description="Your main site logo for public pages"
-                targetWidth={50}
-                targetHeight={50}
+                description="Your main site logo for public pages (160×160 px)"
+                targetWidth={160}
+                targetHeight={160}
                 currentImage={currentSiteLogoUrl}
                 onImageCropped={handleSiteLogoChange}
                 onRemove={removeSiteLogo}
@@ -320,9 +320,11 @@ export function AdminSettingsContent() {
             <CardContent>
               <ImageCropper
                 title="Favicon"
-                description="Square icon for browser tabs (32×32 px)"
+                description="Browser tab icon (.ico files only)"
                 targetWidth={32}
                 targetHeight={32}
+                accept=".ico"
+                skipCrop
                 currentImage={currentFaviconUrl}
                 onImageCropped={handleFaviconChange}
                 onRemove={removeFavicon}

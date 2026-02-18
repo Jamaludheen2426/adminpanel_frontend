@@ -7,6 +7,7 @@ import { DatabaseStep } from './_components/database-step';
 import { CompanyStep } from './_components/company-step';
 import { AdminStep } from './_components/admin-step';
 import { ReviewStep } from './_components/review-step';
+import { FinishedStep } from './_components/finished-step';
 import {
   type WizardState,
   type DatabaseStepData,
@@ -17,6 +18,7 @@ import {
 
 export default function InstallPage() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isFinished, setIsFinished] = useState(false);
   const [state, setState] = useState<WizardState>(wizardStateDefaults);
 
   // File state — kept here (not in step components) so they survive step navigation
@@ -51,16 +53,20 @@ export default function InstallPage() {
     goNext();
   };
 
+  const handleSetupComplete = () => {
+    setIsFinished(true);
+  };
+
   return (
     <div className="space-y-6">
-      <InstallStepper currentStep={currentStep} onStepClick={goTo} />
+      <InstallStepper currentStep={currentStep} onStepClick={goTo} isFinished={isFinished} />
 
       <div className="bg-card border rounded-xl p-6 shadow-sm">
-        {currentStep === 1 && (
+        {!isFinished && currentStep === 1 && (
           <WelcomeStep onNext={goNext} />
         )}
 
-        {currentStep === 2 && (
+        {!isFinished && currentStep === 2 && (
           <DatabaseStep
             data={state.db}
             onNext={handleDatabaseNext}
@@ -68,7 +74,7 @@ export default function InstallPage() {
           />
         )}
 
-        {currentStep === 3 && (
+        {!isFinished && currentStep === 3 && (
           <CompanyStep
             data={state.company}
             onNext={handleCompanyNext}
@@ -76,7 +82,7 @@ export default function InstallPage() {
           />
         )}
 
-        {currentStep === 4 && (
+        {!isFinished && currentStep === 4 && (
           <AdminStep
             data={state.admin}
             onNext={handleAdminNext}
@@ -84,14 +90,19 @@ export default function InstallPage() {
           />
         )}
 
-        {currentStep === 5 && (
+        {!isFinished && currentStep === 5 && (
           <ReviewStep
             state={state}
             logoFile={logoFile}
             faviconFile={faviconFile}
             avatarFile={avatarFile}
             onGoToStep={goTo}
+            onSetupComplete={handleSetupComplete}
           />
+        )}
+
+        {isFinished && (
+          <FinishedStep adminEmail={state.admin.email} />
         )}
       </div>
     </div>

@@ -29,6 +29,10 @@ interface ImageCropperProps {
   currentImage?: string;
   onImageCropped: (file: File) => void;
   onRemove: () => void;
+  /** Custom accept attribute for the file input (default: "image/*") */
+  accept?: string;
+  /** If true, skip the crop dialog and pass the file directly */
+  skipCrop?: boolean;
 }
 
 const centerAspectCrop = (
@@ -59,6 +63,8 @@ export function ImageCropper({
   currentImage,
   onImageCropped,
   onRemove,
+  accept = "image/*",
+  skipCrop = false,
 }: ImageCropperProps) {
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -76,6 +82,13 @@ export function ImageCropper({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Skip crop dialog for non-image files (e.g. .ico)
+      if (skipCrop) {
+        onImageCropped(file);
+        return;
+      }
+
       setSelectedFile(file);
       setCrop(undefined);
       setCompletedCrop(null);
@@ -232,7 +245,7 @@ export function ImageCropper({
               {currentImage ? "Change Image" : "Choose Image"}
               <input
                 type="file"
-                accept="image/*"
+                accept={accept}
                 className="hidden"
                 onChange={handleFileSelect}
               />

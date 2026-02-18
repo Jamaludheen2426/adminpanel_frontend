@@ -22,9 +22,9 @@ export const databaseStepSchema = z.object({
     .url('Must be a valid URL (e.g. http://localhost:3000)'),
   upload_path: z.string().min(1, 'Upload path is required'),
   max_file_size: z
-    .string()
-    .regex(/^\d+$/, 'Must be a number')
-    .refine((v) => parseInt(v, 10) > 0, { message: 'Must be greater than 0' }),
+  .string()
+  .regex(/^\d+(\.\d+)?$/, 'Must be a valid number')
+  .refine((v) => parseFloat(v) > 0, { message: 'Must be greater than 0' })
 });
 
 export type DatabaseStepData = z.infer<typeof databaseStepSchema>;
@@ -37,7 +37,7 @@ export const databaseStepDefaults: DatabaseStepData = {
   db_password: '',
   domain: 'http://localhost:3000',
   upload_path: 'uploads',
-  max_file_size: '10485760', // 10 MB in bytes
+  max_file_size: '10', // 10 MB 
 };
 
 // ─── Step 3: Company ──────────────────────────────────────────────────────────

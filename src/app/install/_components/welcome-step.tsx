@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { CheckCircle2, XCircle, Loader2, RefreshCw, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, RefreshCw, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePreflightCheck } from '@/hooks/use-setup';
 import { cn } from '@/lib/utils';
 
@@ -27,7 +28,7 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       <div>
         <h2 className="text-2xl font-bold">Welcome to Setup</h2>
         <p className="text-muted-foreground mt-1">
-          Let's make sure your environment is ready before we begin.
+          Let&apos;s make sure your environment is ready before we begin.
         </p>
       </div>
 
@@ -47,12 +48,13 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
           )}
 
           {isError && (
-            <div className="flex items-center gap-3 py-2 text-destructive">
-              <XCircle className="h-5 w-5 flex-shrink-0" />
-              <span className="text-sm">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Connection failed</AlertTitle>
+              <AlertDescription>
                 Could not reach backend: {error?.message ?? 'Unknown error'}
-              </span>
-            </div>
+              </AlertDescription>
+            </Alert>
           )}
 
           {checks.map((check) => (

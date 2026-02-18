@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, CheckCircle2, Loader2, XCircle,
-  Building2, User, Database, Edit2,
+  ArrowLeft, CheckCircle2, Loader2,
+  Building2, User, Database, Edit2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useCreateSetupCompany, useCreateSetupAdmin, useFinalize } from '@/hooks/use-setup';
 import type { WizardState } from '@/lib/setup-validation';
 
@@ -17,6 +17,7 @@ interface ReviewStepProps {
   faviconFile?: File | null;
   avatarFile?: File | null;
   onGoToStep: (step: number) => void;
+  onSetupComplete: () => void;
 }
 
 // Separate the progress phases from the overall state phases
@@ -40,8 +41,8 @@ export function ReviewStep({
   faviconFile,
   avatarFile,
   onGoToStep,
+  onSetupComplete,
 }: ReviewStepProps) {
-  const router = useRouter();
   const [phase, setPhase] = useState<SetupPhase>('idle');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -83,7 +84,6 @@ export function ReviewStep({
       // Server is restarting — poll until it's back up with all routes loaded
       setPhase('restarting');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      let serverReady = false;
       for (let i = 0; i < 30; i++) { // try for up to 30 seconds
         await new Promise((r) => setTimeout(r, 1000));
         try {
@@ -93,7 +93,6 @@ export function ReviewStep({
           });
           if (res.ok || res.status === 401) {
             // 200 = logged in, 401 = route exists but not authed — either way server is ready
-            serverReady = true;
             break;
           }
         } catch {
@@ -102,6 +101,8 @@ export function ReviewStep({
       }
 
       setPhase('done');
+      // Notify parent — show the Finished step
+      onSetupComplete();
     } catch (err: unknown) {
       setPhase('error');
       setErrorMessage(err instanceof Error ? err.message : 'Setup failed. Please try again.');
@@ -112,33 +113,12 @@ export function ReviewStep({
   const isDone  = (key: ProgressPhase) => phaseIndex(phase) > phaseIndex(key);
   const isActive = (key: ProgressPhase) => phase === key;
 
-  // Derived booleans — avoids inline string comparisons that confuse TypeScript
+  // Derived booleans
   const isIdle       = phase === 'idle';
   const isError      = phase === 'error';
   const isDonePhase  = phase === 'done';
   const isInProgress = !isIdle && !isError && !isDonePhase;
   const canInteract  = isIdle || isError;
-
-  // ── Success screen ──────────────────────────────────────────────────────────
-  if (isDonePhase) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 gap-6 text-center">
-        <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-950/50 flex items-center justify-center">
-          <CheckCircle2 className="h-10 w-10 text-green-500" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold">Setup Complete!</h2>
-          <p className="text-muted-foreground mt-2 max-w-md">
-            Your application is ready. You've been automatically logged in as super admin.
-          </p>
-        </div>
-        <Button size="lg" onClick={() => router.push('/admin')} className="gap-2">
-          Go to Dashboard
-          <ArrowLeft className="h-4 w-4 rotate-180" />
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -241,13 +221,11 @@ export function ReviewStep({
 
       {/* Error */}
       {isError && (
-        <div className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-md px-3 py-3">
-          <XCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-medium">Setup failed</p>
-            <p className="mt-0.5 text-destructive/80">{errorMessage}</p>
-          </div>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Setup failed</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
       )}
 
       <div className="flex items-center justify-between">
