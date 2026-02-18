@@ -19,7 +19,11 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/ap
 async function forwardRequest(request: NextRequest, path: string, method: string) {
   try {
     // Construct the full backend URL
-    const backendUrl = `${BACKEND_URL}/${path}`;
+    // Strip leading "v1/" from path because NEXT_PUBLIC_API_URL already ends in /v1
+    // e.g. path = "v1/auth/login" → strippedPath = "auth/login"
+    // Final URL: https://backend.onrender.com/api/v1/auth/login  ✓
+    const strippedPath = path.startsWith('v1/') ? path.slice(3) : path;
+    const backendUrl = `${BACKEND_URL}/${strippedPath}`;
 
     // Get request body if present
     let body: BodyInit | undefined;
@@ -35,7 +39,7 @@ async function forwardRequest(request: NextRequest, path: string, method: string
     const headers = new Headers(request.headers);
     headers.delete('host');
     headers.delete('connection');
-    
+
     // Always set JSON content type for non-file requests
     if (body && !headers.get('content-type')?.includes('multipart/form-data')) {
       headers.set('content-type', 'application/json');
