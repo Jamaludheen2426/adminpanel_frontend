@@ -2,7 +2,8 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-client';
 import type { DatabaseStepData, CompanyStepData, AdminStepData } from '@/lib/setup-validation';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+// Use the Next.js proxy route for same-domain cookie handling
+const API_URL = '/api/proxy/v1';
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
 

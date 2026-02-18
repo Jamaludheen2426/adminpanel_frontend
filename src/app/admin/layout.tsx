@@ -25,6 +25,14 @@ export default function AdminLayout({
     if (!isLoading && !isAuthenticated) {
       router.push("/auth/login");
     }
+    
+    // Clear auth_pending flag once authenticated
+    if (!isLoading && isAuthenticated) {
+      if (typeof document !== 'undefined') {
+        // Clear the temporary auth_pending cookie
+        document.cookie = 'auth_pending=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+      }
+    }
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {

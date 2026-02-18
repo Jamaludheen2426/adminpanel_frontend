@@ -78,6 +78,20 @@ export function useLogin() {
       queryClient.setQueryData(queryKeys.auth.me(), user);
       toast.success('Login successful');
       
+      // Set a temporary auth_pending cookie for middleware
+      // (Next.js middleware can't access cross-domain cookies set by backend)
+      // This flag expires after 15 seconds to force re-validation
+      if (typeof window !== 'undefined') {
+        // Set cookie that expires in 15 seconds
+        const expiryDate = new Date();
+        expiryDate.setSeconds(expiryDate.getSeconds() + 15);
+        
+        // Use document.cookie since we can't directly set cookies via fetch
+        document.cookie = `auth_pending=true; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+        
+        localStorage.setItem('auth_pending_time', Date.now().toString());
+      }
+      
       // Use setTimeout to ensure toast renders before redirect
       // and to properly trigger the navigation
       setTimeout(() => {
@@ -101,9 +115,20 @@ export function useRegister() {
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me(), user);
       toast.success('Registration successful');
-      router.push('/admin');
+      
+      // Set a temporary auth_pending cookie for middleware
+      if (typeof window !== 'undefined') {
+        const expiryDate = new Date();
+        expiryDate.setSeconds(expiryDate.getSeconds() + 15);
+        document.cookie = `auth_pending=true; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+      }
+      
+      setTimeout(() => {
+        router.push('/admin');
+      }, 300);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Registration error:', error);
       toast.error(error.response?.data?.message || 'Registration failed');
     },
   });
@@ -118,12 +143,26 @@ export function useLogout() {
     mutationFn: authApi.logout,
     onSuccess: () => {
       queryClient.clear();
+      
+      // Clear auth_pending flag
+      if (typeof window !== 'undefined') {
+        document.cookie = 'auth_pending=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+        localStorage.removeItem('auth_pending_time');
+      }
+      
       toast.success('Logged out successfully');
       router.push('/auth/login');
     },
     onError: () => {
       // Even if logout fails, clear local state
       queryClient.clear();
+      
+      // Clear auth_pending flag
+      if (typeof window !== 'undefined') {
+        document.cookie = 'auth_pending=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
+        localStorage.removeItem('auth_pending_time');
+      }
+      
       router.push('/auth/login');
     },
   });

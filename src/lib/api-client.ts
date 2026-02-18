@@ -2,7 +2,10 @@ import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } fro
 import { toast } from 'sonner';
 import { queryClient, queryKeys } from '@/lib/query-client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Use the Next.js proxy route for same-domain cookie handling
+// Instead of calling backend directly, we proxy through /api/proxy
+// This allows Set-Cookie headers from backend to be set on the Vercel domain
+const API_URL = '/api/proxy/v1';
 
 // Custom error class for approval-required responses
 export class ApprovalRequiredError extends Error {

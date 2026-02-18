@@ -33,8 +33,9 @@ export async function middleware(request: NextRequest) {
 
   if (needsBackendCheck) {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-      const res = await fetch(`${apiUrl}/setup/status`, {
+      // Use the proxy route for setup status check
+      // This ensures setup status is checked through the same domain
+      const res = await fetch('/api/proxy/v1/setup/status', {
         signal: AbortSignal.timeout(3000),
       });
       if (res.ok) {
@@ -78,10 +79,15 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
   const token = request.cookies.get('access_token')?.value;
+  
+  // Check for auth_pending flag (set by login hook for cross-domain cookie handling)
+  // This allows access while cross-domain cookies propagate
+  const authPendingCookie = request.cookies.get('auth_pending')?.value;
+  const isAuthPending = authPendingCookie === 'true';
 
   // Redirect root to admin if logged in, otherwise to login
   if (pathname === '/') {
-    if (token) {
+    if (token || isAuthPending) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.redirect(new URL('/auth/login', request.url));
@@ -90,14 +96,16 @@ export async function middleware(request: NextRequest) {
   // If accessing public route, allow access
   if (isPublicRoute) {
     // Redirect authenticated users away from auth pages to admin
-    if (token && pathname.startsWith('/auth')) {
+    // But allow if auth_pending (user just logged in, cookies might not be available yet)
+    if ((token || isAuthPending) && pathname.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
     return NextResponse.next();
   }
 
-  // If accessing admin route and no token, redirect to login
-  if (isAdminRoute && !token) {
+  // If accessing admin route:
+  // Allow if token exists OR auth_pending flag is set (waiting for cross-domain cookies)
+  if (isAdminRoute && !token && !isAuthPending) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
