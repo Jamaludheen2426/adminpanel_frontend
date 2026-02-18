@@ -12,34 +12,9 @@ interface FinishedStepProps {
 export function FinishedStep({ adminEmail }: FinishedStepProps) {
   const router = useRouter();
 
-  // Clear all auth cookies/tokens on mount so user must login fresh
-  useEffect(() => {
-  const clearSession = async () => {
-    // 1. Call backend to clear HttpOnly cookies server-side
-    try {
-      await fetch('/api/v1/auth/logout', {
-        method: 'POST',
-        credentials: 'include', // sends cookies so server can expire them
-      });
-    } catch {
-      // continue even if it fails
-    }
-
-    // 2. Clear ALL localStorage (not just one key)
-    localStorage.clear();
-
-    // 3. Clear ALL sessionStorage
-    sessionStorage.clear();
-
-    // 4. Clear any client-accessible cookies
-    document.cookie.split(';').forEach((cookie) => {
-      const name = cookie.split('=')[0].trim();
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
-    });
-  };
-
-  clearSession();
+useEffect(() => {
+  localStorage.clear();
+  sessionStorage.clear();
 }, []);
 
   const handleGoToLogin = () => {

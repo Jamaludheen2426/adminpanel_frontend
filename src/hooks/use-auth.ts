@@ -77,9 +77,15 @@ export function useLogin() {
     onSuccess: (user) => {
       queryClient.setQueryData(queryKeys.auth.me(), user);
       toast.success('Login successful');
-      router.push('/admin');
+      
+      // Use setTimeout to ensure toast renders before redirect
+      // and to properly trigger the navigation
+      setTimeout(() => {
+        router.push('/admin');
+      }, 300);
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Login failed');
     },
   });

@@ -21,13 +21,15 @@ export async function middleware(request: NextRequest) {
   // Fast path: cookie set by backend after finalize step
   const installedCookie = request.cookies.get('app_installed')?.value;
   let isInstalled = installedCookie === 'true';
+  let isSetupDisabled = false;
 
   // Always verify with backend when:
   // 1. No cookie and not on /install (cold start)
   // 2. Cookie says installed but user is visiting /install (might have been reset)
   const needsBackendCheck =
     (!isInstalled && !pathname.startsWith(INSTALL_ROUTE)) ||
-    (isInstalled && pathname.startsWith(INSTALL_ROUTE));
+    (isInstalled && pathname.startsWith(INSTALL_ROUTE)) ||
+    pathname.startsWith(INSTALL_ROUTE); // Always check status when visiting /install
 
   if (needsBackendCheck) {
     try {
@@ -38,11 +40,17 @@ export async function middleware(request: NextRequest) {
       if (res.ok) {
         const json = await res.json();
         isInstalled = json?.data?.installed === true;
+        isSetupDisabled = json?.data?.disabled === true;
       }
     } catch {
       // Backend not reachable — don't redirect, let it fall through
       isInstalled = false;
     }
+  }
+
+  // If setup is disabled and user tries to access /install → send to login
+  if (isSetupDisabled && pathname.startsWith(INSTALL_ROUTE)) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
   // Not installed + not on /install → send to wizard
@@ -60,7 +68,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
-  // On /install and not installed → allow through
+  // On /install and not installed and setup not disabled → allow through
   if (pathname.startsWith(INSTALL_ROUTE)) {
     return NextResponse.next();
   }
