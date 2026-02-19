@@ -1,0 +1,11 @@
+name,code,nationality,sort_order,is_active,is_default
+India,IN,Indian,1,1,1
+United States,US,American,2,1,0
+United Kingdom,GB,British,3,1,0
+Canada,CA,Canadian,4,1,0
+Australia,AU,Australian,5,1,0
+Germany,DE,German,6,1,0
+France,FR,French,7,1,0
+Japan,JP,Japanese,8,1,0
+China,CN,Chinese,9,1,0
+Brazil,BR,Brazilian,10,1,0

@@ -29,17 +29,28 @@ export const updatePermissionSchema = createPermissionSchema.partial();
 export const createCountrySchema = z.object({
   name: z.string().min(2, 'Country name required'),
   code: z.string().length(2, 'Country code must be 2 characters'),
+  nationality: z.string().optional(),
+  sort_order: z.number().default(0),
+  is_default: z.boolean().default(false),
 });
 
 export const createStateSchema = z.object({
   name: z.string().min(2, 'State name required'),
   code: z.string().optional(),
-  countryId: z.string().uuid('Invalid country'),
+  slug: z.string().optional(),
+  countryId: z.number(),
+  sort_order: z.number().default(0),
+  is_default: z.boolean().default(false),
 });
 
 export const createCitySchema = z.object({
   name: z.string().min(2, 'City name required'),
-  stateId: z.string().uuid('Invalid state'),
+  stateId: z.number(),
+  countryId: z.number().optional(),
+  slug: z.string().optional(),
+  pincode: z.string().optional(),
+  sort_order: z.number().default(0),
+  is_default: z.boolean().default(false),
 });
 
 export const createPincodeSchema = z.object({

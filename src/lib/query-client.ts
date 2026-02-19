@@ -104,8 +104,8 @@ export const queryKeys = {
   locations: {
     all: ['locations'] as const,
     countries: () => [...queryKeys.locations.all, 'countries'] as const,
-    states: (countryId: number) => [...queryKeys.locations.all, 'states', countryId] as const,
-    cities: (stateId: number) => [...queryKeys.locations.all, 'cities', stateId] as const,
+    states: (countryId?: number) => [...queryKeys.locations.all, 'states', countryId] as const,
+    cities: (stateId?: number) => [...queryKeys.locations.all, 'cities', stateId] as const,
     pincodes: (cityId: number) => [...queryKeys.locations.all, 'pincodes', cityId] as const,
   },
 

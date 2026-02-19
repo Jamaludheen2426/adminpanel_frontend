@@ -1,0 +1,11 @@
+name,code,slug,country_code,sort_order,is_active,is_default
+Tamil Nadu,TN,tamil-nadu,IN,1,1,0
+Maharashtra,MH,maharashtra,IN,2,1,0
+Karnataka,KA,karnataka,IN,3,1,0
+Gujarat,GJ,gujarat,IN,4,1,0
+Rajasthan,RJ,rajasthan,IN,5,1,0
+Uttar Pradesh,UP,uttar-pradesh,IN,6,1,0
+West Bengal,WB,west-bengal,IN,7,1,0
+Punjab,PB,punjab,IN,8,1,0
+Madhya Pradesh,MP,madhya-pradesh,IN,9,1,0
+Kerala,KL,kerala,IN,10,1,0

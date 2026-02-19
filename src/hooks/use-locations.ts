@@ -9,9 +9,8 @@ const locationsApi = {
   // Countries
   getCountries: async (): Promise<Country[]> => {
     try {
-      const response = await apiClient.get('/locations/countries');
-      // Handle both possible response structures
-       const countries = response.data.data || [];
+      const response = await apiClient.get('/locations/countries', { params: { limit: 1000 } });
+      const countries = response.data.data || [];
       return countries;
     } catch (error) {
       console.error('Failed to fetch countries:', error);
@@ -34,10 +33,10 @@ const locationsApi = {
   },
 
   // States
-  getStates: async (countryId: number): Promise<State[]> => {
+  getStates: async (countryId?: number): Promise<State[]> => {
     try {
-      const response = await apiClient.get(`/locations/states/${countryId}`);
-      
+      const url = countryId ? `/locations/states/${countryId}` : '/locations/states';
+      const response = await apiClient.get(url, { params: { limit: 1000 } });
       const states = response.data.data || [];
       return states;
     } catch (error) {
@@ -61,10 +60,9 @@ const locationsApi = {
   },
 
   // Cities
-  getCities: async (stateId: number): Promise<City[]> => {
+  getCities: async (): Promise<City[]> => {
     try {
-      const response = await apiClient.get(`/locations/cities/${stateId}`);
-      
+      const response = await apiClient.get('/locations/cities', { params: { limit: 1000 } });
       const cities = response.data.data || [];
       return cities;
     } catch (error) {
@@ -90,8 +88,8 @@ const locationsApi = {
   // Pincodes
   getPincodes: async (cityId: number): Promise<Pincode[]> => {
     try {
-      const response = await apiClient.get(`/locations/pincodes/${cityId}`);
-      const pincodes = response.data.data|| [];
+      const response = await apiClient.get(`/locations/pincodes/${cityId}`, { params: { limit: 1000 } });
+      const pincodes = response.data.data || [];
       return pincodes;
     } catch (error) {
       console.error('Failed to fetch pincodes:', error);
@@ -173,11 +171,10 @@ export function useDeleteCountry() {
 }
 
 // States hooks
-export function useStates(countryId: number) {
+export function useStates(countryId?: number) {
   return useQuery({
     queryKey: queryKeys.locations.states(countryId),
     queryFn: () => locationsApi.getStates(countryId),
-    enabled: !!countryId,
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });
@@ -232,11 +229,10 @@ export function useDeleteState() {
 }
 
 // Cities hooks
-export function useCities(stateId: number) {
+export function useCities() {
   return useQuery({
-    queryKey: queryKeys.locations.cities(stateId),
-    queryFn: () => locationsApi.getCities(stateId),
-    enabled: !!stateId,
+    queryKey: queryKeys.locations.cities(),
+    queryFn: () => locationsApi.getCities(),
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });

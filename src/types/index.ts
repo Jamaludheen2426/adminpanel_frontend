@@ -271,19 +271,31 @@ export interface Country extends BaseEntity {
   code: string;
   phone_code: string | null;
   currency_code: string | null;
+  nationality: string | null;
+  sort_order: number;
+  is_default: boolean;
 }
 
 export interface State extends BaseEntity {
   name: string;
   code: string | null;
+  slug: string | null;
   country_id: number;
+  sort_order: number;
+  is_default: boolean;
   country?: Country;
 }
 
 export interface City extends BaseEntity {
   name: string;
+  slug: string | null;
+  pincode: string | null;
   state_id: number;
+  country_id: number | null;
+  sort_order: number;
+  is_default: boolean;
   state?: State;
+  country?: Country;
 }
 
 export interface Pincode extends BaseEntity {
@@ -315,7 +327,7 @@ export interface EmailConfig extends BaseEntity {
   name: string;
   from_email: string;
   from_name: string;
-  driver: 'smtp' | 'brevo'  | 'sendmail';
+  driver: 'smtp' | 'brevo' | 'sendmail';
   host: string | null;
   port: number | null;
   username: string | null;

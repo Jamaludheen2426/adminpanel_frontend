@@ -87,7 +87,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
     return allModules.filter((m) => m === "settings");
   if (groupSlug === "users_roles")
     return allModules.filter((m) =>
-      ["employees", "roles", "permissions", "modules", "approvals"].includes(m),
+      ["employees", "roles", "permissions", "modules", "approvals", "companies"].includes(m),
     );
   if (groupSlug === "cms")
     return allModules.filter((m) =>
@@ -109,7 +109,16 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
     return allModules.filter((m) => ["locations", "currencies"].includes(m));
   if (groupSlug === "appearance")
     return allModules.filter((m) => ["appearance"].includes(m));
-  if (groupSlug === "system")
+  if (groupSlug === "system") {
+    // Collect all modules assigned to other groups
+    const assignedModules = [
+      "settings",
+      "employees", "roles", "permissions", "modules", "approvals", "companies",
+      "media", "translations", "languages", "pages", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
+      "locations", "currencies",
+      "appearance"
+    ];
+    // Return system modules PLUS any modules not assigned anywhere else (catch-all)
     return allModules.filter((m) =>
       [
         "activity_logs",
@@ -120,8 +129,9 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
         "tools",
         "platform",
         "other",
-      ].includes(m),
+      ].includes(m) || !assignedModules.includes(m)
     );
+  }
   return [];
 }
 

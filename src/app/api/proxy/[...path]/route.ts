@@ -23,7 +23,8 @@ async function forwardRequest(request: NextRequest, path: string, method: string
     // e.g. path = "v1/auth/login" → strippedPath = "auth/login"
     // Final URL: https://backend.onrender.com/api/v1/auth/login  ✓
     const strippedPath = path.startsWith('v1/') ? path.slice(3) : path;
-    const backendUrl = `${BACKEND_URL}/${strippedPath}`;
+    const searchParams = request.nextUrl.search;
+    const backendUrl = `${BACKEND_URL}/${strippedPath}${searchParams}`;
 
     // Get request body if present
     let body: BodyInit | undefined;

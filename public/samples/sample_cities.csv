@@ -1,0 +1,11 @@
+name,state_code,slug,pincode,sort_order,is_active,is_default
+Chennai,TN,chennai,600001,1,1,1
+Coimbatore,TN,coimbatore,641001,2,1,0
+Madurai,TN,madurai,625001,3,1,0
+Salem,TN,salem,636001,4,1,0
+Mumbai,MH,mumbai,400001,5,1,0
+Pune,MH,pune,411001,6,1,0
+Nagpur,MH,nagpur,440001,7,1,0
+Bengaluru,KA,bengaluru,560001,8,1,0
+Mysuru,KA,mysuru,570001,9,1,0
+Ahmedabad,GJ,ahmedabad,380001,10,1,0
