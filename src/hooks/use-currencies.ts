@@ -120,6 +120,24 @@ export function useDeleteCurrency() {
   });
 }
 
+// Toggle currency active status
+export function useToggleCurrencyStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, is_active }: { id: number; is_active: boolean }) =>
+      currenciesApi.update({ id, data: { is_active } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.currencies.all });
+      toast.success('Currency status updated');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || 'Failed to update status');
+    },
+  });
+}
+
 // Set default currency mutation
 export function useSetDefaultCurrency() {
   const queryClient = useQueryClient();

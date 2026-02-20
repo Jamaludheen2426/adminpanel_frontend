@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-interface Timezone {
+export interface Timezone {
   value: string;
   label: string;
   offset: number;

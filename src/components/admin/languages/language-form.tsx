@@ -108,8 +108,8 @@ export function LanguageForm({ language, onSuccess }: LanguageFormProps) {
         </Select>
       </div>
 
-      <div className="flex items-center justify-between">
-        <Label htmlFor="isActive">Active</Label>
+      <div className="flex items-center justify-between border rounded-lg p-3">
+        <Label htmlFor="isActive">Is Active?</Label>
         <Switch
           id="isActive"
           checked={isActive}

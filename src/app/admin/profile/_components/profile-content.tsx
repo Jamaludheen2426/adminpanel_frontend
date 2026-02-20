@@ -19,14 +19,23 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth, useUpdateProfile, useChangePassword } from "@/hooks";
 import { useUploadMedia } from "@/hooks/use-media";
 import { useTranslation } from "@/hooks/use-translation";
+import { useTimezones } from "@/hooks/use-timezones";
 import { Spinner } from "@/components/ui/spinner";
 import { User, Mail, Phone, Shield, Calendar, Camera } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
 
 const profileSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email"),
   phone: z.string().optional(),
+  timezone: z.string().optional(),
 });
 
 const passwordSchema = z
@@ -49,6 +58,7 @@ export function ProfileContent() {
   const updateProfileMutation = useUpdateProfile();
   const changePasswordMutation = useChangePassword();
   const uploadMedia = useUploadMedia();
+  const { data: timezones = [] } = useTimezones();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +78,7 @@ export function ProfileContent() {
       full_name: user?.full_name || "",
       email: user?.email || "",
       phone: user?.phone || "",
+      timezone: user?.timezone || "",
     },
   });
 
@@ -242,6 +253,28 @@ export function ProfileContent() {
                     placeholder="+1234567890"
                     {...profileForm.register("phone")}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Timezone</Label>
+                  <Select
+                    value={profileForm.watch("timezone") || undefined}
+                    onValueChange={(val) => profileForm.setValue("timezone", val)}
+                  >
+                    <SelectTrigger id="timezone">
+                      <SelectValue placeholder="Use company default" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timezones.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Personal timezone override (leave empty to use company default)
+                  </p>
                 </div>
 
                 <Button type="submit" disabled={updateProfileMutation.isPending}>

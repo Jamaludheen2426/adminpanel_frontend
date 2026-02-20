@@ -19,6 +19,7 @@ export interface Company extends Omit<BaseEntity, 'is_active'> {
   email: string | null;
   phone: string | null;
   address: string | null;
+  timezone: string | null;
   is_active: number; // 0=inactive/suspended, 1=active, 2=pending
   settings: Record<string, unknown> | null;
   max_users: number | null;
@@ -49,6 +50,7 @@ export interface UpdateCompanyDto {
   email?: string;
   phone?: string;
   address?: string;
+  timezone?: string;
   is_active?: number;
   settings?: Record<string, unknown>;
   max_users?: number;
@@ -75,6 +77,7 @@ export interface User extends Omit<BaseEntity, 'is_active'> {
   designation: string | null;
   doj: string | null;
   dor: string | null;
+  timezone: string | null;
   login_access: number;
   email_verified_at: string | null;
   last_login_at: string | null;
@@ -238,29 +241,33 @@ export interface Currency extends BaseEntity {
   decimal_places: number;
   decimal_separator: string;
   thousand_separator: string;
+  space_between: boolean;
   exchange_rate: number;
   is_default: boolean;
 }
 
 export interface CreateCurrencyDto {
-  name: string;
+  name?: string;
   code: string;
   symbol: string;
   symbol_position?: 'before' | 'after';
   decimal_places?: number;
   decimal_separator?: string;
   thousand_separator?: string;
+  space_between?: boolean;
   exchange_rate?: number;
   is_default?: boolean;
 }
 
 export interface UpdateCurrencyDto {
   name?: string;
+  code?: string;
   symbol?: string;
   symbol_position?: 'before' | 'after';
   decimal_places?: number;
   decimal_separator?: string;
   thousand_separator?: string;
+  space_between?: boolean;
   exchange_rate?: number;
   is_active?: boolean;
 }
@@ -504,6 +511,7 @@ export interface UpdateProfileDto {
   email?: string;
   phone?: string;
   avatar?: string;
+  timezone?: string;
 }
 
 export interface AuthUser extends User {

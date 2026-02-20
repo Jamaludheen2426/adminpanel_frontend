@@ -30,19 +30,20 @@ export function TopHeader() {
 
   useEffect(() => {
     setMounted(true);
-    // Load saved currency from localStorage
-    const savedCurrency = localStorage.getItem("preferred_currency");
-    if (savedCurrency) setSelectedCurrency(savedCurrency);
+    // Load saved currency from cookie
+    const match = document.cookie.match(/(?:^| )preferred_currency=([^;]+)/);
+    if (match) setSelectedCurrency(decodeURIComponent(match[1]));
   }, []);
 
   const handleLanguageChange = (code: string) => {
-    // Use the translation hook's setLanguage to trigger refetch
     setLanguage(code);
   };
 
   const handleCurrencyChange = (code: string) => {
     setSelectedCurrency(code);
-    localStorage.setItem("preferred_currency", code);
+    // Store in cookie (1 year expiry, accessible across subpaths)
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `preferred_currency=${encodeURIComponent(code)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   };
 
   const languages = languagesData?.data?.filter(l => l.is_active) || [];

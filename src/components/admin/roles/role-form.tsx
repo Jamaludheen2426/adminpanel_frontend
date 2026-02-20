@@ -506,15 +506,15 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between border rounded-lg p-3">
+            <Label htmlFor="is_active" className="cursor-pointer font-normal">
+              Is Active?
+            </Label>
             <Switch
               id="is_active"
               checked={isActive}
               onCheckedChange={(checked) => setValue("is_active", checked)}
             />
-            <Label htmlFor="is_active" className="cursor-pointer font-normal">
-              Is default?
-            </Label>
           </div>
         </CardContent>
       </Card>

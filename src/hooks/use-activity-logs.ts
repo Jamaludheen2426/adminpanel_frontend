@@ -1,6 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
+import { toast } from 'sonner';
 import type { ActivityLog } from '@/types';
 import type { PaginatedResponse, PaginationParams } from '@/lib/api-client';
 
@@ -28,6 +29,11 @@ const activityLogsApi = {
     const response = await apiClient.get(`/activity-logs/user/${userId}`, { params });
     return response.data;
   },
+
+  clearOld: async (days: number): Promise<{ deleted: number }> => {
+    const response = await apiClient.delete(`/activity-logs/clear`, { params: { days } });
+    return response.data.data;
+  },
 };
 
 // Get all activity logs with pagination and filters
@@ -53,5 +59,20 @@ export function useUserActivityLogs(userId: number, params?: PaginationParams) {
     queryKey: [...queryKeys.activityLogs.list((params || {}) as Record<string, unknown>), 'user', userId],
     queryFn: () => activityLogsApi.getByUser(userId, params),
     enabled: !!userId,
+  });
+}
+
+// Clear old activity logs older than N days
+export function useClearOldLogs() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (days: number) => activityLogsApi.clearOld(days),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.activityLogs.lists() });
+      toast.success(`Cleared ${data?.deleted ?? 0} old activity log entries`);
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to clear logs');
+    },
   });
 }

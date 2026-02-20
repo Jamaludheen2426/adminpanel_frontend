@@ -60,9 +60,10 @@ const locationsApi = {
   },
 
   // Cities
-  getCities: async (): Promise<City[]> => {
+  getCities: async (stateId?: number): Promise<City[]> => {
     try {
-      const response = await apiClient.get('/locations/cities', { params: { limit: 1000 } });
+      const url = stateId ? `/locations/cities/${stateId}` : '/locations/cities';
+      const response = await apiClient.get(url, { params: { limit: 1000 } });
       const cities = response.data.data || [];
       return cities;
     } catch (error) {
@@ -229,10 +230,11 @@ export function useDeleteState() {
 }
 
 // Cities hooks
-export function useCities() {
+export function useCities(stateId?: number) {
   return useQuery({
-    queryKey: queryKeys.locations.cities(),
-    queryFn: () => locationsApi.getCities(),
+    queryKey: queryKeys.locations.cities(stateId),
+    queryFn: () => locationsApi.getCities(stateId || undefined),
+    enabled: stateId !== 0,
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });

@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Plus, Pencil, Trash2, Search, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -11,48 +12,58 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useCurrencies, useDeleteCurrency, useSetDefaultCurrency } from "@/hooks/use-currencies";
-import { CurrencyForm } from "@/components/admin/currencies/currency-form";
-import { useTranslation } from "@/hooks/use-translation";
-import { Spinner } from "@/components/ui/spinner";
-import type { Currency } from "@/types";
-import { PermissionGuard } from "@/components/guards/permission-guard";
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  useCurrencies,
+  useDeleteCurrency,
+  useSetDefaultCurrency,
+  useToggleCurrencyStatus,
+} from '@/hooks/use-currencies';
+import { CurrencyForm } from '@/components/admin/currencies/currency-form';
+import { PermissionGuard } from '@/components/guards/permission-guard';
+import { Spinner } from '@/components/ui/spinner';
+import { isApprovalRequired } from '@/lib/api-client';
+import type { Currency } from '@/types';
 
 export function CurrenciesContent() {
-  const { t } = useTranslation();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [currencyToDelete, setCurrencyToDelete] = useState<number | null>(null);
 
   const { data, isLoading } = useCurrencies({ page, limit: 10, search });
-  const deleteCurrencyMutation = useDeleteCurrency();
+  const deleteMutation = useDeleteCurrency();
   const setDefaultMutation = useSetDefaultCurrency();
+  const toggleStatusMutation = useToggleCurrencyStatus();
 
   const handleEdit = (currency: Currency) => {
     setSelectedCurrency(currency);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm(t('currencies.delete_confirm'))) {
-      deleteCurrencyMutation.mutate(id);
-    }
-  };
-
-  const handleSetDefault = (id: number) => {
-    setDefaultMutation.mutate(id);
+  const handleAdd = () => {
+    setSelectedCurrency(null);
+    setIsDialogOpen(true);
   };
 
   const handleDialogClose = () => {
@@ -60,107 +71,152 @@ export function CurrenciesContent() {
     setSelectedCurrency(null);
   };
 
+  const handleDelete = (id: number) => {
+    setCurrencyToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (currencyToDelete) {
+      deleteMutation.mutate(currencyToDelete, {
+        onSettled: () => {
+          setDeleteDialogOpen(false);
+          setCurrencyToDelete(null);
+        },
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-4">
+          <Spinner className="h-12 w-12" />
+          <p className="text-sm text-muted-foreground">Loading currencies...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <PermissionGuard permission="currencies.view">
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">{t('currencies.title')}</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setSelectedCurrency(null)}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('currencies.add_currency')}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{selectedCurrency ? t('currencies.edit_currency') : t('currencies.add_currency')}</DialogTitle>
-              <DialogDescription>
-                {selectedCurrency ? t('currencies.edit_desc') : t('currencies.add_desc')}
-              </DialogDescription>
-            </DialogHeader>
-            <CurrencyForm currency={selectedCurrency} onSuccess={handleDialogClose} />
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('currencies.search')}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+      <>
+        {/* Loading overlay */}
+        {(deleteMutation.isPending ||
+          setDefaultMutation.isPending ||
+          toggleStatusMutation.isPending) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
+              <Spinner className="h-12 w-12" />
+              <p className="text-sm font-medium">
+                {deleteMutation.isPending && 'Deleting currency...'}
+                {setDefaultMutation.isPending && 'Setting default currency...'}
+                {toggleStatusMutation.isPending && 'Updating currency status...'}
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner className="h-8 w-8" />
+        )}
+
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Currencies</h1>
+              <p className="text-muted-foreground mt-1">
+                Configure currencies, exchange rates and formatting
+              </p>
             </div>
-          ) : (
-            <>
+            <Button onClick={handleAdd}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Currency
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <div className="relative max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search currencies..."
+                  value={search}
+                  onChange={e => { setSearch(e.target.value); setPage(1); }}
+                  className="pl-10"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('common.code')}</TableHead>
-                    <TableHead>{t('currencies.symbol')}</TableHead>
-                    <TableHead>{t('currencies.exchange_rate')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                    <TableHead className="text-right">{t('common.actions')}</TableHead>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Symbol</TableHead>
+                    <TableHead>Exchange Rate</TableHead>
+                    <TableHead>Format</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Default</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data?.data?.map((currency) => (
+                  {data?.data?.map(currency => (
                     <TableRow key={currency.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {currency.name}
-                          {currency.is_default && (
-                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          )}
-                        </div>
-                      </TableCell>
                       <TableCell>
-                        <code className="text-sm bg-muted px-2 py-1 rounded">
+                        <code className="text-sm bg-muted px-2 py-1 rounded font-mono">
                           {currency.code}
                         </code>
                       </TableCell>
-                      <TableCell>{currency.symbol}</TableCell>
-                      <TableCell>{currency.exchange_rate}</TableCell>
+                      <TableCell className="font-medium">{currency.symbol}</TableCell>
+                      <TableCell>{parseFloat(String(currency.exchange_rate))}</TableCell>
                       <TableCell>
-                        <Badge
-                          className={currency.is_active
-                            ? "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-900 dark:text-green-100"
-                            : "bg-red-100 text-red-800 hover:bg-red-100 dark:bg-red-900 dark:text-red-100"
+                        <span className="text-sm text-muted-foreground font-mono">
+                          {(() => {
+                            const dec = currency.decimal_places > 0
+                              ? `${currency.decimal_separator}${'0'.repeat(currency.decimal_places)}`
+                              : '';
+                            const amount = `1${dec}`;
+                            const space = currency.space_between ? ' ' : '';
+                            return currency.symbol_position === 'before'
+                              ? `${currency.symbol}${space}${amount}`
+                              : `${amount}${space}${currency.symbol}`;
+                          })()}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={Boolean(currency.is_active)}
+                          pending={
+                            isApprovalRequired(toggleStatusMutation.error) &&
+                            toggleStatusMutation.variables?.id === currency.id
                           }
-                        >
-                          {currency.is_active ? t('common.active') : t('common.inactive')}
-                        </Badge>
+                          disabled={
+                            currency.is_default ||
+                            (toggleStatusMutation.isPending &&
+                              toggleStatusMutation.variables?.id === currency.id)
+                          }
+                          onCheckedChange={checked =>
+                            toggleStatusMutation.mutate({ id: currency.id, is_active: checked })
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={Boolean(currency.is_default)}
+                          onCheckedChange={checked => {
+                            if (checked) setDefaultMutation.mutate(currency.id);
+                          }}
+                          disabled={
+                            Boolean(currency.is_default) ||
+                            !currency.is_active ||
+                            setDefaultMutation.isPending
+                          }
+                        />
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {!currency.is_default && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleSetDefault(currency.id)}
-                              disabled={setDefaultMutation.isPending}
-                              title="Set as default"
-                            >
-                              <Star className="h-4 w-4" />
-                            </Button>
-                          )}
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEdit(currency)}
+                            title="Edit"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -168,9 +224,10 @@ export function CurrenciesContent() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleDelete(currency.id)}
-                            disabled={deleteCurrencyMutation.isPending || currency.is_default}
+                            disabled={deleteMutation.isPending || Boolean(currency.is_default)}
+                            title={currency.is_default ? 'Cannot delete default currency' : 'Delete'}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
                       </TableCell>
@@ -178,8 +235,8 @@ export function CurrenciesContent() {
                   ))}
                   {data?.data?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        {t('currencies.no_currencies_found')}
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No currencies found
                       </TableCell>
                     </TableRow>
                   )}
@@ -189,33 +246,82 @@ export function CurrenciesContent() {
               {data?.pagination && data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    {t('common.page', 'Page')} {data.pagination.page} / {data.pagination.totalPages}
+                    Page {data.pagination.page} / {data.pagination.totalPages}
                   </p>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
                       disabled={!data.pagination.hasPrevPage}
                     >
-                      {t('common.previous', 'Previous')}
+                      Previous
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => p + 1)}
+                      onClick={() => setPage(p => p + 1)}
                       disabled={!data.pagination.hasNextPage}
                     >
-                      {t('common.next', 'Next')}
+                      Next
                     </Button>
                   </div>
                 </div>
               )}
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Add / Edit Dialog */}
+        <Dialog open={isDialogOpen} onOpenChange={open => { if (!open) handleDialogClose(); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedCurrency ? 'Edit Currency' : 'Add Currency'}
+              </DialogTitle>
+              <DialogDescription>
+                {selectedCurrency
+                  ? 'Update currency details and formatting options.'
+                  : 'Add a new currency with exchange rate and formatting options.'}
+              </DialogDescription>
+            </DialogHeader>
+            <CurrencyForm
+              key={selectedCurrency?.id ?? 'new'}
+              currency={selectedCurrency}
+              onSuccess={handleDialogClose}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Currency</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this currency? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     </PermissionGuard>
   );
 }

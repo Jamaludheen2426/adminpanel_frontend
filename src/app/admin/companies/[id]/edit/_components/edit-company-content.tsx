@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { useCompany, useUpdateCompany } from '@/hooks/use-companies';
+import { useTimezones } from '@/hooks/use-timezones';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -39,6 +40,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
   const router = useRouter();
   const { data: company, isLoading } = useCompany(companyId);
   const updateCompany = useUpdateCompany();
+  const { data: timezones = [] } = useTimezones();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UpdateCompanyDto>({
@@ -49,6 +51,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
       phone: '',
       address: '',
       domain: '',
+      timezone: 'UTC',
       is_active: 1,
       max_users: undefined,
     },
@@ -64,6 +67,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
         phone: company.phone || '',
         address: company.address || '',
         domain: company.domain || '',
+        timezone: company.timezone || 'UTC',
         is_active: company.is_active,
         max_users: company.max_users || undefined,
       });
@@ -229,6 +233,34 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
                         rows={3}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="timezone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Timezone</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {timezones.map((tz) => (
+                          <SelectItem key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Default timezone for this company
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
