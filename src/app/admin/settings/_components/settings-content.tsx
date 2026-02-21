@@ -125,7 +125,6 @@ const settingGroups: SettingGroup[] = [
         descriptionKey: "settings.social_login_desc",
         href: "/admin/settings/social-login",
         icon: Globe,
-        badge: "common.comming",
         permission: "social_login.view",
       },
     ],

@@ -16,6 +16,11 @@ import type {
 
 // API functions
 const authApi = {
+  socialLogin: async (data: { provider: string; token: string }): Promise<AuthUser> => {
+    const response = await apiClient.post(`/auth/social/${data.provider}`, { token: data.token });
+    return response.data.data.user;
+  },
+
   me: async (): Promise<AuthUser> => {
     const response = await apiClient.get('/auth/me');
     return response.data.data.user;
@@ -99,6 +104,29 @@ export function useLogin() {
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       console.error('Login error:', error);
       toast.error(error.response?.data?.message || 'Login failed');
+    },
+  });
+}
+
+// Social login mutation (Google / Facebook)
+export function useSocialLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: authApi.socialLogin,
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.auth.me(), user);
+      toast.success('Login successful');
+      if (typeof window !== 'undefined') {
+        const expiryDate = new Date();
+        expiryDate.setSeconds(expiryDate.getSeconds() + 15);
+        document.cookie = `auth_pending=true; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
+      }
+      setTimeout(() => router.push('/admin'), 300);
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Social login failed');
     },
   });
 }

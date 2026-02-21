@@ -15,7 +15,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
 
-// Helper to forward a request
 async function forwardRequest(request: NextRequest, path: string, method: string) {
   try {
     // Construct the full backend URL
@@ -50,17 +49,14 @@ async function forwardRequest(request: NextRequest, path: string, method: string
       credentials: 'include',
     });
 
-    // Copy response headers (skip problematic ones)
     const responseHeaders = new Headers();
     backendResponse.headers.forEach((value, key) => {
       const lowerKey = key.toLowerCase();
-      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(lowerKey)) {
+      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection', 'set-cookie'].includes(lowerKey)) {
         responseHeaders.append(key, value);
       }
     });
 
-    // CRITICAL: Forward Set-Cookie headers from backend
-    // These will be set on the Vercel domain so Middleware can read them
     const setCookieHeaders = backendResponse.headers.getSetCookie?.();
     if (setCookieHeaders && setCookieHeaders.length > 0) {
       setCookieHeaders.forEach(cookie => {
