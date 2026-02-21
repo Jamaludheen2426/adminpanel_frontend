@@ -20,7 +20,7 @@ declare global {
       init: (params: { appId: string; version: string; cookie: boolean; xfbml: boolean }) => void;
       login: (
         callback: (response: { authResponse?: { accessToken: string } }) => void,
-        options: { scope: string }
+        options: { scope: string | string[] }
       ) => void;
     };
   }
@@ -106,7 +106,7 @@ export default function LoginPage() {
           toast.error("Facebook login cancelled");
         }
       },
-      { scope: "email,public_profile" }
+      { scope: ['email', 'public_profile'] }
     );
   };
 
