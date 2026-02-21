@@ -264,6 +264,42 @@ export function useUpdateProfile() {
   });
 }
 
+// Link social account (Google / Facebook) to logged-in user
+export function useLinkSocial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: { provider: string; token: string }) => {
+      await apiClient.post(`/auth/link-social/${data.provider}`, { token: data.token });
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`${vars.provider.charAt(0).toUpperCase() + vars.provider.slice(1)} account linked successfully`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to link account');
+    },
+  });
+}
+
+// Unlink social account from logged-in user
+export function useUnlinkSocial() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (provider: string) => {
+      await apiClient.delete(`/auth/link-social/${provider}`);
+    },
+    onSuccess: (_, provider) => {
+      toast.success(`${provider.charAt(0).toUpperCase() + provider.slice(1)} account unlinked`);
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || 'Failed to unlink account');
+    },
+  });
+}
+
 // Auth context helper
 export function useAuth() {
   const { data: user, isLoading, error } = useCurrentUser();

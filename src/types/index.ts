@@ -81,6 +81,10 @@ export interface User extends Omit<BaseEntity, 'is_active'> {
   login_access: number;
   email_verified_at: string | null;
   last_login_at: string | null;
+  google_id: string | null;
+  facebook_id: string | null;
+  auth_provider: 'local' | 'google' | 'facebook';
+  social_avatar: string | null;
   role_id: number;
   role?: Role;
   company?: Company | null;
