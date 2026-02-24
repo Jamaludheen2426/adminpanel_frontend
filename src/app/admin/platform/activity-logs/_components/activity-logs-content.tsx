@@ -1,15 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useActivityLogs } from "@/hooks";
 import { DataTable } from "@/components/ui/data-table";
 import { Card } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 import { ColumnDef } from "@tanstack/react-table";
 import { ActivityLog } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useTranslation } from "@/hooks/use-translation";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 export function ActivityLogsContent() {
   const { t } = useTranslation();
@@ -20,15 +20,15 @@ export function ActivityLogsContent() {
   const columns: ColumnDef<ActivityLog>[] = [
     {
       accessorKey: "action",
-      header: t('common.action'),
+      header: t("common.action"),
     },
     {
       accessorKey: "description",
-      header: t('common.description'),
+      header: t("common.description"),
     },
     {
       accessorKey: "createdAt",
-      header: t('activity.date_time'),
+      header: t("activity.date_time"),
       cell: ({ row }) => {
         const value = row.original.createdAt;
 
@@ -42,35 +42,39 @@ export function ActivityLogsContent() {
     },
     {
       id: "user",
-      header: t('common.user'),
+      header: t("common.user"),
       cell: ({ row }) => row.original.user?.email || "-",
     },
     {
       accessorKey: "ip_address",
-      header: t('activity.ip_address'),
+      header: t("activity.ip_address"),
     },
   ];
 
   return (
     <PermissionGuard permission="activity_logs.view">
       <div className="space-y-6">
+
+        {/* Page Loader */}
+        <PageLoader open={isLoading} />
+
         <div>
-          <h1 className="text-3xl font-bold">{t('activity.logs')}</h1>
+          <h1 className="text-3xl font-bold">{t("activity.logs")}</h1>
           <p className="text-muted-foreground mt-1">
-            {t('activity.logs_desc')}
+            {t("activity.logs_desc")}
           </p>
         </div>
 
         <Card className="p-6">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner className="h-8 w-8" />
-            </div>
-          ) : logs.length > 0 ? (
+          {!isLoading && logs.length > 0 && (
             <DataTable columns={columns} data={logs} />
-          ) : (
+          )}
+
+          {!isLoading && logs.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">{t('activity.no_activity')}</p>
+              <p className="text-muted-foreground">
+                {t("activity.no_activity")}
+              </p>
             </div>
           )}
         </Card>

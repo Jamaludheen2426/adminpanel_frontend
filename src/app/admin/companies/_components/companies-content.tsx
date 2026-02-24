@@ -44,6 +44,7 @@ import { Company } from '@/types';
 import { useDebounce } from '@/hooks/use-debounce';
 import { EditCompanyDialog } from '@/components/admin/companies/edit-company-dialog';
 import { PermissionGuard } from '@/components/guards/permission-guard';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function CompaniesContent() {
   const [search, setSearch] = useState('');
@@ -76,14 +77,10 @@ export function CompaniesContent() {
 
   const getStatusColor = (is_active: number) => {
     switch (is_active) {
-      case 1:
-        return 'bg-green-500';
-      case 0:
-        return 'bg-red-500';
-      case 2:
-        return 'bg-yellow-500';
-      default:
-        return 'bg-gray-500';
+      case 1: return 'bg-green-500';
+      case 0: return 'bg-red-500';
+      case 2: return 'bg-yellow-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -101,191 +98,200 @@ export function CompaniesContent() {
 
   return (
     <PermissionGuard developerOnly>
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-          <p className="text-muted-foreground">
-            Manage all companies in the system
-          </p>
-        </div>
-        <Link href="/admin/companies/create">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Company
-          </Button>
-        </Link>
-      </div>
+      <div className="space-y-6">
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{pagination?.totalItems || 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.is_active === 1).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Suspended</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.is_active === 0).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {companies.filter(c => c.is_active === 2).length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Page Loader */}
+        <PageLoader open={isLoading} />
 
-      {/* Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>All Companies</CardTitle>
-          <CardDescription>
-            Search and manage companies
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search companies..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8"
-              />
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+            <p className="text-muted-foreground">
+              Manage all companies in the system
+            </p>
           </div>
+          <Link href="/admin/companies/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Company
+            </Button>
+          </Link>
+        </div>
 
-          {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Users</TableHead>
-                  <TableHead>Max Users</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+        {/* Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total Companies</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pagination?.totalItems || 0}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Active</CardTitle>
+              <div className="h-2 w-2 rounded-full bg-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {companies.filter(c => c.is_active === 1).length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Suspended</CardTitle>
+              <div className="h-2 w-2 rounded-full bg-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {companies.filter(c => c.is_active === 0).length}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Inactive</CardTitle>
+              <div className="h-2 w-2 rounded-full bg-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {companies.filter(c => c.is_active === 2).length}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search & Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>All Companies</CardTitle>
+            <CardDescription>
+              Search and manage companies
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search companies..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      Loading companies...
-                    </TableCell>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Users</TableHead>
+                    <TableHead>Max Users</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : companies.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      No companies found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  companies.map((company: Company & { user_count?: number }) => (
-                    <TableRow key={company.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {company.logo ? (
-                            <img
-                              src={company.logo}
-                              alt={company.name}
-                              className="h-8 w-8 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
-                              <Building2 className="h-4 w-4 text-primary" />
-                            </div>
-                          )}
-                          <div>
-                            <div>{company.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {company.slug}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{company.email || '—'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={company.is_active === 1 ? 'default' : 'secondary'}
-                          className={getStatusColor(company.is_active)}
-                        >
-                          {getStatusLabel(company.is_active)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{company.user_count || 0}</TableCell>
-                      <TableCell>{company.max_users || '∞'}</TableCell>
-                      <TableCell>
-                        {new Date(company.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setEditId(company.id)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleStatusToggle(company.id, company.is_active)}
-                            >
-                              {company.is_active === 1 ? 'Suspend' : 'Activate'}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-red-600"
-                              onClick={() => setDeleteId(company.id)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+
+                <TableBody>
+
+                  {!isLoading && companies.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        No companies found
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+
+                  {!isLoading &&
+                    companies.map((company: Company & { user_count?: number }) => (
+                      <TableRow key={company.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {company.logo ? (
+                              <img
+                                src={company.logo}
+                                alt={company.name}
+                                className="h-8 w-8 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
+                                <Building2 className="h-4 w-4 text-primary" />
+                              </div>
+                            )}
+                            <div>
+                              <div>{company.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {company.slug}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>{company.email || '—'}</TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={company.is_active === 1 ? 'default' : 'secondary'}
+                            className={getStatusColor(company.is_active)}
+                          >
+                            {getStatusLabel(company.is_active)}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>{company.user_count || 0}</TableCell>
+                        <TableCell>{company.max_users || '∞'}</TableCell>
+                        <TableCell>
+                          {new Date(company.created_at).toLocaleDateString()}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => setEditId(company.id)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleStatusToggle(company.id, company.is_active)}
+                              >
+                                {company.is_active === 1 ? 'Suspend' : 'Activate'}
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => setDeleteId(company.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                </TableBody>
+              </Table>
+            </div>
 
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
@@ -313,38 +319,36 @@ export function CompaniesContent() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the company
-              and all associated data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Delete Dialog */}
+        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the company and all associated data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-      {/* Edit Company Dialog */}
-      <EditCompanyDialog
-        companyId={editId}
-        open={!!editId}
-        onOpenChange={(open) => !open && setEditId(null)}
-      />
-    </div>
+        <EditCompanyDialog
+          companyId={editId}
+          open={!!editId}
+          onOpenChange={(open) => !open && setEditId(null)}
+        />
+      </div>
     </PermissionGuard>
   );
 }

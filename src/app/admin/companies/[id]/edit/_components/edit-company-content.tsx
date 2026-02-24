@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/select';
 import { UpdateCompanyDto } from '@/types';
 import { PermissionGuard } from '@/components/guards/permission-guard';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function EditCompanyContent({ companyId }: { companyId: number }) {
   const router = useRouter();
@@ -86,18 +87,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading company...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!company) {
+  if (!isLoading && !company) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Company not found</p>
@@ -106,7 +96,9 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
   }
 
   return (
-    <PermissionGuard developerOnly>
+    <>
+      <PageLoader open={isLoading} text="Loading company..." />
+      {!isLoading && company && <PermissionGuard developerOnly>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
@@ -365,6 +357,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
         </form>
       </Form>
     </div>
-    </PermissionGuard>
+      </PermissionGuard>}
+    </>
   );
 }

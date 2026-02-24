@@ -2,8 +2,8 @@
 
 import { useUser } from "@/hooks";
 import { UserForm } from "@/components/admin/users/user-form";
-import { Spinner } from "@/components/ui/spinner";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 interface EditUserContentProps {
   userId: number;
@@ -12,15 +12,7 @@ interface EditUserContentProps {
 export function EditUserContent({ userId }: EditUserContentProps) {
   const { data: userData, isLoading } = useUser(userId);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (!userData) {
+  if (!isLoading && !userData) {
     return (
       <div className="text-center py-16 text-muted-foreground">Employee not found.</div>
     );
@@ -28,15 +20,18 @@ export function EditUserContent({ userId }: EditUserContentProps) {
 
   return (
     <PermissionGuard permission="employees.view">
-    <div className="space-y-1">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Edit Employee</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Update employee information
-        </p>
-      </div>
-      <UserForm user={userData} />
-    </div>
+      <PageLoader open={isLoading} />
+      {!isLoading && (
+        <div className="space-y-1">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Edit Employee</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Update employee information
+            </p>
+          </div>
+          <UserForm user={userData!} />
+        </div>
+      )}
     </PermissionGuard>
   );
 }

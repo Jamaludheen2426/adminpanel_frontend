@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, RotateCcw, Save } from "lucide-react";
@@ -25,8 +25,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
-import { Spinner } from "@/components/ui/spinner";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
 const lightColors = [
   { key: "primary_color", label: "Primary", defaultVal: "#208bc4" },
@@ -133,7 +133,6 @@ export function AdminAppearanceContent() {
 
   const handleResetSection = (section: "light" | "dark" | "buttonLight" | "buttonDark" | "all") => {
     const newValues = { ...values };
-
     if (section === "light" || section === "all") {
       lightColors.forEach((c) => { newValues[c.key] = c.defaultVal; });
     }
@@ -146,7 +145,6 @@ export function AdminAppearanceContent() {
     if (section === "buttonDark" || section === "all") {
       darkButtonColors.forEach((c) => { newValues[c.key] = c.defaultVal; });
     }
-
     setValues(newValues);
     bulkUpdateMutation.mutate({
       group: "appearance",
@@ -154,313 +152,297 @@ export function AdminAppearanceContent() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-12 w-12" />
-          <p className="text-sm text-muted-foreground">Loading color theme settings...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PermissionGuard permission="settings.view">
-    <>
-      {/* Loading Overlay - Shows when saving */}
-      {bulkUpdateMutation.isPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-            <Spinner className="h-12 w-12" />
-            <p className="text-sm font-medium">Saving color theme...</p>
+      <>
+        <PageLoader open={isLoading} />
+
+        {/* Loading Overlay - Shows when saving */}
+        {bulkUpdateMutation.isPending && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
+              <p className="text-sm font-medium">Saving color theme...</p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/settings">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard Color Theme</h1>
-            <p className="text-muted-foreground mt-1">
-              Customize colors for light and dark mode
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Light Mode Colors */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Light Mode Colors</CardTitle>
-                  <CardDescription>
-                    Colors applied in light mode
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Light Mode Colors?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will reset all light mode colors to their default values. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleResetSection("light")}>
-                        Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+        {!isLoading && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Link href="/admin/settings">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold">Dashboard Color Theme</h1>
+                <p className="text-muted-foreground mt-1">
+                  Customize colors for light and dark mode
+                </p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-3">
-                {lightColors.map((item) => (
-                  <div key={item.key} className="space-y-1">
-                    <Label className="text-xs font-medium">{item.label}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="w-12 h-9 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="flex-1 h-9 text-sm"
-                      />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Light Mode Colors */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Light Mode Colors</CardTitle>
+                      <CardDescription>Colors applied in light mode</CardDescription>
                     </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Light Mode Colors?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reset all light mode colors to their default values. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleResetSection("light")}>
+                            Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    {lightColors.map((item) => (
+                      <div key={item.key} className="space-y-1">
+                        <Label className="text-xs font-medium">{item.label}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="w-12 h-9 cursor-pointer p-1"
+                          />
+                          <Input
+                            type="text"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Dark Mode Colors */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Dark Mode Colors</CardTitle>
-                  <CardDescription>
-                    Colors applied in dark mode
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Dark Mode Colors?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will reset all dark mode colors to their default values. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleResetSection("dark")}>
-                        Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-3">
-                {darkColors.map((item) => (
-                  <div key={item.key} className="space-y-1">
-                    <Label className="text-xs font-medium">{item.label}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="w-12 h-9 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="flex-1 h-9 text-sm"
-                      />
+              {/* Dark Mode Colors */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Dark Mode Colors</CardTitle>
+                      <CardDescription>Colors applied in dark mode</CardDescription>
                     </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Dark Mode Colors?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reset all dark mode colors to their default values. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleResetSection("dark")}>
+                            Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    {darkColors.map((item) => (
+                      <div key={item.key} className="space-y-1">
+                        <Label className="text-xs font-medium">{item.label}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="w-12 h-9 cursor-pointer p-1"
+                          />
+                          <Input
+                            type="text"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Button Colors */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Light Mode Button Colors */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Light Mode Button Colors</CardTitle>
-                  <CardDescription>
-                    Button colors applied in light mode
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Light Mode Button Colors?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will reset all light mode button colors to their default values. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleResetSection("buttonLight")}>
-                        Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-3">
-                {buttonColors.map((item) => (
-                  <div key={item.key} className="space-y-1">
-                    <Label className="text-xs font-medium">{item.label}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="w-12 h-9 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="flex-1 h-9 text-sm"
-                      />
+            {/* Button Colors */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Light Mode Button Colors */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Light Mode Button Colors</CardTitle>
+                      <CardDescription>Button colors applied in light mode</CardDescription>
                     </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Light Mode Button Colors?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reset all light mode button colors to their default values. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleResetSection("buttonLight")}>
+                            Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    {buttonColors.map((item) => (
+                      <div key={item.key} className="space-y-1">
+                        <Label className="text-xs font-medium">{item.label}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="w-12 h-9 cursor-pointer p-1"
+                          />
+                          <Input
+                            type="text"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Dark Mode Button Colors */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Dark Mode Button Colors</CardTitle>
-                  <CardDescription>
-                    Button colors applied in dark mode
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
-                      <RotateCcw className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Reset Dark Mode Button Colors?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will reset all dark mode button colors to their default values. This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleResetSection("buttonDark")}>
-                        Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-3">
-                {darkButtonColors.map((item) => (
-                  <div key={item.key} className="space-y-1">
-                    <Label className="text-xs font-medium">{item.label}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="w-12 h-9 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={values[item.key] || item.defaultVal}
-                        onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
-                        className="flex-1 h-9 text-sm"
-                      />
+              {/* Dark Mode Button Colors */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Dark Mode Button Colors</CardTitle>
+                      <CardDescription>Button colors applied in dark mode</CardDescription>
                     </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" disabled={bulkUpdateMutation.isPending}>
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Reset Dark Mode Button Colors?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will reset all dark mode button colors to their default values. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleResetSection("buttonDark")}>
+                            Reset
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-3">
+                    {darkButtonColors.map((item) => (
+                      <div key={item.key} className="space-y-1">
+                        <Label className="text-xs font-medium">{item.label}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            type="color"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="w-12 h-9 cursor-pointer p-1"
+                          />
+                          <Input
+                            type="text"
+                            value={values[item.key] || item.defaultVal}
+                            onChange={(e) => setValues({ ...values, [item.key]: e.target.value })}
+                            className="flex-1 h-9 text-sm"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="outline" disabled={bulkUpdateMutation.isPending}>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset All to Defaults
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-2">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" disabled={bulkUpdateMutation.isPending}>
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset All to Defaults
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset All Colors?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will reset ALL color settings (light mode, dark mode, and button colors) to their default values. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleResetSection("all")}>
+                      Reset All
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+                <Save className="mr-2 h-4 w-4" />
+                {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset All Colors?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will reset ALL color settings (light mode, dark mode, and button colors) to their default values. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleResetSection("all")}>
-                  Reset All
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-            <Save className="mr-2 h-4 w-4" />
-            {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}
-          </Button>
-        </div>
-      </div>
-    </>
+            </div>
+          </div>
+        )}
+      </>
     </PermissionGuard>
   );
 }

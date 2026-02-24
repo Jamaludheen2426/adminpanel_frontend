@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageLoader } from '@/components/common/page-loader';
 
 const resetPasswordSchema = z
   .object({
@@ -91,6 +92,8 @@ function ResetPasswordForm() {
   }
 
   return (
+    <>
+    <PageLoader open={isLoading} text="Resetting password..." />
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">Set New Password</h1>
@@ -141,6 +144,7 @@ function ResetPasswordForm() {
         </Button>
       </form>
     </div>
+    </>
   );
 }
 

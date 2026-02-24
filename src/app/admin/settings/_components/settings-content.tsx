@@ -19,8 +19,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAuth } from "@/hooks/use-auth";
 import { usePermissionCheck } from "@/hooks";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 interface SettingItem {
   labelKey: string;
@@ -120,13 +122,6 @@ const settingGroups: SettingGroup[] = [
         badge: "common.comming",
         permission: "email_campaigns.view",
       },
-      {
-        labelKey: "settings.social_login",
-        descriptionKey: "settings.social_login_desc",
-        href: "/admin/settings/social-login",
-        icon: Globe,
-        permission: "social_login.view",
-      },
     ],
   },
   {
@@ -178,6 +173,7 @@ const settingGroups: SettingGroup[] = [
 
 export function SettingsContent() {
   const { t } = useTranslation();
+  const { isLoading } = useAuth();
   const { hasPermission } = usePermissionCheck();
 
   // Filter setting items based on permissions
@@ -195,50 +191,52 @@ export function SettingsContent() {
 
   return (
     <PermissionGuard permission="settings.view">
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t("nav.settings")}</h1>
-        <p className="text-muted-foreground mt-1">{t("settings.page_desc")}</p>
-      </div>
+      <PageLoader open={isLoading} text={t("common.loading", "Loading...")} />
 
-      {visibleGroups.map((group) => (
-        <Card key={group.titleKey}>
-          <CardHeader>
-            <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group cursor-pointer">
-                      <div className="mt-0.5 text-muted-foreground group-hover:text-primary transition-colors">
-                        <Icon className="h-5 w-5" />
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t("nav.settings")}</h1>
+          <p className="text-muted-foreground mt-1">{t("settings.page_desc")}</p>
+        </div>
+
+        {visibleGroups.map((group) => (
+          <Card key={group.titleKey}>
+            <CardHeader>
+              <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group cursor-pointer">
+                        <div className="mt-0.5 text-muted-foreground group-hover:text-primary transition-colors">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-primary group-hover:underline">
+                            {t(item.labelKey)}
+                            {item.badge && (
+                              <span className="text-muted-foreground font-normal">
+                                {" "}
+                                ({t(item.badge)})
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {t(item.descriptionKey)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary group-hover:underline">
-                          {t(item.labelKey)}
-                          {item.badge && (
-                            <span className="text-muted-foreground font-normal">
-                              {" "}
-                              ({t(item.badge)})
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {t(item.descriptionKey)}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </PermissionGuard>
   );
 }

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForgotPassword, useVerifyOTP, useResetPassword } from "@/hooks/use-auth";
 import { ArrowLeft } from "lucide-react";
+import { PageLoader } from "@/components/common/page-loader";
 
 // Step 1: Email schema
 const emailSchema = z.object({
@@ -90,6 +91,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
+    <>
+    <PageLoader open={forgotPasswordMutation.isPending || verifyOTPMutation.isPending || resetPasswordMutation.isPending} text="Processing..." />
     <div className="min-h-screen h-screen flex">
       {/* Left Side - Background */}
       <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
@@ -295,5 +298,6 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

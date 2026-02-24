@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Eye, EyeOff } from "lucide-react";
@@ -24,22 +24,39 @@ import {
   useSettingsByGroup,
   useBulkUpdateSettings,
 } from "@/hooks/use-settings";
-import { Spinner } from "@/components/ui/spinner";
+import { useIsPluginActive } from "@/hooks/use-plugins";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
-const drivers = [
-  { value: "local", label: "Local disk" },
-  { value: "s3", label: "Amazon S3" },
-  { value: "cloudflare", label: "Cloudflare R2" },
-  { value: "digitalocean", label: "DigitalOcean Spaces" },
-  { value: "wasabi", label: "Wasabi" },
-  { value: "bunnycdn", label: "BunnyCDN" },
-  { value: "backblaze", label: "Backblaze B2" },
+const ALL_DRIVERS = [
+  { value: "local", label: "Local disk", plugin: null },
+  { value: "s3", label: "Amazon S3", plugin: "amazon-s3" },
+  { value: "cloudflare", label: "Cloudflare R2", plugin: "cloudflare-r2" },
+  { value: "digitalocean", label: "DigitalOcean Spaces", plugin: "digitalocean-spaces" },
+  { value: "wasabi", label: "Wasabi", plugin: "wasabi" },
+  { value: "bunnycdn", label: "BunnyCDN", plugin: null },
+  { value: "backblaze", label: "Backblaze B2", plugin: null },
 ];
 
 export function MediaContent() {
   const { data: settings, isLoading } = useSettingsByGroup("media");
   const bulkUpdateMutation = useBulkUpdateSettings();
+
+  const s3Active = useIsPluginActive("amazon-s3");
+  const r2Active = useIsPluginActive("cloudflare-r2");
+  const doActive = useIsPluginActive("digitalocean-spaces");
+  const wbActive = useIsPluginActive("wasabi");
+
+  const pluginActiveMap: Record<string, boolean> = {
+    "amazon-s3": s3Active,
+    "cloudflare-r2": r2Active,
+    "digitalocean-spaces": doActive,
+    "wasabi": wbActive,
+  };
+
+  const drivers = ALL_DRIVERS.filter(
+    (d) => d.plugin === null || pluginActiveMap[d.plugin]
+  );
 
   const [values, setValues] = useState({
     driver: "s3",
@@ -104,7 +121,6 @@ export function MediaContent() {
       );
     }
 
-    // S3-compatible storage (S3, Cloudflare R2, DigitalOcean, Wasabi, Backblaze)
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Access Key */}
@@ -376,87 +392,75 @@ export function MediaContent() {
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-12 w-12" />
-          <p className="text-sm text-muted-foreground">
-            Loading media settings...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <PermissionGuard permission="media.view">
-    <>
-      {/* Loading Overlay - Shows when saving */}
-      {bulkUpdateMutation.isPending && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-            <Spinner className="h-12 w-12" />
-            <p className="text-sm font-medium">Saving media settings...</p>
-          </div>
-        </div>
-      )}
+      <>
+        <PageLoader open={isLoading} />
+        <PageLoader open={bulkUpdateMutation.isPending} />
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/settings">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Media Storage Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Configure where and how your media files are stored
-            </p>
-          </div>
-        </div>
-
-        {/* Driver Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Driver</CardTitle>
-            <CardDescription>Select your storage provider</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-w-md">
-              <Label>Storage Driver</Label>
-              <Select
-                value={values.driver}
-                onValueChange={(val) => setValues({ ...values, driver: val })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {drivers.map((driver) => (
-                    <SelectItem key={driver.value} value={driver.value}>
-                      {driver.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {!isLoading && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Link href="/admin/settings">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold">Media Storage Settings</h1>
+                <p className="text-muted-foreground mt-1">
+                  Configure where and how your media files are stored
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Dynamic Fields Based on Driver */}
-        {renderDriverFields()}
+            {/* Driver Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Driver</CardTitle>
+                <CardDescription>Select your storage provider</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-w-md">
+                  <Label>Storage Driver</Label>
+                  <Select
+                    value={values.driver}
+                    onValueChange={(val) => setValues({ ...values, driver: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {drivers.map((driver) => (
+                        <SelectItem key={driver.value} value={driver.value}>
+                          {driver.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {drivers.length === 1 && (
+                    <p className="text-xs text-muted-foreground pt-1">
+                      No cloud storage plugins enabled.{" "}
+                      <a href="/admin/plugins" className="text-primary hover:underline">Enable them in Plugins →</a>
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-            <Save className="mr-2 h-4 w-4" />
-            {bulkUpdateMutation.isPending ? "Saving..." : "Save Media Settings"}
-          </Button>
-        </div>
-      </div>
-    </>
+            {/* Dynamic Fields Based on Driver */}
+            {renderDriverFields()}
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+                <Save className="mr-2 h-4 w-4" />
+                {bulkUpdateMutation.isPending ? "Saving..." : "Save Media Settings"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </>
     </PermissionGuard>
   );
 }

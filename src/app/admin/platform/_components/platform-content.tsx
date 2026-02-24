@@ -16,7 +16,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
+import { useAuth } from "@/hooks/use-auth";
 import { usePermissionCheck } from "@/hooks";
+import { PageLoader } from "@/components/common/page-loader";
 
 interface PlatformItem {
   labelKey: string;
@@ -49,7 +51,6 @@ const platformGroups: PlatformGroup[] = [
         icon: Shield,
         permission: "roles.view",
       },
-
       {
         labelKey: "nav.modules",
         descriptionKey: "platform.modules_desc",
@@ -87,6 +88,7 @@ const platformGroups: PlatformGroup[] = [
 
 export function PlatformContent() {
   const { t } = useTranslation();
+  const { isLoading } = useAuth();
   const { hasPermission } = usePermissionCheck();
 
   // Filter platform items based on permissions
@@ -103,45 +105,49 @@ export function PlatformContent() {
     .filter(group => group.items.length > 0);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('platform.page_desc', 'Manage employees, roles, and system administration')}
-        </p>
-      </div>
+    <>
+      <PageLoader open={isLoading} text={t("common.loading", "Loading...")} />
 
-      {visibleGroups.map((group) => (
-        <Card key={group.titleKey}>
-          <CardHeader>
-            <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group cursor-pointer">
-                      <div className="mt-0.5 text-muted-foreground group-hover:text-primary transition-colors">
-                        <Icon className="h-5 w-5" />
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
+          <p className="text-muted-foreground mt-1">
+            {t('platform.page_desc', 'Manage employees, roles, and system administration')}
+          </p>
+        </div>
+
+        {visibleGroups.map((group) => (
+          <Card key={group.titleKey}>
+            <CardHeader>
+              <CardTitle className="text-lg">{t(group.titleKey)}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link key={item.href} href={item.href}>
+                      <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group cursor-pointer">
+                        <div className="mt-0.5 text-muted-foreground group-hover:text-primary transition-colors">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-primary group-hover:underline">
+                            {t(item.labelKey)}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            {t(item.descriptionKey)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary group-hover:underline">
-                          {t(item.labelKey)}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                          {t(item.descriptionKey)}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </>
   );
 }

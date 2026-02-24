@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ import { useUsers, useDeleteUser, useToggleUserStatus, useUpdateUser } from "@/h
 import { useRoles } from "@/hooks/use-roles";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
-import { Spinner } from "@/components/ui/spinner";
+import { PageLoader } from "@/components/common/page-loader";
 import type { User } from "@/types";
 
 const isSuperAdminOrDeveloper = (user: User) =>
@@ -49,7 +49,6 @@ export function UsersContent() {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
-  // Role change confirmation state
   const [roleChangeDialog, setRoleChangeDialog] = useState<{
     user: User;
     newRoleId: string;
@@ -94,6 +93,10 @@ export function UsersContent() {
   return (
     <PermissionGuard permission="employees.view">
       <div className="space-y-6">
+
+        {/* Global Page Loader */}
+        <PageLoader open={isLoading} />
+
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Employees</h1>
           <Button onClick={() => router.push("/admin/platform/users/create")}>
@@ -114,12 +117,10 @@ export function UsersContent() {
               />
             </div>
           </CardHeader>
+
           <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner className="h-8 w-8" />
-              </div>
-            ) : (
+
+            {!isLoading && (
               <>
                 <Table>
                   <TableHeader>
@@ -134,6 +135,7 @@ export function UsersContent() {
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {data?.data?.map((user) => (
                       <TableRow key={user.id}>
@@ -141,6 +143,7 @@ export function UsersContent() {
                         <TableCell className="text-muted-foreground">{user.email}</TableCell>
                         <TableCell className="text-muted-foreground">{user.department || "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{user.designation || "—"}</TableCell>
+
                         <TableCell>
                           {isSuperAdminOrDeveloper(user) ? (
                             <span className="text-xs font-medium text-muted-foreground">
@@ -181,6 +184,7 @@ export function UsersContent() {
                             </Popover>
                           )}
                         </TableCell>
+
                         <TableCell>
                           <Switch
                             checked={user.login_access === 1}
@@ -189,45 +193,63 @@ export function UsersContent() {
                             disabled={
                               isSuperAdminOrDeveloper(user) ||
                               (updateUserMutation.isPending &&
-                              updateUserMutation.variables?.id === user.id)
+                                updateUserMutation.variables?.id === user.id)
                             }
                             onCheckedChange={(checked) =>
                               handleLoginAccessChange(user, checked)
                             }
                           />
                         </TableCell>
+
                         <TableCell>
                           <Switch
                             checked={user.is_active === 1}
                             onText="ACTIVE"
                             offText="INACTIVE"
-                            pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === user.id}
+                            pending={
+                              isApprovalRequired(toggleStatusMutation.error) &&
+                              toggleStatusMutation.variables?.id === user.id
+                            }
                             disabled={
                               isSuperAdminOrDeveloper(user) ||
                               (toggleStatusMutation.isPending &&
-                              toggleStatusMutation.variables?.id === user.id)
+                                toggleStatusMutation.variables?.id === user.id)
                             }
                             onCheckedChange={(checked) =>
-                              toggleStatusMutation.mutate({ id: user.id, is_active: checked ? 1 : 0 })
+                              toggleStatusMutation.mutate({
+                                id: user.id,
+                                is_active: checked ? 1 : 0,
+                              })
                             }
                           />
                         </TableCell>
+
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => router.push(`/admin/platform/users/${user.id}/edit`)}
+                              onClick={() =>
+                                router.push(`/admin/platform/users/${user.id}/edit`)
+                              }
                               title="Edit Employee"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
+
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDelete(user)}
-                              disabled={isSuperAdminOrDeveloper(user) || deleteUserMutation.isPending}
-                              title={isSuperAdminOrDeveloper(user) ? "Cannot delete super admin" : "Delete Employee"}
+                              disabled={
+                                isSuperAdminOrDeveloper(user) ||
+                                deleteUserMutation.isPending
+                              }
+                              title={
+                                isSuperAdminOrDeveloper(user)
+                                  ? "Cannot delete super admin"
+                                  : "Delete Employee"
+                              }
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -235,9 +257,13 @@ export function UsersContent() {
                         </TableCell>
                       </TableRow>
                     ))}
+
                     {data?.data?.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell
+                          colSpan={8}
+                          className="text-center py-8 text-muted-foreground"
+                        >
                           No employees found.
                         </TableCell>
                       </TableRow>
@@ -272,24 +298,32 @@ export function UsersContent() {
                 )}
               </>
             )}
+
           </CardContent>
         </Card>
       </div>
 
       {/* Role Change Confirmation Dialog */}
-      <AlertDialog open={!!roleChangeDialog} onOpenChange={() => setRoleChangeDialog(null)}>
+      <AlertDialog
+        open={!!roleChangeDialog}
+        onOpenChange={() => setRoleChangeDialog(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to change <strong>{roleChangeDialog?.user.full_name}</strong>&apos;s role from{" "}
-              <strong>{roleChangeDialog?.user.role?.name || "Unknown"}</strong> to{" "}
+              Are you sure you want to change{" "}
+              <strong>{roleChangeDialog?.user.full_name}</strong>&apos;s role from{" "}
+              <strong>{roleChangeDialog?.user.role?.name || "Unknown"}</strong>{" "}
+              to{" "}
               <strong>{roleChangeDialog?.newRoleName}</strong>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRoleChange}>Confirm</AlertDialogAction>
+            <AlertDialogAction onClick={confirmRoleChange}>
+              Confirm
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

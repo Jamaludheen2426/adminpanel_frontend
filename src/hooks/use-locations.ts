@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
-import type { Country, State, City, Pincode } from '@/types';
+import type { Country, State, City, Pincode, Locality, CreateLocalityDto, UpdateLocalityDto } from '@/types';
 
 // API functions
 const locationsApi = {
@@ -110,6 +110,31 @@ const locationsApi = {
 
   deletePincode: async (id: number): Promise<void> => {
     await apiClient.delete(`/locations/pincodes/${id}`);
+  },
+
+  // Localities
+  getLocalities: async (cityId: number): Promise<Locality[]> => {
+    try {
+      const response = await apiClient.get(`/locations/localities/${cityId}`, { params: { limit: 1000 } });
+      return response.data.data || [];
+    } catch (error) {
+      console.error('Failed to fetch localities:', error);
+      throw new Error('Failed to fetch localities');
+    }
+  },
+
+  createLocality: async (data: CreateLocalityDto): Promise<Locality> => {
+    const response = await apiClient.post('/locations/localities', data);
+    return response.data.data?.locality || response.data.locality;
+  },
+
+  updateLocality: async ({ id, data }: { id: number; data: UpdateLocalityDto }): Promise<Locality> => {
+    const response = await apiClient.put(`/locations/localities/${id}`, data);
+    return response.data.data?.locality || response.data.locality;
+  },
+
+  deleteLocality: async (id: number): Promise<void> => {
+    await apiClient.delete(`/locations/localities/${id}`);
   },
 };
 
@@ -343,6 +368,65 @@ export function useDeletePincode() {
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete pincode');
+    },
+  });
+}
+
+// Localities hooks
+export function useLocalities(cityId: number) {
+  return useQuery({
+    queryKey: queryKeys.locations.localities(cityId),
+    queryFn: () => locationsApi.getLocalities(cityId),
+    enabled: !!cityId,
+    retry: 1,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useCreateLocality() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: locationsApi.createLocality,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
+      toast.success('Locality created successfully');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || 'Failed to create locality');
+    },
+  });
+}
+
+export function useUpdateLocality() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: locationsApi.updateLocality,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
+      toast.success('Locality updated successfully');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || 'Failed to update locality');
+    },
+  });
+}
+
+export function useDeleteLocality() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: locationsApi.deleteLocality,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
+      toast.success('Locality deleted successfully');
+    },
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+      if (isApprovalRequired(error)) return;
+      toast.error(error.response?.data?.message || 'Failed to delete locality');
     },
   });
 }

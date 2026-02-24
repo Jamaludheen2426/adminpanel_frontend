@@ -15,6 +15,7 @@ const segmentTranslationMap: Record<string, string> = {
   "profile": "nav.profile",
   "activity-logs": "nav.activity_logs",
   "platform": "nav.platform",
+
   // Settings sub-pages
   "general": "settings.general",
   "email": "settings.email",
@@ -34,9 +35,11 @@ const segmentTranslationMap: Record<string, string> = {
   "cache": "settings.cache",
   "optimize": "settings.optimize",
   "missing": "nav.missing_keys",
+
   // Actions
   "create": "common.create",
   "edit": "common.edit",
+
   // Appearance
   "appearance": "nav.appearance",
   "theme": "appearance.theme",
@@ -48,23 +51,30 @@ export default function Breadcrumb() {
   const pathname = usePathname();
   const { t } = useTranslation();
 
+  // Remove "admin" + remove numeric IDs
   const segments = pathname
     .split("/")
     .filter(Boolean)
-    .slice(1); // Skip the 'admin' part
+    .slice(1) // skip 'admin'
+    .filter(segment => isNaN(Number(segment))); // remove numeric IDs
 
   const getLabel = (segment: string): string => {
     const translationKey = segmentTranslationMap[segment];
+
     if (translationKey) {
-      return t(translationKey, segment
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" "));
+      return t(
+        translationKey,
+        segment
+          .split("-")
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      );
     }
-    // Fallback: capitalize the segment
+
+    // fallback
     return segment
       .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
   };
 
@@ -82,14 +92,22 @@ export default function Breadcrumb() {
 
   return (
     <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-      <Link href="/admin" className="hover:text-foreground transition-colors">
+      {/* Home Icon */}
+      <Link
+        href="/admin"
+        className="hover:text-foreground transition-colors"
+      >
         <Home className="h-4 w-4" />
       </Link>
+
       {items.slice(1).map((item, index) => (
         <div key={item.href} className="flex items-center gap-2">
           <ChevronRight className="h-4 w-4" />
+
           {index === items.length - 2 ? (
-            <span className="text-foreground font-medium">{item.label}</span>
+            <span className="text-foreground font-medium">
+              {item.label}
+            </span>
           ) : (
             <Link
               href={item.href}

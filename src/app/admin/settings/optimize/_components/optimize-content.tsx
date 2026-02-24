@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Save, Trash2, BarChart3, Image, Eye, ListFilter, Clock } from 'lucide-react';
@@ -34,8 +34,7 @@ import {
 import { useSettingsByGroup, useBulkUpdateSettings } from '@/hooks/use-settings';
 import { useClearOldLogs } from '@/hooks/use-activity-logs';
 import { PermissionGuard } from '@/components/guards/permission-guard';
-import { Spinner } from '@/components/ui/spinner';
-
+import { PageLoader } from '@/components/common/page-loader';
 export function OptimizeContent() {
   const { data: optimizeSettings, isLoading: loadingOptimize } = useSettingsByGroup('optimize');
   const { data: paginationSettings, isLoading: loadingPagination } = useSettingsByGroup('pagination');
@@ -82,19 +81,11 @@ export function OptimizeContent() {
     clearLogs.mutate(parseInt(values['optimize.log_retention_days'] || '90'));
   };
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-12 w-12" />
-          <p className="text-sm text-muted-foreground">Loading optimization settings...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <PermissionGuard permission="settings.view">
+      <>
+      <PageLoader open={isLoading} />
       <div className="space-y-6">
         {/* Header */}
         <div>
@@ -301,6 +292,7 @@ export function OptimizeContent() {
           </CardContent>
         </Card>
       </div>
+      </>
     </PermissionGuard>
   );
 }

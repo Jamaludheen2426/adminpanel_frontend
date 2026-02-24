@@ -37,6 +37,12 @@ export * from './use-companies';
 // Approval hooks
 export * from './use-approvals';
 
+// Plugin hooks
+export * from './use-plugins';
+
+// Payment hooks
+export * from './use-payments';
+
 // Utility hooks
 export * from './use-debounce';
 export * from './use-permission';

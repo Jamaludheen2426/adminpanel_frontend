@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -67,8 +67,8 @@ import {
 } from "@/hooks/use-email-configs";
 import { useEmailTemplates } from "@/hooks/use-email-templates";
 import type { EmailConfig, CreateEmailConfigDto } from "@/types";
-import { Spinner } from "@/components/ui/spinner";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
 const drivers = [
   { value: "smtp", label: "SMTP (Generic)", free: true },
@@ -342,22 +342,12 @@ export function EmailConfigContent() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-12 w-12" />
-          <p className="text-sm text-muted-foreground">
-            Loading email settings...
-          </p>
-        </div>
-      </div>
-    );
-  }
+ 
 
   return (
     <PermissionGuard permission="email_configs.view">
     <>
+      <PageLoader open={isLoading} />
       {/* Loading Overlay */}
       {(createMutation.isPending ||
         updateMutation.isPending ||
@@ -366,7 +356,6 @@ export function EmailConfigContent() {
         toggleMutation.isPending) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-            <Spinner className="h-12 w-12" />
             <p className="text-sm font-medium">
               {createMutation.isPending && "Creating configuration..."}
               {updateMutation.isPending && "Updating configuration..."}
@@ -377,7 +366,7 @@ export function EmailConfigContent() {
           </div>
         </div>
       )}
-
+      {!isLoading && (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -911,6 +900,7 @@ export function EmailConfigContent() {
           </DialogContent>
         </Dialog>
       </div>
+      )}
     </>
     </PermissionGuard>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,22 +9,9 @@ import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLogin, useSocialLogin } from "@/hooks/use-auth";
-import { useSettingsByGroup, usePublicSettings } from "@/hooks/use-settings";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { toast } from "sonner";
-
-declare global {
-  interface Window {
-    FB?: {
-      init: (params: { appId: string; version: string; cookie: boolean; xfbml: boolean }) => void;
-      login: (
-        callback: (response: { authResponse?: { accessToken: string } }) => void,
-        options: { scope: string; auth_type?: string }
-      ) => void;
-    };
-  }
-}
+import { useLogin } from "@/hooks/use-auth";
+import { useSettingsByGroup } from "@/hooks/use-settings";
+import { PageLoader } from "@/components/common/page-loader";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -36,9 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const loginMutation = useLogin();
-  const socialLoginMutation = useSocialLogin();
   const { data: settings } = useSettingsByGroup("appearance");
-  const { data: publicSettings } = usePublicSettings();
 
   const {
     register,
@@ -52,69 +37,13 @@ export default function LoginPage() {
   const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Login";
   const backgroundImage = settings?.find((s) => s.key === "login_background_url")?.value || "";
 
-  const googleEnabled = publicSettings?.["google_enabled"] === "true";
-  const googleClientId = publicSettings?.["google_client_id"] || "";
-  const facebookEnabled = publicSettings?.["facebook_enabled"] === "true";
-  const facebookAppId = publicSettings?.["facebook_app_id"] || "";
-
-  const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
-  const facebookAvailable = facebookEnabled && !!facebookAppId && isHttps;
-
-  const showSocial = (googleEnabled && !!googleClientId) || (facebookEnabled && !!facebookAppId);
-
-  useEffect(() => {
-    if (!facebookAvailable) return;
-
-    const initFB = () => {
-      window.FB?.init({
-        appId: facebookAppId,
-        version: "v19.0",
-        cookie: true,
-        xfbml: false,
-      });
-    };
-
-    if (window.FB) {
-      initFB();
-    } else {
-      const script = document.createElement("script");
-      script.src = "https://connect.facebook.net/en_US/sdk.js";
-      script.async = true;
-      script.defer = true;
-      script.onload = initFB;
-      document.body.appendChild(script);
-    }
-  }, [facebookAvailable, facebookAppId]);
-
-  const handleFacebookLogin = () => {
-    if (!isHttps) {
-      toast.error("Facebook login requires HTTPS. Use it on your production site.");
-      return;
-    }
-    if (!window.FB) {
-      toast.error("Facebook SDK not loaded. Please try again.");
-      return;
-    }
-    window.FB.login(
-      (response) => {
-        if (response.authResponse?.accessToken) {
-          socialLoginMutation.mutate({
-            provider: "facebook",
-            token: response.authResponse.accessToken,
-          });
-        } else {
-          toast.error("Facebook login cancelled");
-        }
-      },
-      { scope: 'email,public_profile', auth_type: 'rerequest' }
-    );
-  };
-
   const onSubmit = (data: LoginFormData) => {
     loginMutation.mutate(data);
   };
 
   return (
+    <>
+    <PageLoader open={loginMutation.isPending} text="Signing in..." />
     <div className="min-h-screen h-screen flex">
       {/* Left Side - Background Image (60%) */}
       <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
@@ -221,68 +150,6 @@ export default function LoginPage() {
               {loginMutation.isPending ? "Signing in..." : "Sign In"}
             </Button>
 
-            {/* Social Login Section */}
-            {showSocial && (
-              <>
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-gray-400">Or continue with</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  {/* Google Login */}
-                  {googleEnabled && googleClientId && (
-                    <GoogleOAuthProvider clientId={googleClientId}>
-                      <div className="w-full [&>div]:w-full [&>div>div]:w-full [&>div>div>iframe]:w-full">
-                        <GoogleLogin
-                          onSuccess={(credentialResponse) => {
-                            if (credentialResponse.credential) {
-                              socialLoginMutation.mutate({
-                                provider: "google",
-                                token: credentialResponse.credential,
-                              });
-                            }
-                          }}
-                          onError={() => toast.error("Google login failed")}
-                          width="100%"
-                          text="signin_with"
-                          shape="rectangular"
-                          theme="outline"
-                        />
-                      </div>
-                    </GoogleOAuthProvider>
-                  )}
-
-                  {/* Facebook Login — requires HTTPS; shown disabled on HTTP with a hint */}
-                  {facebookEnabled && facebookAppId && (
-                    <button
-                      type="button"
-                      onClick={handleFacebookLogin}
-                      disabled={socialLoginMutation.isPending || !isHttps}
-                      title={!isHttps ? "Facebook login requires HTTPS (not available on localhost)" : undefined}
-                      className="flex items-center justify-center gap-3 w-full border border-gray-200 rounded-md py-2 px-4 text-gray-700 hover:bg-gray-50 transition-colors text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 512 512"
-                        className="w-5 h-5 shrink-0"
-                        fill="#1877F2"
-                      >
-                        <path d="M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256C0 376 82.7 476.8 194.2 504.5V334.2H141.4V256h52.8V222.3c0-87.1 39.4-127.5 125-127.5c16.2 0 44.9 3.2 56.4 6.3V172c-6.2-.6-16.5-1-29.6-1c-42 0-58.2 15.9-58.2 57.2V256h83.6l-14.4 78.2H287V510.1C413.8 494.8 512 386.9 512 256z" />
-                      </svg>
-                      Continue with Facebook
-                      {!isHttps && <span className="text-xs text-gray-400">(HTTPS only)</span>}
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-
             {/* Register Link */}
             <p className="text-sm text-center text-gray-500">
               Don&apos;t have an account?{" "}
@@ -297,5 +164,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

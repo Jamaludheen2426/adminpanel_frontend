@@ -316,6 +316,29 @@ export interface Pincode extends BaseEntity {
   city?: City;
 }
 
+export interface Locality extends BaseEntity {
+  name: string;
+  pincode: string;
+  city_id: number;
+  is_default: boolean;
+  city?: City;
+}
+
+export interface CreateLocalityDto {
+  name: string;
+  pincode: string;
+  city_id: number;
+  is_active?: boolean;
+  is_default?: boolean;
+}
+
+export interface UpdateLocalityDto {
+  name?: string;
+  pincode?: string;
+  is_active?: boolean;
+  is_default?: boolean;
+}
+
 // Activity Log types
 export interface ActivityLog {
   id: number;
@@ -683,4 +706,73 @@ export interface BulkImportResult {
   created: number;
   skipped: number;
   errors: { key: string; error: string }[];
+}
+
+// Plugin types
+export type PluginCategory =
+  | 'authentication'
+  | 'analytics'
+  | 'storage'
+  | 'payment'
+  | 'maps'
+  | 'security'
+  | 'communication'
+  | 'general';
+
+export interface Plugin {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  category: PluginCategory;
+  icon: string | null;
+  is_active: number; // 0=disabled, 1=enabled
+  config_group: string | null;
+  config_route: string | null;
+  company_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PluginGrouped {
+  plugins: Plugin[];
+  grouped: Record<PluginCategory, Plugin[]>;
+}
+
+// ─── Payment types ────────────────────────────────────────────────────────────
+
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
+
+export interface PaymentUser {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface Payment {
+  id: number;
+  company_id: number | null;
+  user_id: number | null;
+  amount: string;       // DECIMAL comes back as string from MySQL
+  currency: string;
+  status: PaymentStatus;
+  gateway: string | null;
+  gateway_transaction_id: string | null;
+  description: string | null;
+  metadata: Record<string, unknown> | null;
+  user?: PaymentUser;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaymentStatItem { count: number; total: number; }
+
+export interface PaymentStats {
+  total_count: number;
+  total_revenue: number;
+  pending: PaymentStatItem;
+  completed: PaymentStatItem;
+  failed: PaymentStatItem;
+  refunded: PaymentStatItem;
+  cancelled: PaymentStatItem;
 }

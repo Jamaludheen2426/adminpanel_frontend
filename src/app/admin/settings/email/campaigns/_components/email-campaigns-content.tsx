@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -79,8 +79,8 @@ import { useEmailTemplates } from "@/hooks/use-email-templates";
 import { useEmailConfigs } from "@/hooks/use-email-configs";
 import { useRoles } from "@/hooks/use-roles";
 import type { EmailCampaign, CreateEmailCampaignDto } from "@/types";
-import { Spinner } from "@/components/ui/spinner";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
 const campaignTypes = [
   { value: "holiday", label: "Holiday Campaign" },
@@ -207,20 +207,12 @@ export function EmailCampaignsContent() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Spinner className="h-12 w-12" />
-          <p className="text-sm text-muted-foreground">Loading campaigns...</p>
-        </div>
-      </div>
-    );
-  }
+  
 
   return (
     <PermissionGuard permission="email_campaigns.read">
     <>
+      <PageLoader open={isLoading} />
       {/* Loading Overlay */}
       {(createMutation.isPending ||
         updateMutation.isPending ||
@@ -231,7 +223,6 @@ export function EmailCampaignsContent() {
         processQueueMutation.isPending) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-            <Spinner className="h-12 w-12" />
             <p className="text-sm font-medium">
               {createMutation.isPending && "Creating campaign..."}
               {updateMutation.isPending && "Updating campaign..."}
@@ -245,6 +236,7 @@ export function EmailCampaignsContent() {
         </div>
       )}
 
+      {!isLoading && (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -797,6 +789,7 @@ export function EmailCampaignsContent() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      )}
     </>
     </PermissionGuard>
   );

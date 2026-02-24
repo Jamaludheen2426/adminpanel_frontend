@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Check } from "lucide-react";
@@ -17,6 +17,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
 const countries = [
   { code: "AF", name: "Afghanistan" },
@@ -247,7 +248,6 @@ export function PhoneContent() {
         min_length: settingsMap.min_length || "8",
         max_length: settingsMap.max_length || "15",
       });
-      
       const selectedCodes = (settingsMap.selected_countries || "").split(",");
       setSelectAll(selectedCodes.length === countries.length);
     }
@@ -265,13 +265,11 @@ export function PhoneContent() {
   const handleCountryToggle = (code: string) => {
     const currentCountries = values.selected_countries ? values.selected_countries.split(",") : [];
     let newCountries;
-    
     if (currentCountries.includes(code)) {
       newCountries = currentCountries.filter((c) => c !== code);
     } else {
       newCountries = [...currentCountries, code];
     }
-    
     setSelectAll(newCountries.length === countries.length);
     setValues({ ...values, selected_countries: newCountries.join(",") });
   };
@@ -291,181 +289,176 @@ export function PhoneContent() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
   return (
     <PermissionGuard permission="settings.view">
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/admin/settings">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Phone Settings</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure phone number validation and country code options
-          </p>
-        </div>
-      </div>
-
-      {/* Enable Country Code Selection */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start gap-3">
-            <Checkbox
-              id="enable-country"
-              checked={values.enable_country_code}
-              onCheckedChange={(checked) => 
-                setValues({ ...values, enable_country_code: checked as boolean })
-              }
-              className="mt-1"
-            />
-            <div className="flex-1">
-              <Label htmlFor="enable-country" className="text-lg font-semibold cursor-pointer">
-                Enable Country Code Selection
-              </Label>
-              <CardDescription className="mt-1">
-                When enabled, phone number fields will display a country code selector with automatic country detection.
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-
-        {values.enable_country_code && (
-          <CardContent className="space-y-4">
-            {/* Select All Countries */}
-            <div className="bg-muted/50 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <Checkbox
-                  id="select-all"
-                  checked={selectAll}
-                  onCheckedChange={handleSelectAll}
-                  className="mt-1"
-                />
-                <div className="flex-1">
-                  <Label htmlFor="select-all" className="text-base font-medium cursor-pointer">
-                    All
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Select all countries to be available in the phone country code selector.
-                  </p>
-                </div>
+      <>
+        <PageLoader open={isLoading} />
+        {!isLoading && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Link href="/admin/settings">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-3xl font-bold">Phone Settings</h1>
+                <p className="text-muted-foreground mt-1">
+                  Configure phone number validation and country code options
+                </p>
               </div>
             </div>
 
-            {/* Available Countries */}
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Available Countries</Label>
-              <ScrollArea className="h-64 border rounded-md">
-                <div className="p-4 space-y-2">
-                  {countries.map((country) => (
-                    <div key={country.code} className="flex items-center gap-3">
-                      <Checkbox
-                        id={country.code}
-                        checked={isCountrySelected(country.code)}
-                        onCheckedChange={() => handleCountryToggle(country.code)}
-                      />
-                      <Label
-                        htmlFor={country.code}
-                        className="text-sm cursor-pointer flex-1"
-                      >
-                        {country.name}
-                      </Label>
-                    </div>
-                  ))}
+            {/* Enable Country Code Selection */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    id="enable-country"
+                    checked={values.enable_country_code}
+                    onCheckedChange={(checked) =>
+                      setValues({ ...values, enable_country_code: checked as boolean })
+                    }
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="enable-country" className="text-lg font-semibold cursor-pointer">
+                      Enable Country Code Selection
+                    </Label>
+                    <CardDescription className="mt-1">
+                      When enabled, phone number fields will display a country code selector with automatic country detection.
+                    </CardDescription>
+                  </div>
                 </div>
-              </ScrollArea>
+              </CardHeader>
+
+              {values.enable_country_code && (
+                <CardContent className="space-y-4">
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        id="select-all"
+                        checked={selectAll}
+                        onCheckedChange={handleSelectAll}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <Label htmlFor="select-all" className="text-base font-medium cursor-pointer">
+                          All
+                        </Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Select all countries to be available in the phone country code selector.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Available Countries</Label>
+                    <ScrollArea className="h-64 border rounded-md">
+                      <div className="p-4 space-y-2">
+                        {countries.map((country) => (
+                          <div key={country.code} className="flex items-center gap-3">
+                            <Checkbox
+                              id={country.code}
+                              checked={isCountrySelected(country.code)}
+                              onCheckedChange={() => handleCountryToggle(country.code)}
+                            />
+                            <Label
+                              htmlFor={country.code}
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              {country.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Minimum Length */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Minimum Length</CardTitle>
+                <CardDescription>
+                  Minimum number of characters required for phone numbers.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="min_length">Minimum Length</Label>
+                  <div className="relative">
+                    <Input
+                      id="min_length"
+                      type="number"
+                      value={values.min_length}
+                      onChange={(e) => setValues({ ...values, min_length: e.target.value })}
+                      min="1"
+                      max="20"
+                    />
+                    {values.min_length && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Maximum Length */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Maximum Length</CardTitle>
+                <CardDescription>
+                  Maximum number of characters allowed for phone numbers.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 max-w-md">
+                  <Label htmlFor="max_length">Maximum Length</Label>
+                  <div className="relative">
+                    <Input
+                      id="max_length"
+                      type="number"
+                      value={values.max_length}
+                      onChange={(e) => setValues({ ...values, max_length: e.target.value })}
+                      min="1"
+                      max="20"
+                    />
+                    {values.max_length && (
+                      <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Info Box */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>
+                    <strong>For local format (without country code):</strong> Set min/max based on your country's phone number length (e.g., 8-15 for most countries).
+                  </p>
+                  <p>
+                    <strong>For international format (with country code enabled):</strong> Recommended min: 7, max: 20. This accommodates country codes (1-4 digits) + phone numbers (typically 6-15 digits).
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+                <Save className="mr-2 h-4 w-4" />
+                {bulkUpdateMutation.isPending ? "Saving..." : "Save Phone Settings"}
+              </Button>
             </div>
-          </CardContent>
+          </div>
         )}
-      </Card>
-
-      {/* Minimum Length */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Minimum Length</CardTitle>
-          <CardDescription>
-            Minimum number of characters required for phone numbers.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-w-md">
-            <Label htmlFor="min_length">Minimum Length</Label>
-            <div className="relative">
-              <Input
-                id="min_length"
-                type="number"
-                value={values.min_length}
-                onChange={(e) => setValues({ ...values, min_length: e.target.value })}
-                min="1"
-                max="20"
-              />
-              {values.min_length && (
-                <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Maximum Length */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Maximum Length</CardTitle>
-          <CardDescription>
-            Maximum number of characters allowed for phone numbers.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 max-w-md">
-            <Label htmlFor="max_length">Maximum Length</Label>
-            <div className="relative">
-              <Input
-                id="max_length"
-                type="number"
-                value={values.max_length}
-                onChange={(e) => setValues({ ...values, max_length: e.target.value })}
-                min="1"
-                max="20"
-              />
-              {values.max_length && (
-                <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500" />
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Info Box */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>
-              <strong>For local format (without country code):</strong> Set min/max based on your country's phone number length (e.g., 8-15 for most countries).
-            </p>
-            <p>
-              <strong>For international format (with country code enabled):</strong> Recommended min: 7, max: 20. This accommodates country codes (1-4 digits) + phone numbers (typically 6-15 digits).
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-          <Save className="mr-2 h-4 w-4" />
-          {bulkUpdateMutation.isPending ? "Saving..." : "Save Phone Settings"}
-        </Button>
-      </div>
-    </div>
+      </>
     </PermissionGuard>
   );
 }

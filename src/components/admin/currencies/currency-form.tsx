@@ -31,9 +31,9 @@ const detectFormat = (decimal: string, thousand: string) =>
 
 const currencySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  code: z.string().min(3, "Code must be at least 3 characters").max(5, "Code must be at most 5 characters"),
-  symbol: z.string().min(1, "Symbol is required"),
-  exchange_rate: z.coerce.number().min(0, "Exchange rate must be positive"),
+  code: z.string().min(3).max(5),
+  symbol: z.string().min(1),
+  exchange_rate: z.coerce.number().min(0),
   decimal_places: z.coerce.number().int().min(0).max(8).default(2),
   number_format: z.string().default("western"),
   symbol_position: z.enum(["before", "after"]).default("before"),
@@ -63,7 +63,7 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
     defaultValues: {
       name: currency?.name ?? "",
       code: currency?.code ?? "",
-      symbol: currency?.symbol || "",
+      symbol: currency?.symbol ?? "",
       exchange_rate: currency?.exchange_rate ?? 1,
       decimal_places: currency?.decimal_places ?? 2,
       number_format: detectFormat(
@@ -82,7 +82,10 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
   const symbolPosition = watch("symbol_position");
 
   const onSubmit = (data: CurrencyFormData) => {
-    const fmt = NUMBER_FORMATS.find(f => f.value === data.number_format) ?? NUMBER_FORMATS[0];
+    const fmt =
+      NUMBER_FORMATS.find(f => f.value === data.number_format) ??
+      NUMBER_FORMATS[0];
+
     const payload = {
       name: data.name.trim(),
       code: data.code.toUpperCase().trim(),
@@ -97,22 +100,27 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
     };
 
     if (currency) {
-      updateMutation.mutate({ id: currency.id, data: payload }, { onSuccess });
+      updateMutation.mutate(
+        { id: currency.id, data: payload },
+        { onSuccess }
+      );
     } else {
       createMutation.mutate(payload, { onSuccess });
     }
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending =
+    createMutation.isPending || updateMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4"
+    >
       {/* Name */}
       <div className="space-y-2">
-        <Label htmlFor="name">
-          Name <span className="text-destructive">*</span>
-        </Label>
-        <Input id="name" placeholder="US Dollar" {...register("name")} />
+        <Label>Name *</Label>
+        <Input placeholder="US Dollar" {...register("name")} />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
         )}
@@ -120,11 +128,8 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
 
       {/* Code */}
       <div className="space-y-2">
-        <Label htmlFor="code">
-          Code <span className="text-destructive">*</span>
-        </Label>
+        <Label>Code *</Label>
         <Input
-          id="code"
           placeholder="USD"
           className="font-mono uppercase"
           {...register("code")}
@@ -133,15 +138,15 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
         {errors.code && (
           <p className="text-sm text-destructive">{errors.code.message}</p>
         )}
-        <p className="text-xs text-muted-foreground">ISO currency code (e.g. USD, EUR, INR)</p>
+        <p className="text-xs text-muted-foreground">
+          ISO currency code (e.g. USD, EUR, INR)
+        </p>
       </div>
 
       {/* Symbol */}
       <div className="space-y-2">
-        <Label htmlFor="symbol">
-          Symbol <span className="text-destructive">*</span>
-        </Label>
-        <Input id="symbol" placeholder="$" {...register("symbol")} />
+        <Label>Symbol *</Label>
+        <Input placeholder="$" {...register("symbol")} />
         {errors.symbol && (
           <p className="text-sm text-destructive">{errors.symbol.message}</p>
         )}
@@ -149,34 +154,30 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
 
       {/* Exchange Rate */}
       <div className="space-y-2">
-        <Label htmlFor="exchange_rate">Exchange Rate</Label>
+        <Label>Exchange Rate</Label>
         <Input
-          id="exchange_rate"
           type="number"
           step="0.0001"
           min="0"
-          placeholder="1.00"
           {...register("exchange_rate")}
           disabled={!!currency?.is_default}
         />
-        {errors.exchange_rate && (
-          <p className="text-sm text-destructive">{errors.exchange_rate.message}</p>
-        )}
         {currency?.is_default && (
-          <p className="text-xs text-muted-foreground">Default currency always has rate 1</p>
+          <p className="text-xs text-muted-foreground">
+            Default currency always has rate 1
+          </p>
         )}
       </div>
 
       {/* Decimal Places */}
       <div className="space-y-2">
-        <Label htmlFor="decimal_places">Decimal Places</Label>
+        <Label>Decimal Places</Label>
         <Input
-          id="decimal_places"
           type="number"
           min="0"
           max="8"
-          {...register("decimal_places")}
           step="1"
+          {...register("decimal_places")}
         />
       </div>
 
@@ -192,7 +193,9 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
           </SelectTrigger>
           <SelectContent>
             {NUMBER_FORMATS.map(f => (
-              <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+              <SelectItem key={f.value} value={f.value}>
+                {f.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -203,42 +206,59 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
         <Label>Symbol Position</Label>
         <Select
           value={symbolPosition}
-          onValueChange={val => setValue("symbol_position", val as "before" | "after")}
+          onValueChange={val =>
+            setValue("symbol_position", val as "before" | "after")
+          }
         >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="before">Before number ($100)</SelectItem>
-            <SelectItem value="after">After number (100$)</SelectItem>
+            <SelectItem value="before">
+              Before number ($100)
+            </SelectItem>
+            <SelectItem value="after">
+              After number (100$)
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Space Between */}
-      <div className="flex items-center justify-between border rounded-lg p-3">
-        <Label htmlFor="space_between" className="cursor-pointer font-normal">
+      <div className="md:col-span-2 flex items-center justify-between border rounded-lg p-3">
+        <Label className="cursor-pointer font-normal">
           Space between symbol and amount
         </Label>
         <Checkbox
-          id="space_between"
           checked={spaceBetween}
-          onCheckedChange={v => setValue("space_between", Boolean(v))}
+          onCheckedChange={v =>
+            setValue("space_between", Boolean(v))
+          }
         />
       </div>
 
-      {/* Active */}
-      <div className="flex items-center justify-between border rounded-lg p-3">
-        <Label htmlFor="is_active">Is Active?</Label>
+      {/* Is Active */}
+      <div className="md:col-span-2 flex items-center justify-between border rounded-lg p-3">
+        <Label>Is Active?</Label>
         <Switch
-          id="is_active"
           checked={isActive}
-          onCheckedChange={v => setValue("is_active", v)}
+          onCheckedChange={v =>
+            setValue("is_active", v)
+          }
         />
       </div>
 
-      <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Saving..." : currency ? "Update Currency" : "Create Currency"}
+      {/* Submit */}
+      <Button
+        type="submit"
+        className="w-full md:col-span-2"
+        disabled={isPending}
+      >
+        {isPending
+          ? "Saving..."
+          : currency
+          ? "Update Currency"
+          : "Create Currency"}
       </Button>
     </form>
   );

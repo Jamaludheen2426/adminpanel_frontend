@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import {
@@ -72,9 +72,9 @@ import {
 } from "@/hooks/use-email-templates";
 import { useEmailConfigs } from "@/hooks/use-email-configs";
 import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
-import { Spinner } from "@/components/ui/spinner";
 import { HtmlEditor } from "@/components/common/html-editor";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from '@/components/common/page-loader';
 
 const defaultForm: CreateEmailTemplateDto = {
   name: "",
@@ -254,6 +254,7 @@ export function TemplatesContent() {
   return (
     <PermissionGuard permission="email_templates.read">
     <div className="space-y-6">
+      <PageLoader open={isLoading} />
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/admin/settings/email">
@@ -275,208 +276,206 @@ export function TemplatesContent() {
       </div>
 
       {/* Templates List */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Templates</CardTitle>
-              <CardDescription>
-                Email templates used for notifications and communications
-              </CardDescription>
+      {!isLoading && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Templates</CardTitle>
+                <CardDescription>
+                  Email templates used for notifications and communications
+                </CardDescription>
+              </div>
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search templates..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="pl-10"
+                />
+              </div>
             </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search templates..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner className="h-8 w-8" />
-            </div>
-          ) : templates.length > 0 ? (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Variables</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {templates.map((template) => (
-                    <TableRow key={template.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {template.name}
-                          {template.is_predefined && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                            >
-                              System
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {template.type === "header" ? (
-                          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-900 dark:text-purple-100">
-                            Header
-                          </Badge>
-                        ) : template.type === "footer" ? (
-                          <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-900 dark:text-orange-100">
-                            Footer
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">Template</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground max-w-xs truncate">
-                        {template.subject || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {template.variables &&
-                          template.variables.length > 0 ? (
-                            template.variables.slice(0, 3).map((v) => (
+          </CardHeader>
+          <CardContent>
+            {templates.length > 0 ? (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Variables</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {templates.map((template) => (
+                      <TableRow key={template.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {template.name}
+                            {template.is_predefined && (
                               <Badge
-                                key={v}
-                                variant="secondary"
-                                className="text-xs"
+                                variant="outline"
+                                className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                               >
-                                {v}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-muted-foreground text-sm">
-                              -
-                            </span>
-                          )}
-                          {template.variables &&
-                            template.variables.length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{template.variables.length - 3}
+                                System
                               </Badge>
                             )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={template.is_active}
-                          pending={isApprovalRequired(toggleMutation.error) && toggleMutation.variables === template.id}
-                          onCheckedChange={() =>
-                            handleToggleActive(template.id)
-                          }
-                          disabled={toggleMutation.isPending}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handlePreview(template)}
-                            title="Preview"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => openSendTestDialog(template)}
-                            title={
-                              template.type !== "template"
-                                ? "Test email only available for regular templates"
-                                : "Send Test Email"
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {template.type === "header" ? (
+                            <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 dark:bg-purple-900 dark:text-purple-100">
+                              Header
+                            </Badge>
+                          ) : template.type === "footer" ? (
+                            <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-900 dark:text-orange-100">
+                              Footer
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">Template</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground max-w-xs truncate">
+                          {template.subject || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {template.variables &&
+                            template.variables.length > 0 ? (
+                              template.variables.slice(0, 3).map((v) => (
+                                <Badge
+                                  key={v}
+                                  variant="secondary"
+                                  className="text-xs"
+                                >
+                                  {v}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                -
+                              </span>
+                            )}
+                            {template.variables &&
+                              template.variables.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{template.variables.length - 3}
+                                </Badge>
+                              )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={template.is_active}
+                            pending={isApprovalRequired(toggleMutation.error) && toggleMutation.variables === template.id}
+                            onCheckedChange={() =>
+                              handleToggleActive(template.id)
                             }
-                            disabled={template.type !== "template"}
-                            className="bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <Mail className="h-4 w-4 mr-1" />
-                            Test
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEditDialog(template)}
-                            title="Edit"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          {!template.is_predefined && (
+                            disabled={toggleMutation.isPending}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => {
-                                setDeletingId(template.id);
-                                setDeleteDialogOpen(true);
-                              }}
-                              title="Delete"
+                              onClick={() => handlePreview(template)}
+                              title="Preview"
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => openSendTestDialog(template)}
+                              title={
+                                template.type !== "template"
+                                  ? "Test email only available for regular templates"
+                                  : "Send Test Email"
+                              }
+                              disabled={template.type !== "template"}
+                              className="bg-blue-500 hover:bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <Mail className="h-4 w-4 mr-1" />
+                              Test
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(template)}
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            {!template.is_predefined && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setDeletingId(template.id);
+                                  setDeleteDialogOpen(true);
+                                }}
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
-              {templatesData?.pagination &&
-                templatesData.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Page {templatesData.pagination.page} of{" "}
-                      {templatesData.pagination.totalPages} (
-                      {templatesData.pagination.totalItems} templates)
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={!templatesData.pagination.hasPrevPage}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!templatesData.pagination.hasNextPage}
-                      >
-                        Next
-                      </Button>
+                {templatesData?.pagination &&
+                  templatesData.pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-4">
+                      <p className="text-sm text-muted-foreground">
+                        Page {templatesData.pagination.page} of{" "}
+                        {templatesData.pagination.totalPages} (
+                        {templatesData.pagination.totalItems} templates)
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={!templatesData.pagination.hasPrevPage}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => p + 1)}
+                          disabled={!templatesData.pagination.hasNextPage}
+                        >
+                          Next
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                )}
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {search
-                  ? "No templates found matching your search."
-                  : "No email templates yet. Create one to get started."}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  )}
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  {search
+                    ? "No templates found matching your search."
+                    : "No email templates yet. Create one to get started."}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

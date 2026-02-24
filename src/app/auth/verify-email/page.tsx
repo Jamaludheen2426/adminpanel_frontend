@@ -57,14 +57,7 @@ function VerifyEmailContent() {
   }, [token, router]);
 
   if (isLoading) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="inline-block">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-        </div>
-        <p className="text-gray-600">Verifying your email...</p>
-      </div>
-    );
+    return <PageLoader open={true} text="Verifying your email..." />;
   }
 
   if (success) {
@@ -95,14 +88,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <div className="text-center space-y-4">
-        <div className="inline-block">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-        </div>
-        <p className="text-gray-600">Loading...</p>
-      </div>
-    }>
+    <Suspense fallback={<PageLoader open={true} text="Loading..." />}>
       <VerifyEmailContent />
     </Suspense>
   );

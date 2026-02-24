@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRegister } from "@/hooks/use-auth";
 import { useSettingsByGroup } from "@/hooks/use-settings";
+import { PageLoader } from "@/components/common/page-loader";
 
 const registerSchema = z
   .object({
@@ -65,6 +66,8 @@ export default function RegisterPage() {
   };
 
   return (
+    <>
+    <PageLoader open={registerMutation.isPending} text="Creating account..." />
     <div className="min-h-screen h-screen flex">
       {/* Left Side - Background Image (60%) */}
       <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
@@ -209,5 +212,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

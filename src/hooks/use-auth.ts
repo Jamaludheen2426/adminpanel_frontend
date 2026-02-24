@@ -108,29 +108,6 @@ export function useLogin() {
   });
 }
 
-// Social login mutation (Google / Facebook)
-export function useSocialLogin() {
-  const queryClient = useQueryClient();
-  const router = useRouter();
-
-  return useMutation({
-    mutationFn: authApi.socialLogin,
-    onSuccess: (user) => {
-      queryClient.setQueryData(queryKeys.auth.me(), user);
-      toast.success('Login successful');
-      if (typeof window !== 'undefined') {
-        const expiryDate = new Date();
-        expiryDate.setSeconds(expiryDate.getSeconds() + 15);
-        document.cookie = `auth_pending=true; path=/; expires=${expiryDate.toUTCString()}; SameSite=Lax`;
-      }
-      setTimeout(() => router.push('/admin'), 300);
-    },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Social login failed');
-    },
-  });
-}
-
 // Register mutation
 export function useRegister() {
   const queryClient = useQueryClient();
@@ -260,42 +237,6 @@ export function useUpdateProfile() {
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to update profile');
-    },
-  });
-}
-
-// Link social account (Google / Facebook) to logged-in user
-export function useLinkSocial() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: { provider: string; token: string }) => {
-      await apiClient.post(`/auth/link-social/${data.provider}`, { token: data.token });
-    },
-    onSuccess: (_, vars) => {
-      toast.success(`${vars.provider.charAt(0).toUpperCase() + vars.provider.slice(1)} account linked successfully`);
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-    },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to link account');
-    },
-  });
-}
-
-// Unlink social account from logged-in user
-export function useUnlinkSocial() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (provider: string) => {
-      await apiClient.delete(`/auth/link-social/${provider}`);
-    },
-    onSuccess: (_, provider) => {
-      toast.success(`${provider.charAt(0).toUpperCase() + provider.slice(1)} account unlinked`);
-      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-    },
-    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
-      toast.error(error.response?.data?.message || 'Failed to unlink account');
     },
   });
 }

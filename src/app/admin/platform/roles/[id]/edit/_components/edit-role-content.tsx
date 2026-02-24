@@ -2,8 +2,8 @@
 
 import { useRole } from "@/hooks/use-roles";
 import { RoleForm } from "@/components/admin/roles/role-form";
-import { Spinner } from "@/components/ui/spinner";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 interface EditRoleContentProps {
   roleId: number;
@@ -12,15 +12,7 @@ interface EditRoleContentProps {
 export function EditRoleContent({ roleId }: EditRoleContentProps) {
   const { data: roleData, isLoading } = useRole(roleId);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
-
-  if (!roleData) {
+  if (!isLoading && !roleData) {
     return (
       <div className="text-center py-16 text-muted-foreground">Role not found.</div>
     );
@@ -28,15 +20,18 @@ export function EditRoleContent({ roleId }: EditRoleContentProps) {
 
   return (
     <PermissionGuard permission="roles.view">
-    <div className="space-y-1">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Edit Role</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Update role details and permissions
-        </p>
-      </div>
-      <RoleForm role={roleData} />
-    </div>
+      <PageLoader open={isLoading} />
+      {!isLoading && (
+        <div className="space-y-1">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Edit Role</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Update role details and permissions
+            </p>
+          </div>
+          <RoleForm role={roleData!} />
+        </div>
+      )}
     </PermissionGuard>
   );
 }

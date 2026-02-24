@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -31,6 +31,7 @@ import {
 } from "@/hooks";
 import { EmailTemplate } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 const templateSchema = z.object({
   name: z.string().min(2, "Template name required"),
@@ -208,215 +209,214 @@ export function EmailTemplatesContent() {
 
   return (
     <PermissionGuard permission="email_templates.read">
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          {/* <h1 className="text-3xl font-bold">Email Templates</h1> */}
-          <p className="text-gray-600 mt-1">Manage system email templates</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              onClick={() => {
-                setSelectedTemplate(null);
-                reset({});
-              }}
-            >
-              <Plus size={18} className="mr-2" />
-              Add Template
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {selectedTemplate ? "Edit Template" : "Create Template"}
-              </DialogTitle>
-              <DialogDescription>
-                {selectedTemplate
-                  ? "Update the email template details below."
-                  : "Fill in the details to create a new email template."}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Template Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Welcome Email"
-                  {...register("name")}
-                  className="mt-2"
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              {!selectedTemplate && (
+      <div className="space-y-6">
+        <PageLoader open={isLoading} />
+        <div className="flex items-center justify-between">
+          <div>
+            {/* <h1 className="text-3xl font-bold">Email Templates</h1> */}
+            <p className="text-gray-600 mt-1">Manage system email templates</p>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => {
+                  setSelectedTemplate(null);
+                  reset({});
+                }}
+              >
+                <Plus size={18} className="mr-2" />
+                Add Template
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedTemplate ? "Edit Template" : "Create Template"}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedTemplate
+                    ? "Update the email template details below."
+                    : "Fill in the details to create a new email template."}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
-                  <Label htmlFor="slug">Slug (optional)</Label>
+                  <Label htmlFor="name">Template Name</Label>
                   <Input
-                    id="slug"
-                    placeholder="welcome_email"
-                    {...register("slug")}
+                    id="name"
+                    placeholder="Welcome Email"
+                    {...register("name")}
                     className="mt-2"
                   />
+                  {errors.name && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                {!selectedTemplate && (
+                  <div>
+                    <Label htmlFor="slug">Slug (optional)</Label>
+                    <Input
+                      id="slug"
+                      placeholder="welcome_email"
+                      {...register("slug")}
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Auto-generated if empty
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="subject">Subject</Label>
+                  <Input
+                    id="subject"
+                    placeholder="Welcome to our platform"
+                    {...register("subject")}
+                    className="mt-2"
+                  />
+                  {errors.subject && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.subject.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="body">Email Body (HTML)</Label>
+                  <Textarea
+                    id="body"
+                    placeholder="<h1>Hello {{name}}</h1><p>Welcome to our platform...</p>"
+                    {...register("body")}
+                    className="mt-2 font-mono text-sm"
+                    rows={10}
+                  />
+                  {errors.body && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.body.message}
+                    </p>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
-                    Auto-generated if empty
+                    Use {"{{variable}}"} for dynamic content
                   </p>
                 </div>
-              )}
 
+                <div>
+                  <Label htmlFor="description">Description (optional)</Label>
+                  <Input
+                    id="description"
+                    placeholder="Sent when a new user registers"
+                    {...register("description")}
+                    className="mt-2"
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <Button type="submit" disabled={isPending}>
+                    {isPending
+                      ? "Saving..."
+                      : selectedTemplate
+                        ? "Update"
+                        : "Create"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDialogClose}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Preview Dialog */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Preview: {selectedTemplate?.name}</DialogTitle>
+              <DialogDescription>
+                Preview of the email template with sample data.
+              </DialogDescription>
+            </DialogHeader>
+            {previewContent && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm text-gray-500">Subject</Label>
+                  <p className="font-medium">{previewContent.subject}</p>
+                </div>
+                <div>
+                  <Label className="text-sm text-gray-500">Body</Label>
+                  <div
+                    className="border rounded p-4 mt-2 bg-white text-black"
+                    dangerouslySetInnerHTML={{ __html: previewContent.body }}
+                  />
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Send Test Email Dialog */}
+        <Dialog open={isSendTestOpen} onOpenChange={setIsSendTestOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Test Email</DialogTitle>
+              <DialogDescription>
+                Send a test email using the &quot;{selectedTemplate?.name}&quot;
+                template.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="subject">Subject</Label>
+                <Label htmlFor="testEmail">Email Address</Label>
                 <Input
-                  id="subject"
-                  placeholder="Welcome to our platform"
-                  {...register("subject")}
+                  id="testEmail"
+                  type="email"
+                  placeholder="test@example.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
                   className="mt-2"
                 />
-                {errors.subject && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.subject.message}
-                  </p>
-                )}
               </div>
-
-              <div>
-                <Label htmlFor="body">Email Body (HTML)</Label>
-                <Textarea
-                  id="body"
-                  placeholder="<h1>Hello {{name}}</h1><p>Welcome to our platform...</p>"
-                  {...register("body")}
-                  className="mt-2 font-mono text-sm"
-                  rows={10}
-                />
-                {errors.body && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errors.body.message}
-                  </p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">
-                  Use {"{{variable}}"} for dynamic content
-                </p>
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description (optional)</Label>
-                <Input
-                  id="description"
-                  placeholder="Sent when a new user registers"
-                  {...register("description")}
-                  className="mt-2"
-                />
-              </div>
-
-              <div className="flex gap-4 pt-4">
-                <Button type="submit" disabled={isPending}>
-                  {isPending
-                    ? "Saving..."
-                    : selectedTemplate
-                      ? "Update"
-                      : "Create"}
+              <div className="flex gap-4 pt-2">
+                <Button
+                  onClick={handleSendTestSubmit}
+                  disabled={!testEmail || sendMutation.isPending}
+                >
+                  {sendMutation.isPending ? "Sending..." : "Send Test"}
                 </Button>
                 <Button
-                  type="button"
                   variant="outline"
-                  onClick={handleDialogClose}
+                  onClick={() => setIsSendTestOpen(false)}
                 >
                   Cancel
                 </Button>
               </div>
-            </form>
+            </div>
           </DialogContent>
         </Dialog>
-      </div>
 
-      {/* Preview Dialog */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Preview: {selectedTemplate?.name}</DialogTitle>
-            <DialogDescription>
-              Preview of the email template with sample data.
-            </DialogDescription>
-          </DialogHeader>
-          {previewContent && (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm text-gray-500">Subject</Label>
-                <p className="font-medium">{previewContent.subject}</p>
-              </div>
-              <div>
-                <Label className="text-sm text-gray-500">Body</Label>
-                <div
-                  className="border rounded p-4 mt-2 bg-white text-black"
-                  dangerouslySetInnerHTML={{ __html: previewContent.body }}
-                />
-              </div>
+        <Card className="p-6">
+          {!isLoading && templates.length > 0 && (
+            <DataTable columns={columns} data={templates} searchKey="name" />
+          )}
+
+          {!isLoading && templates.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-4">No templates created yet</p>
+              <Button onClick={() => setIsDialogOpen(true)} size="sm">
+                Create First Template
+              </Button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Send Test Email Dialog */}
-      <Dialog open={isSendTestOpen} onOpenChange={setIsSendTestOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send Test Email</DialogTitle>
-            <DialogDescription>
-              Send a test email using the &quot;{selectedTemplate?.name}&quot;
-              template.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="testEmail">Email Address</Label>
-              <Input
-                id="testEmail"
-                type="email"
-                placeholder="test@example.com"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                className="mt-2"
-              />
-            </div>
-            <div className="flex gap-4 pt-2">
-              <Button
-                onClick={handleSendTestSubmit}
-                disabled={!testEmail || sendMutation.isPending}
-              >
-                {sendMutation.isPending ? "Sending..." : "Send Test"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsSendTestOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <Card className="p-6">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">Loading templates...</p>
-          </div>
-        ) : templates.length > 0 ? (
-          <DataTable columns={columns} data={templates} searchKey="name" />
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No templates created yet</p>
-            <Button onClick={() => setIsDialogOpen(true)} size="sm">
-              Create First Template
-            </Button>
-          </div>
-        )}
-      </Card>
-    </div>
+        </Card>
+      </div>
     </PermissionGuard>
   );
 }

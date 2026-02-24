@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Cookies from 'js-cookie';
+import { PageLoader } from '@/components/common/page-loader';
 
 const signUpSchema = z
   .object({
@@ -87,6 +88,8 @@ export default function SignUpPage() {
   };
 
   return (
+    <>
+    <PageLoader open={isLoading} text="Creating account..." />
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
@@ -173,5 +176,6 @@ export default function SignUpPage() {
         </Link>
       </p>
     </div>
+    </>
   );
 }

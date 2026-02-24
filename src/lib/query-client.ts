@@ -58,9 +58,9 @@ export const queryKeys = {
     lists: () => [...queryKeys.permissions.all, 'list'] as const,
     list: (params: Record<string, unknown>) => [...queryKeys.permissions.lists(), params] as const,
     details: () =>
-    [...queryKeys.permissions.all, 'detail'] as const,
+      [...queryKeys.permissions.all, 'detail'] as const,
     detail: (id: number) =>
-    [...queryKeys.permissions.details(), id] as const,
+      [...queryKeys.permissions.details(), id] as const,
   },
 
   // Modules
@@ -107,6 +107,7 @@ export const queryKeys = {
     states: (countryId?: number) => [...queryKeys.locations.all, 'states', countryId] as const,
     cities: (stateId?: number) => [...queryKeys.locations.all, 'cities', stateId] as const,
     pincodes: (cityId: number) => [...queryKeys.locations.all, 'pincodes', cityId] as const,
+    localities: (cityId: number) => [...queryKeys.locations.all, 'localities', cityId] as const,
   },
 
   // Activity Logs
@@ -179,6 +180,21 @@ export const queryKeys = {
     lists: () => [...queryKeys.missingTranslationKeys.all, 'list'] as const,
     list: (params: Record<string, unknown>) => [...queryKeys.missingTranslationKeys.lists(), params] as const,
     count: () => [...queryKeys.missingTranslationKeys.all, 'count'] as const,
+  },
+
+  // Plugins
+  plugins: {
+    all: ['plugins'] as const,
+    list: () => [...queryKeys.plugins.all, 'list'] as const,
+    detail: (slug: string) => [...queryKeys.plugins.all, 'detail', slug] as const,
+  },
+
+  // Payments
+  payments: {
+    all: ['payments'] as const,
+    list: () => [...queryKeys.payments.all, 'list'] as const,
+    stats: () => [...queryKeys.payments.all, 'stats'] as const,
+    detail: (id: number) => [...queryKeys.payments.all, 'detail', id] as const,
   },
 
   setup: {
