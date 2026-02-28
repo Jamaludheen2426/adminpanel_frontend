@@ -90,9 +90,9 @@ type StateForm = z.infer<typeof stateSchema>;
 
 type SortKey =
   | keyof Pick<
-      State,
-      "name" | "code" | "sort_order" | "is_active" | "created_at"
-    >
+    State,
+    "name" | "code" | "sort_order" | "is_active" | "created_at"
+  >
   | "country_name";
 type SortDirection = "asc" | "desc";
 interface SortConfig {
@@ -575,7 +575,7 @@ export function StatesTab() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="destructive-outline"
                             size="icon"
                             disabled={deleteState.isPending}
                             onClick={() =>

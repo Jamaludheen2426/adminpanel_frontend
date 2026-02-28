@@ -33,6 +33,8 @@ interface ImageCropperProps {
   accept?: string;
   /** If true, skip the crop dialog and pass the file directly */
   skipCrop?: boolean;
+  /** If true, show the preview as a circle */
+  rounded?: boolean;
 }
 
 const centerAspectCrop = (
@@ -65,6 +67,7 @@ export function ImageCropper({
   onRemove,
   accept = "image/*",
   skipCrop = false,
+  rounded = false,
 }: ImageCropperProps) {
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -73,11 +76,18 @@ export function ImageCropper({
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
   const [scale, setScale] = useState(1);
   const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [localPreview, setLocalPreview] = useState<string>("");
 
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const aspect = targetWidth / targetHeight;
+
+  // Clear localPreview and call parent onRemove
+  const handleRemoveClick = () => {
+    setLocalPreview("");
+    onRemove();
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -187,6 +197,9 @@ export function ImageCropper({
   const handleCrop = async () => {
     const croppedFile = await getCroppedImage();
     if (croppedFile) {
+      // Show local blob preview INSTANTLY — no need to wait for backend URL
+      const blobUrl = URL.createObjectURL(croppedFile);
+      setLocalPreview(blobUrl);
       onImageCropped(croppedFile);
       handleClose();
     }
@@ -201,56 +214,71 @@ export function ImageCropper({
     setScale(1);
   };
 
+  // localPreview (blob URL) takes priority while backend upload is in-flight;
+  // once currentImage updates to the real server URL the useEffect above clears it.
+  const displayImage = localPreview || currentImage;
+
   // Calculate crop area dimensions in pixels
   const cropAreaPx = completedCrop && imgRef.current
     ? {
-        width: Math.round(completedCrop.width * (imgRef.current.naturalWidth / imgRef.current.width)),
-        height: Math.round(completedCrop.height * (imgRef.current.naturalHeight / imgRef.current.height)),
-      }
+      width: Math.round(completedCrop.width * (imgRef.current.naturalWidth / imgRef.current.width)),
+      height: Math.round(completedCrop.height * (imgRef.current.naturalHeight / imgRef.current.height)),
+    }
     : { width: 0, height: 0 };
 
   return (
     <>
-      <div className="space-y-4">
-        <Label>{title}</Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 text-primary font-medium text-sm">
-          Target: {targetWidth} × {targetHeight}px
+      <div className="flex items-center gap-6 p-4 border rounded-xl bg-muted/30">
+        <div className="relative group">
+          <div className={`h-24 w-24 overflow-hidden border-4 border-background shadow-xl ${rounded ? 'rounded-full' : 'rounded-2xl'} bg-muted flex items-center justify-center`}>
+            {displayImage ? (
+              <img
+                src={displayImage}
+                alt={title}
+                className="h-full w-full object-cover transition-transform group-hover:scale-110"
+              />
+            ) : (
+              <div className="text-muted-foreground">
+                <Upload className="h-8 w-8 opacity-20" />
+              </div>
+            )}
+          </div>
+
+          {displayImage && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={handleRemoveClick}
+              title="Remove Image"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
-        <div className="flex items-start gap-4 flex-wrap">
-          {currentImage && (
-            <div className="relative inline-block">
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <img
-                  src={currentImage}
-                  alt={title}
-                  className="max-h-24 object-contain"
-                />
-              </div>
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute -top-2 -right-2 h-6 w-6"
-                onClick={onRemove}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+        <div className="flex-1 space-y-3">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground leading-relaxed italic">{description}</p>
+          </div>
 
-          <Button variant="outline" asChild>
-            <label className="cursor-pointer">
-              <Upload className="mr-2 h-4 w-4" />
-              {currentImage ? "Change Image" : "Choose Image"}
-              <input
-                type="file"
-                accept={accept}
-                className="hidden"
-                onChange={handleFileSelect}
-              />
-            </label>
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild className="h-9 px-4 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
+              <label>
+                <Upload className="mr-2 h-4 w-4" />
+                {currentImage ? "Change" : "Upload Image"}
+                <input
+                  type="file"
+                  accept={accept}
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </label>
+            </Button>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2 py-1 border rounded bg-muted/50">
+              {targetWidth}x{targetHeight} Px
+            </div>
+          </div>
         </div>
       </div>
 

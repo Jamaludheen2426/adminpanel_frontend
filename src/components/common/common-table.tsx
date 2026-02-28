@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -18,6 +18,7 @@ export interface CommonColumn<T> {
   header: string;
   render?: (row: T) => React.ReactNode;
   className?: string;
+  sortable?: boolean;
 }
 
 interface CommonTableProps<T extends { id: number; is_active: boolean; created_at: string }> {
@@ -31,6 +32,9 @@ interface CommonTableProps<T extends { id: number; is_active: boolean; created_a
   showStatus?: boolean;
   showCreated?: boolean;
   showActions?: boolean;
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
+  onSort?: (column: string) => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -52,7 +56,17 @@ export function CommonTable<T extends { id: number; is_active: boolean; created_
   showStatus = true,
   showCreated = true,
   showActions = true,
+  sortColumn,
+  sortDirection,
+  onSort,
 }: CommonTableProps<T>) {
+
+  const handleSortClick = (key: string, isSortable?: boolean) => {
+    if (isSortable && onSort) {
+      onSort(key);
+    }
+  };
+
   return (
     <>
       <PageLoader open={isLoading} />
@@ -61,8 +75,23 @@ export function CommonTable<T extends { id: number; is_active: boolean; created_
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
-                <TableHead key={col.key} className={col.className}>
-                  {col.header}
+                <TableHead
+                  key={col.key}
+                  className={`${col.className || ''} ${col.sortable && onSort ? 'cursor-pointer select-none hover:bg-muted/50 transition-colors' : ''}`}
+                  onClick={() => handleSortClick(col.key, col.sortable)}
+                >
+                  <div className="flex items-center gap-1">
+                    {col.header}
+                    {col.sortable && onSort && (
+                      <div className="flex bg-muted rounded p-0.5 ml-1 text-muted-foreground/50 hover:text-foreground">
+                        {sortColumn === col.key ? (
+                          sortDirection === 'asc' ? <ChevronUp className="h-4 w-4 text-foreground" /> : <ChevronDown className="h-4 w-4 text-foreground" />
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3" />
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </TableHead>
               ))}
               {showStatus && <TableHead>Status</TableHead>}

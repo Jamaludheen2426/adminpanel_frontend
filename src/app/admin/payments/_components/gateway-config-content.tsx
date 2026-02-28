@@ -252,8 +252,7 @@ export default function GatewayConfigContent({ slug }: { slug: string }) {
                         </Link>
                         <div className="flex items-center gap-3">
                             <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center border"
-                                style={{ background: `${gateway.brandColor}15`, borderColor: `${gateway.brandColor}30` }}
+                                className="w-10 h-10 rounded-xl flex items-center justify-center border bg-muted"
                             >
                                 {gateway.logo}
                             </div>

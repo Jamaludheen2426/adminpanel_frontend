@@ -71,11 +71,11 @@ export function EmailTemplatesContent() {
     resolver: zodResolver(templateSchema),
     defaultValues: selectedTemplate
       ? {
-          name: selectedTemplate.name,
-          subject: selectedTemplate.subject ?? "",
-          body: selectedTemplate.body,
-          description: selectedTemplate.description || "",
-        }
+        name: selectedTemplate.name,
+        subject: selectedTemplate.subject ?? "",
+        body: selectedTemplate.body,
+        description: selectedTemplate.description || "",
+      }
       : {},
   });
 
@@ -191,9 +191,8 @@ export function EmailTemplatesContent() {
             <Edit className="h-4 w-4" />
           </Button>
           <Button
-            size="sm"
-            variant="ghost"
-            className="text-red-600 hover:text-red-700"
+            size="icon"
+            variant="destructive-outline"
             onClick={() => handleDelete(row.original.id)}
             title="Delete"
           >

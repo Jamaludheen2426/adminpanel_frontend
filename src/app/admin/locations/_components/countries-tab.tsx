@@ -514,7 +514,7 @@ export function CountriesTab() {
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
+                            variant="destructive-outline"
                             size="icon"
                             disabled={deleteCountry.isPending}
                             onClick={() =>

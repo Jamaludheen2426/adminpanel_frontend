@@ -6,6 +6,8 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { useServerSort } from "@/hooks/use-server-sort";
+import { SortHead } from "@/components/ui/sort-head";
 import {
   Table,
   TableBody,
@@ -48,6 +50,7 @@ export function UsersContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
+  const { sort_by, sort_order, handleSort } = useServerSort('full_name');
 
   const [roleChangeDialog, setRoleChangeDialog] = useState<{
     user: User;
@@ -55,7 +58,7 @@ export function UsersContent() {
     newRoleName: string;
   } | null>(null);
 
-  const { data, isLoading } = useUsers({ page, limit: 10, search: debouncedSearch });
+  const { data, isLoading, isFetching } = useUsers({ page, limit: 10, search: debouncedSearch, sort_by, sort_order });
   const { data: rolesData } = useRoles({ limit: 100 });
   const deleteUserMutation = useDeleteUser();
   const toggleStatusMutation = useToggleUserStatus();
@@ -95,7 +98,7 @@ export function UsersContent() {
       <div className="space-y-6">
 
         {/* Global Page Loader */}
-        <PageLoader open={isLoading} />
+        <PageLoader open={isFetching} />
 
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Employees</h1>
@@ -125,10 +128,10 @@ export function UsersContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Designation</TableHead>
+                      <SortHead field="full_name" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Name</SortHead>
+                      <SortHead field="email" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Email</SortHead>
+                      <SortHead field="department" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Department</SortHead>
+                      <SortHead field="designation" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Designation</SortHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Login Access</TableHead>
                       <TableHead>Status</TableHead>
@@ -137,7 +140,7 @@ export function UsersContent() {
                   </TableHeader>
 
                   <TableBody>
-                    {data?.data?.map((user) => (
+                    {(data?.data ?? []).map((user) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.full_name}</TableCell>
                         <TableCell className="text-muted-foreground">{user.email}</TableCell>
@@ -167,9 +170,8 @@ export function UsersContent() {
                                     <button
                                       key={role.id}
                                       type="button"
-                                      className={`text-left text-xs px-3 py-1.5 rounded hover:bg-muted transition-colors ${
-                                        role.id === user.role_id ? "bg-muted font-semibold" : ""
-                                      }`}
+                                      className={`text-left text-xs px-3 py-1.5 rounded hover:bg-muted transition-colors ${role.id === user.role_id ? "bg-muted font-semibold" : ""
+                                        }`}
                                       onClick={() => {
                                         if (role.id !== user.role_id) {
                                           handleRoleChange(user, role.id.toString());
@@ -238,7 +240,7 @@ export function UsersContent() {
                             </Button>
 
                             <Button
-                              variant="ghost"
+                              variant="destructive-outline"
                               size="icon"
                               onClick={() => handleDelete(user)}
                               disabled={

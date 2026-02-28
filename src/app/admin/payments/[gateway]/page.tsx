@@ -5,11 +5,13 @@ export function generateStaticParams() {
     return GATEWAY_SLUGS.map((g) => ({ gateway: g.slug }));
 }
 
-export function generateMetadata({ params }: { params: { gateway: string } }) {
-    const name = GATEWAY_SLUGS.find((g) => g.slug === params.gateway)?.name ?? params.gateway;
+export async function generateMetadata({ params }: { params: Promise<{ gateway: string }> }) {
+    const p = await params;
+    const name = GATEWAY_SLUGS.find((g) => g.slug === p.gateway)?.name ?? p.gateway;
     return { title: `${name} Configuration` };
 }
 
-export default function GatewayPage({ params }: { params: { gateway: string } }) {
-    return <GatewayConfigContent slug={params.gateway} />;
+export default async function GatewayPage({ params }: { params: Promise<{ gateway: string }> }) {
+    const p = await params;
+    return <GatewayConfigContent slug={p.gateway} />;
 }

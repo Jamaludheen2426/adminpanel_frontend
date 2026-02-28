@@ -3,16 +3,20 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-    CreditCard, Star, Settings2, ChevronRight, CheckCircle2,
-    AlertCircle, Shield, Zap,
+    CreditCard, Star, ChevronRight, CheckCircle2,
+    AlertCircle, Puzzle, ArrowRight,
 } from "lucide-react";
+import {
+    Card, CardContent, CardDescription, CardHeader, CardTitle,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { PageLoader } from "@/components/common/page-loader";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
-import { toast } from "sonner";
+import { useIsPluginActive } from "@/hooks/use-plugins";
 
 // ─── Gateway definitions ──────────────────────────────────────────────────────
 
@@ -23,9 +27,7 @@ export interface GatewayDef {
     group: string;
     enabledKey: string;
     defaultKey: string;
-    primaryKeyField: string; // used to detect "is configured"
-    accentColor: string;
-    brandColor: string;
+    primaryKeyField: string;
     logo: React.ReactNode;
 }
 
@@ -33,108 +35,96 @@ export const GATEWAYS: GatewayDef[] = [
     {
         slug: "stripe",
         name: "Stripe",
-        tagline: "Accept Visa, Mastercard, and more via Stripe.",
+        tagline: "Cards, wallets, and more via Stripe",
         group: "stripe",
         enabledKey: "stripe_enabled",
         defaultKey: "stripe_is_default",
         primaryKeyField: "stripe_publishable_key",
-        accentColor: "from-indigo-500/10 to-violet-500/10",
-        brandColor: "#635BFF",
         logo: (
-            <svg viewBox="0 0 60 25" className="h-7" fill="none">
-                <path fill="#635BFF" d="M11.6 10.2c0-1 .9-1.4 2.3-1.4 2 0 4.6.6 6.6 1.7V5c-2.2-.9-4.4-1.2-6.6-1.2-5.4 0-9 2.8-9 7.5 0 7.3 10 6.1 10 9.3 0 1.2-1 1.6-2.5 1.6-2.2 0-5-.9-7.2-2.2v5.9c2.4 1 4.9 1.5 7.2 1.5 5.5 0 9.3-2.7 9.3-7.5-.1-7.9-10.1-6.5-10.1-9.7zM29.6 1l-6 1.3V26h5.8V1zM40 7.5c-2.3 0-3.8 1.1-4.7 1.8l-.3-1.4h-5.2v26.2l5.8-1.2v-6.3c.9.6 2.2 1.4 4.3 1.4 4.4 0 8.4-3.5 8.4-10.9C48.3 10.4 44.3 7.5 40 7.5zm-1.5 16.7c-1.4 0-2.3-.5-2.9-1.2l-.1-9.4c.6-.7 1.6-1.2 3-1.2 2.3 0 3.9 2.6 3.9 5.9-.1 3.4-1.7 5.9-3.9 5.9z" />
+            <svg viewBox="0 0 60 26" className="h-6 w-auto" fill="none">
+                <path fill="#635BFF" d="M11.6 10.2c0-1 .9-1.4 2.3-1.4 2 0 4.5.6 6.5 1.7V5c-2.1-.9-4.3-1.2-6.5-1.2-5.4 0-9 2.8-9 7.5 0 7.3 10 6.1 10 9.3 0 1.2-1 1.6-2.5 1.6-2.1 0-5-.9-7.1-2.2v5.9c2.4 1 4.8 1.5 7.1 1.5 5.5 0 9.3-2.7 9.3-7.5C21.7 12 11.6 13.4 11.6 10.2zM29.6 1l-6 1.3V26h5.8V1zM40 7.5c-2.3 0-3.8 1.1-4.6 1.8l-.3-1.4h-5.2v26.2l5.8-1.2v-6.3c.9.6 2.2 1.4 4.2 1.4 4.4 0 8.4-3.5 8.4-10.9C48.3 10.4 44.3 7.5 40 7.5zm-1.4 16.7c-1.4 0-2.3-.5-2.9-1.2l-.1-9.4c.6-.7 1.5-1.2 3-1.2 2.3 0 3.8 2.6 3.8 5.9 0 3.4-1.6 5.9-3.8 5.9z" />
             </svg>
         ),
     },
     {
         slug: "paypal",
         name: "PayPal",
-        tagline: "Fast and trusted global payments via PayPal.",
+        tagline: "Fast and trusted global payments",
         group: "paypal",
         enabledKey: "paypal_enabled",
         defaultKey: "paypal_is_default",
         primaryKeyField: "paypal_client_id",
-        accentColor: "from-blue-500/10 to-cyan-500/10",
-        brandColor: "#003087",
         logo: (
-            <svg viewBox="0 0 100 30" className="h-7" fill="none">
-                <path fill="#003087" d="M12 0h14c7 0 10 4 9 10C33 17 27 21 20 21h-4l-2 9H7L12 0zm5 15h3c3 0 5-2 5-5 0-2-1-4-4-4h-3L16 15zM35 3h14c7 0 9 4 8 9-2 7-8 11-15 11h-4l-2 7H29L35 3zm5 14h3c3 0 5-1 5-4 0-2-1-4-4-4h-3L38 17z" />
-                <path fill="#009CDE" d="M58 0h14c7 0 10 4 9 10C79 17 73 21 66 21h-4l-2 9H53L58 0zm5 15h3c3 0 5-2 5-5 0-2-1-4-4-4h-3L61 15z" />
+            <svg viewBox="0 0 80 20" className="h-6 w-auto" fill="none">
+                <path fill="#253B80" d="M8 0h9c4 0 7 2 6 6C21 11 17 14 13 14H10L8 20H3L8 0zm4 10h3c2 0 3-1 3-3 0-1-.5-2-2-2H13L11 10zM22 3h9c4 0 7 2 6 6C35 14 31 17 27 17h-3l-2 7H17L22 3zm4 10h3c2 0 3-1 3-3 0-1-.5-2-2-2H27L25 13z" />
+                <path fill="#179BD7" d="M36 0h9c4 0 7 2 6 6C49 11 45 14 41 14H38L36 20H31L36 0zm4 10h3c2 0 3-1 3-3 0-1-.5-2-2-2H40L38 10z" />
             </svg>
         ),
     },
     {
         slug: "razorpay",
         name: "Razorpay",
-        tagline: "Accept payments via cards, UPI, wallets & more.",
+        tagline: "Cards, UPI, wallets & more — India-focused",
         group: "razorpay",
         enabledKey: "razorpay_enabled",
         defaultKey: "razorpay_is_default",
         primaryKeyField: "razorpay_key_id",
-        accentColor: "from-sky-500/10 to-blue-500/10",
-        brandColor: "#072654",
         logo: (
-            <svg viewBox="0 0 120 30" className="h-7" fill="none">
-                <path fill="#072654" d="M10 2h8l12 26H22L10 2zm10 0l22 26h-8L12 2h8z" />
-                <text x="38" y="22" fontFamily="Arial" fontSize="16" fontWeight="700" fill="#072654">Razorpay</text>
+            <svg viewBox="0 0 110 24" className="h-5 w-auto" fill="none">
+                <path fill="#072654" d="M6 2h5l8 17H14L6 2zm6 0l14 17H21L8 2h4z" />
+                <text x="26" y="18" fontFamily="Arial" fontSize="14" fontWeight="700" fill="#072654">Razorpay</text>
             </svg>
         ),
     },
     {
         slug: "paystack",
         name: "Paystack",
-        tagline: "Simple and reliable payments across Africa.",
+        tagline: "Reliable payments across Africa",
         group: "paystack",
         enabledKey: "paystack_enabled",
         defaultKey: "paystack_is_default",
         primaryKeyField: "paystack_public_key",
-        accentColor: "from-teal-500/10 to-emerald-500/10",
-        brandColor: "#00C3F7",
         logo: (
-            <svg viewBox="0 0 120 30" className="h-7" fill="none">
-                <rect x="2" y="6" width="28" height="6" rx="3" fill="#00C3F7" />
-                <rect x="2" y="14" width="20" height="6" rx="3" fill="#40DDA1" />
-                <rect x="2" y="22" width="24" height="6" rx="3" fill="#00C3F7" />
-                <text x="40" y="22" fontFamily="Arial" fontSize="15" fontWeight="700" fill="#00C3F7">paystack</text>
+            <svg viewBox="0 0 100 22" className="h-5 w-auto" fill="none">
+                <rect x="1" y="2" width="18" height="5" rx="2.5" fill="#00C3F7" />
+                <rect x="1" y="9" width="12" height="5" rx="2.5" fill="#40DDA1" />
+                <rect x="1" y="16" width="15" height="5" rx="2.5" fill="#00C3F7" />
+                <text x="24" y="17" fontFamily="Arial" fontSize="14" fontWeight="700" fill="#00C3F7">paystack</text>
             </svg>
         ),
     },
     {
         slug: "mollie",
         name: "Mollie",
-        tagline: "Effortless European online payments.",
+        tagline: "Effortless European online payments",
         group: "mollie",
         enabledKey: "mollie_enabled",
         defaultKey: "mollie_is_default",
         primaryKeyField: "mollie_api_key",
-        accentColor: "from-orange-500/10 to-amber-500/10",
-        brandColor: "#000000",
         logo: (
-            <svg viewBox="0 0 100 30" className="h-7" fill="none">
-                <text x="0" y="22" fontFamily="Georgia,serif" fontSize="22" fontWeight="900" fill="#000000">mollie</text>
+            <svg viewBox="0 0 70 22" className="h-5 w-auto" fill="none">
+                <text x="0" y="18" fontFamily="Georgia,serif" fontSize="20" fontWeight="900" fill="#000">mollie</text>
             </svg>
         ),
     },
     {
         slug: "flutterwave",
         name: "Flutterwave",
-        tagline: "Pan-African payment infrastructure.",
+        tagline: "Pan-African payment infrastructure",
         group: "flutterwave",
         enabledKey: "flutterwave_enabled",
         defaultKey: "flutterwave_is_default",
         primaryKeyField: "flutterwave_public_key",
-        accentColor: "from-orange-500/10 to-rose-500/10",
-        brandColor: "#F5A623",
         logo: (
-            <svg viewBox="0 0 36 36" className="h-7" fill="none">
-                <path d="M18 2C9.2 2 2 9.2 2 18s7.2 16 16 16 16-7.2 16-16S26.8 2 18 2z" fill="#F5A623" />
-                <path d="M24 12c-2 0-4 1-5 2.5C18 13 16 12 14 12c-3.3 0-6 2.7-6 6s2.7 6 6 6c2 0 4-1 5-2.5C20 23 22 24 24 24c3.3 0 6-2.7 6-6s-2.7-6-6-6z" fill="#fff" />
+            <svg viewBox="0 0 30 30" className="h-7 w-auto" fill="none">
+                <circle cx="15" cy="15" r="15" fill="#F5A623" />
+                <path d="M20 9c-2 0-3.5 1-4.5 2.5C14.5 10 13 9 11 9c-3 0-5 2.3-5 5.5s2 5.5 5 5.5c2 0 3.5-1 4.5-2.5C16.5 19 18 20 20 20c3 0 5-2.3 5-5.5S23 9 20 9z" fill="#fff" />
             </svg>
         ),
     },
 ];
 
-// ─── Single Gateway Card ──────────────────────────────────────────────────────
+// ─── Gateway Card ─────────────────────────────────────────────────────────────
 
 function GatewayCard({
     gateway,
@@ -155,94 +145,75 @@ function GatewayCard({
     const isConfigured = !!getVal(gateway.primaryKeyField);
 
     const toggle = () => {
-        bulkUpdate.mutate({
-            group: gateway.group,
-            [gateway.enabledKey]: (!isEnabled).toString(),
-        });
+        bulkUpdate.mutate({ group: gateway.group, [gateway.enabledKey]: (!isEnabled).toString() });
     };
 
     return (
-        <div
-            className={`relative rounded-2xl border bg-card overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 ${isEnabled ? "border-primary/20 shadow-sm" : "border-border/60"
-                }`}
-        >
-            {/* Gradient accent on left edge when enabled */}
-            {isEnabled && (
-                <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
-                    style={{ background: gateway.brandColor }}
-                />
-            )}
-
-            <div className="p-5 pl-6">
-                <div className="flex items-center gap-4">
-                    {/* Logo */}
-                    <div className={`shrink-0 w-28 h-14 rounded-xl bg-gradient-to-br ${gateway.accentColor} border border-border/40 flex items-center justify-center p-3`}>
+        <Card className={`transition-all duration-200 hover:shadow-md ${isEnabled ? "border-primary/30" : ""}`}>
+            <CardHeader className="pb-3">
+                <div className="flex items-start gap-4">
+                    {/* Logo area */}
+                    <div className="shrink-0 flex items-center justify-center w-28 h-12 rounded-lg border bg-muted/40 px-3">
                         {gateway.logo}
                     </div>
 
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <h3 className="font-semibold text-base">{gateway.name}</h3>
+                    {/* Name + description */}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <CardTitle className="text-base">{gateway.name}</CardTitle>
                             {isDefault && (
-                                <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 px-1.5 gap-1">
+                                <Badge variant="secondary" className="text-[10px] gap-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400">
                                     <Star className="w-2.5 h-2.5 fill-current" /> Default
                                 </Badge>
                             )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{gateway.tagline}</p>
-                        <div className="flex items-center gap-2 mt-2">
                             {isConfigured ? (
-                                <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
-                                    <CheckCircle2 className="w-3 h-3" /> Configured
-                                </span>
+                                <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 border-emerald-300 dark:text-emerald-400">
+                                    <CheckCircle2 className="w-2.5 h-2.5" /> Configured
+                                </Badge>
                             ) : (
-                                <span className="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
-                                    <AlertCircle className="w-3 h-3" /> Setup required
-                                </span>
-                            )}
-                            {isEnabled && (
-                                <span className="inline-flex items-center gap-1 text-xs text-primary">
-                                    <Zap className="w-3 h-3" /> Active
-                                </span>
+                                <Badge variant="outline" className="text-[10px] gap-1 text-amber-600 border-amber-300 dark:text-amber-400">
+                                    <AlertCircle className="w-2.5 h-2.5" /> Setup Required
+                                </Badge>
                             )}
                         </div>
+                        <CardDescription className="text-xs mt-0.5">{gateway.tagline}</CardDescription>
                     </div>
 
                     {/* Controls */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        {/* Star default */}
+                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
                         <button
                             onClick={() => onToggleDefault(gateway.slug)}
-                            className={`p-1.5 rounded-lg transition-colors ${isDefault
-                                    ? "text-amber-500 dark:text-amber-400"
-                                    : "text-muted-foreground hover:text-amber-500"
+                            className={`p-1.5 rounded-md transition-colors hover:bg-muted ${isDefault ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
                                 }`}
-                            title="Set as default"
+                            title={isDefault ? "Default gateway" : "Set as default"}
                         >
                             <Star className={`w-4 h-4 ${isDefault ? "fill-current" : ""}`} />
                         </button>
-
-                        {/* Toggle */}
                         <Switch
                             checked={isEnabled}
                             onCheckedChange={toggle}
                             disabled={isLoading || bulkUpdate.isPending}
                         />
-
-                        {/* Configure */}
                         <Link href={`/admin/payments/${gateway.slug}`}>
-                            <Button variant={isConfigured ? "outline" : "default"} size="sm" className="gap-1.5 h-8">
-                                <Settings2 className="w-3.5 h-3.5" />
+                            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
                                 {isConfigured ? "Edit" : "Setup"}
                                 <ChevronRight className="w-3 h-3" />
                             </Button>
                         </Link>
                     </div>
                 </div>
-            </div>
-        </div>
+            </CardHeader>
+
+            {/* Bottom info row */}
+            <Separator />
+            <CardContent className="pt-3 pb-3">
+                <p className="text-xs text-muted-foreground">
+                    {isConfigured
+                        ? `Use ${gateway.name} to process payments at checkout`
+                        : `Enter your ${gateway.name} API credentials to activate this gateway`}
+                </p>
+            </CardContent>
+        </Card>
     );
 }
 
@@ -251,76 +222,99 @@ function GatewayCard({
 export default function PaymentsContent() {
     const [defaultGateway, setDefaultGateway] = useState<string>("");
 
-    // Load active gateways count for stats
-    const stripeSettings = useSettingsByGroup("stripe");
-    const paypalSettings = useSettingsByGroup("paypal");
+    // Check which payment plugins are active — gateways only show if plugin is enabled
+    const stripeActive = useIsPluginActive("stripe");
+    const paypalActive = useIsPluginActive("paypal");
+    const razorpayActive = useIsPluginActive("razorpay");
+    const paystackActive = useIsPluginActive("paystack");
+    const mollieActive = useIsPluginActive("mollie");
+    const flutterwaveActive = useIsPluginActive("flutterwave");
+
+    const pluginActiveMap: Record<string, boolean> = {
+        stripe: stripeActive,
+        paypal: paypalActive,
+        razorpay: razorpayActive,
+        paystack: paystackActive,
+        mollie: mollieActive,
+        flutterwave: flutterwaveActive,
+    };
+
+    const visibleGateways = GATEWAYS.filter((g) => pluginActiveMap[g.slug]);
 
     const handleToggleDefault = (slug: string) => {
         setDefaultGateway((prev) => (prev === slug ? "" : slug));
-        toast.success(`${slug.charAt(0).toUpperCase() + slug.slice(1)} set as default payment method`);
     };
 
     return (
         <PermissionGuard permission="payments.view">
-            <div className="space-y-8">
+            <div className="space-y-6">
 
-                {/* ── Hero Header ── */}
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-700 p-8 text-white">
-                    {/* Background decoration */}
-                    <div className="absolute right-0 top-0 opacity-10">
-                        <CreditCard className="w-64 h-64 -rotate-12 translate-x-16 -translate-y-8" />
-                    </div>
-                    <div className="absolute right-24 bottom-0 opacity-5">
-                        <Shield className="w-48 h-48 rotate-12 translate-y-12" />
-                    </div>
-
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                <CreditCard className="w-4 h-4" />
-                            </div>
-                            <span className="text-sm font-medium text-white/80">Payment Configuration</span>
-                        </div>
-                        <h1 className="text-3xl font-bold mb-2">Payment Methods</h1>
-                        <p className="text-white/70 max-w-lg">
-                            Configure and manage your payment gateways. Enable the ones you need and set up their API credentials to start accepting payments.
-                        </p>
-                        <div className="flex items-center gap-4 mt-5">
-                            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 text-sm">
-                                <Shield className="w-3.5 h-3.5" />
-                                <span>{GATEWAYS.length} gateways available</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5 text-sm">
-                                <Zap className="w-3.5 h-3.5" />
-                                <span>PCI compliant</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Instructions ── */}
-                <div className="flex gap-3 p-4 rounded-xl border bg-muted/30 text-sm text-muted-foreground">
-                    <span className="mt-0.5">💡</span>
+                {/* ── Page Header ── */}
+                <div className="flex items-start justify-between">
                     <div>
-                        <ul className="space-y-1 list-disc list-inside">
-                            <li>Click the <strong className="text-foreground">star ☆</strong> to set your default payment method at checkout</li>
-                            <li>Use the <strong className="text-foreground">toggle</strong> to enable or disable a gateway instantly</li>
-                            <li>Click <strong className="text-foreground">Edit / Setup</strong> to enter API credentials</li>
-                        </ul>
+                        <h1 className="text-2xl font-bold flex items-center gap-2">
+                            <CreditCard className="w-6 h-6 text-primary" />
+                            Payment Methods
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Configure payment gateways for checkout. Enable plugins first to manage them here.
+                        </p>
                     </div>
+                    {visibleGateways.length > 0 && (
+                        <Badge variant="secondary" className="gap-1.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                            {visibleGateways.length} active
+                        </Badge>
+                    )}
                 </div>
 
-                {/* ── Gateway List ── */}
-                <div className="space-y-3">
-                    {GATEWAYS.map((gateway) => (
-                        <GatewayCard
-                            key={gateway.slug}
-                            gateway={gateway}
-                            isDefault={defaultGateway === gateway.slug}
-                            onToggleDefault={handleToggleDefault}
-                        />
-                    ))}
-                </div>
+                {/* ── Hint ── */}
+                <Card className="border-dashed bg-muted/20">
+                    <CardContent className="py-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5"><Star className="w-3 h-3 text-amber-500 fill-amber-500" /> Star sets as default checkout gateway</span>
+                        <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> Toggle to enable / disable at checkout</span>
+                        <span className="flex items-center gap-1.5"><CreditCard className="w-3 h-3 text-primary" /> Edit to configure API credentials</span>
+                    </CardContent>
+                </Card>
+
+                {/* ── No plugins enabled state ── */}
+                {visibleGateways.length === 0 && (
+                    <Card className="border-dashed">
+                        <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-4">
+                            <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+                                <Puzzle className="w-7 h-7 text-muted-foreground" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base mb-1">No payment plugins enabled</CardTitle>
+                                <CardDescription className="max-w-sm">
+                                    Go to the Plugins page and enable the payment gateways you want to use.
+                                    They will appear here once activated.
+                                </CardDescription>
+                            </div>
+                            <Link href="/admin/plugins">
+                                <Button variant="default" className="gap-2">
+                                    <Puzzle className="w-4 h-4" />
+                                    Go to Plugins
+                                    <ArrowRight className="w-4 h-4" />
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {/* ── Gateway list (only enabled plugins) ── */}
+                {visibleGateways.length > 0 && (
+                    <div className="space-y-3">
+                        {visibleGateways.map((gateway) => (
+                            <GatewayCard
+                                key={gateway.slug}
+                                gateway={gateway}
+                                isDefault={defaultGateway === gateway.slug}
+                                onToggleDefault={handleToggleDefault}
+                            />
+                        ))}
+                    </div>
+                )}
 
             </div>
         </PermissionGuard>

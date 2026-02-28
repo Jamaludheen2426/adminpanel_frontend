@@ -22,6 +22,8 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
 import type { Role } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { useServerSort } from "@/hooks/use-server-sort";
+import { SortHead } from "@/components/ui/sort-head";
 
 export function RolesContent() {
   const { t } = useTranslation();
@@ -29,8 +31,9 @@ export function RolesContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
+  const { sort_by, sort_order, handleSort } = useServerSort('name');
 
-  const { data, isLoading } = useRoles({ page, limit: 10, search: debouncedSearch });
+  const { data, isLoading, isFetching } = useRoles({ page, limit: 10, search: debouncedSearch, sort_by, sort_order });
   const deleteRoleMutation = useDeleteRole();
   const toggleStatusMutation = useToggleRoleStatus();
 
@@ -53,7 +56,7 @@ export function RolesContent() {
       <div className="space-y-6">
 
         {/* Page Loader */}
-        <PageLoader open={isLoading} />
+        <PageLoader open={isFetching} />
 
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("nav.roles")}</h1>
@@ -85,7 +88,7 @@ export function RolesContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("common.name")}</TableHead>
+                      <SortHead field="name" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>{t("common.name")}</SortHead>
                       <TableHead>{t("common.description")}</TableHead>
                       <TableHead>{t("common.status")}</TableHead>
                       <TableHead>{t("common.approved", "Approved")}</TableHead>
@@ -106,14 +109,14 @@ export function RolesContent() {
                             checked={role.is_active === 1}
                             onText="ACTIVE"
                             offText="INACTIVE"
-                          pending={role.is_active === 2 || (isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === role.id)}
+                            pending={role.is_active === 2 || (isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === role.id)}
                             disabled={
                               isSuperAdminOrDeveloper(role) ||
                               (toggleStatusMutation.isPending &&
                                 toggleStatusMutation.variables?.id === role.id)
                             }
                             onCheckedChange={(checked) => {
-                            toggleStatusMutation.mutate({ id: role.id, is_active: checked ? 1 : 0 });
+                              toggleStatusMutation.mutate({ id: role.id, is_active: checked ? 1 : 0 });
                             }}
                           />
                         </TableCell>
@@ -136,17 +139,17 @@ export function RolesContent() {
                               size="icon"
                               onClick={() => handleEdit(role)}
                               disabled={isSuperAdminOrDeveloper(role)}
-                            title={isSuperAdminOrDeveloper(role) ? "Cannot edit super admin" : "Edit Role"}
+                              title={isSuperAdminOrDeveloper(role) ? "Cannot edit super admin" : "Edit Role"}
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
 
                             <Button
-                              variant="ghost"
+                              variant="destructive-outline"
                               size="icon"
                               onClick={() => handleDelete(role)}
-                            disabled={isSuperAdminOrDeveloper(role) || deleteRoleMutation.isPending}
-                            title={isSuperAdminOrDeveloper(role) ? "Cannot delete super admin" : "Delete Role"}
+                              disabled={isSuperAdminOrDeveloper(role) || deleteRoleMutation.isPending}
+                              title={isSuperAdminOrDeveloper(role) ? "Cannot delete super admin" : "Delete Role"}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -157,7 +160,7 @@ export function RolesContent() {
 
                     {data?.data?.length === 0 && (
                       <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                           {t("roles.no_roles_found")}
                         </TableCell>
                       </TableRow>

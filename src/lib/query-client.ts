@@ -197,6 +197,25 @@ export const queryKeys = {
     detail: (id: number) => [...queryKeys.payments.all, 'detail', id] as const,
   },
 
+  faqs: {
+    all: ['faqs'] as const,
+    categories: () => [...queryKeys.faqs.all, 'categories'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.faqs.all, 'list', params] as const,
+    detail: (id: number) => [...queryKeys.faqs.all, 'detail', id] as const,
+  },
+
+  announcements: {
+    all: ['announcements'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.announcements.all, 'list', params] as const,
+    detail: (id: number | string) => [...queryKeys.announcements.all, 'detail', id] as const,
+  },
+
+  testimonials: {
+    all: ['testimonials'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.testimonials.all, 'list', params] as const,
+    detail: (id: number | string) => [...queryKeys.testimonials.all, 'detail', id] as const,
+  },
+
   setup: {
     all: ['setup'] as const,
     status: () => [...queryKeys.setup.all, 'status'] as const,

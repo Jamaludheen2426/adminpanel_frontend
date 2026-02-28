@@ -29,7 +29,7 @@ async function forwardRequest(request: NextRequest, path: string, method: string
     let body: BodyInit | undefined;
     try {
       if (method !== 'GET' && method !== 'HEAD') {
-        body = await request.text();
+        body = await request.arrayBuffer();
       }
     } catch {
       body = undefined;

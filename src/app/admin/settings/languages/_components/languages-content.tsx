@@ -55,11 +55,14 @@ import { isApprovalRequired } from "@/lib/api-client";
 import { HelpCircle } from "lucide-react";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { useServerSort } from "@/hooks/use-server-sort";
+import { SortHead } from "@/components/ui/sort-head";
 
 export function LanguagesContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const { sort_by, sort_order, handleSort } = useServerSort('name');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
 
@@ -71,7 +74,7 @@ export function LanguagesContent() {
     name: string;
   } | null>(null);
 
-  const { data, isLoading } = useLanguages({ page, limit: 10, search });
+  const { data, isLoading, isFetching } = useLanguages({ page, limit: 10, search, sort_by, sort_order });
   const deleteLanguageMutation = useDeleteLanguage();
   const setDefaultMutation = useSetDefaultLanguage();
   const translateAllMutation = useTranslateAllToLanguage();
@@ -150,6 +153,7 @@ export function LanguagesContent() {
       <>
         <PageLoader open={isLoading} />
         <PageLoader open={
+          isFetching ||
           deleteLanguageMutation.isPending ||
           setDefaultMutation.isPending ||
           toggleStatusMutation.isPending ||
@@ -193,14 +197,14 @@ export function LanguagesContent() {
                         <p className="text-muted-foreground">
                           Short ISO code like <b>en</b>, <b>ar</b>, <b>fr</b>.
                         </p>
-                        
-                    <a
+
+                        <a
                           href="https://www.loc.gov/standards/iso639-2/php/code_list.php"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-500 hover:text-blue-600 underline text-xs mt-1 inline-block"
                         >
-📋 Find your language code here &#8594;                        </a>
+                          📋 Find your language code here &#8594;                        </a>
                       </div>
                       <div>
                         <p className="font-semibold">Native Name</p>
@@ -280,8 +284,8 @@ export function LanguagesContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>{t("common.name")}</TableHead>
-                      <TableHead>{t("common.code")}</TableHead>
+                      <SortHead field="name" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>{t("common.name")}</SortHead>
+                      <SortHead field="code" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>{t("common.code")}</SortHead>
                       <TableHead>{t("languages.native_name")}</TableHead>
                       <TableHead>{t("languages.direction")}</TableHead>
                       <TableHead>{t("common.status")}</TableHead>
@@ -373,7 +377,7 @@ export function LanguagesContent() {
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
-                              variant="ghost"
+                              variant="destructive-outline"
                               onClick={() => handleDelete(language.id)}
                               disabled={
                                 deleteLanguageMutation.isPending ||
@@ -381,7 +385,7 @@ export function LanguagesContent() {
                               }
                               title={t("common.delete", "Delete")}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

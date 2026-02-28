@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { PageLoader } from '@/components/common/page-loader';
 
 function VerifyEmailContent() {
   const router = useRouter();

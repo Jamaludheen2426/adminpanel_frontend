@@ -2,155 +2,119 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
-import type { Country, State, City, Pincode, Locality, CreateLocalityDto, UpdateLocalityDto } from '@/types';
+import type { Country, State, City, Pincode, Locality } from '@/types';
 
-// API functions
+// Re-export Locality as CityRecord so the rest of the app keeps compiling
+// (City model = what was Locality; District model = what was City)
+export type District = City;       // old City type reused for District
+export type CityRecord = Locality; // old Locality type reused for City
+
+// ─── API layer ────────────────────────────────────────────────────────────────
+
 const locationsApi = {
   // Countries
   getCountries: async (): Promise<Country[]> => {
-    try {
-      const response = await apiClient.get('/locations/countries', { params: { limit: 1000 } });
-      const countries = response.data.data || [];
-      return countries;
-    } catch (error) {
-      console.error('Failed to fetch countries:', error);
-      throw new Error('Failed to fetch countries');
-    }
+    const response = await apiClient.get('/locations/countries', { params: { limit: 1000 } });
+    return response.data.data || [];
   },
-
   createCountry: async (data: Partial<Country>): Promise<Country> => {
     const response = await apiClient.post('/locations/countries', data);
     return response.data.data?.country || response.data.country;
   },
-
   updateCountry: async ({ id, data }: { id: number; data: Partial<Country> }): Promise<Country> => {
     const response = await apiClient.put(`/locations/countries/${id}`, data);
     return response.data.data?.country || response.data.country;
   },
-
   deleteCountry: async (id: number): Promise<void> => {
     await apiClient.delete(`/locations/countries/${id}`);
   },
 
   // States
   getStates: async (countryId?: number): Promise<State[]> => {
-    try {
-      const url = countryId ? `/locations/states/${countryId}` : '/locations/states';
-      const response = await apiClient.get(url, { params: { limit: 1000 } });
-      const states = response.data.data || [];
-      return states;
-    } catch (error) {
-      console.error('Failed to fetch states:', error);
-      throw new Error('Failed to fetch states');
-    }
+    const url = countryId ? `/locations/states/${countryId}` : '/locations/states';
+    const response = await apiClient.get(url, { params: { limit: 1000 } });
+    return response.data.data || [];
   },
-
   createState: async (data: Partial<State>): Promise<State> => {
     const response = await apiClient.post('/locations/states', data);
     return response.data.data?.state || response.data.state;
   },
-
   updateState: async ({ id, data }: { id: number; data: Partial<State> }): Promise<State> => {
     const response = await apiClient.put(`/locations/states/${id}`, data);
     return response.data.data?.state || response.data.state;
   },
-
   deleteState: async (id: number): Promise<void> => {
     await apiClient.delete(`/locations/states/${id}`);
   },
 
-  // Cities
-  getCities: async (stateId?: number): Promise<City[]> => {
-    try {
-      const url = stateId ? `/locations/cities/${stateId}` : '/locations/cities';
-      const response = await apiClient.get(url, { params: { limit: 1000 } });
-      const cities = response.data.data || [];
-      return cities;
-    } catch (error) {
-      console.error('Failed to fetch cities:', error);
-      throw new Error('Failed to fetch cities');
-    }
+  // Districts (was Cities → /cities → now /districts)
+  getDistricts: async (stateId?: number): Promise<City[]> => {
+    const url = stateId ? `/locations/districts/${stateId}` : '/locations/districts';
+    const response = await apiClient.get(url, { params: { limit: 1000 } });
+    return response.data.data || [];
   },
-
-  createCity: async (data: Partial<City>): Promise<City> => {
-    const response = await apiClient.post('/locations/cities', data);
-    return response.data.data?.city || response.data.city;
+  createDistrict: async (data: Partial<City>): Promise<City> => {
+    const response = await apiClient.post('/locations/districts', data);
+    return response.data.data?.district || response.data.district;
   },
-
-  updateCity: async ({ id, data }: { id: number; data: Partial<City> }): Promise<City> => {
-    const response = await apiClient.put(`/locations/cities/${id}`, data);
-    return response.data.data?.city || response.data.city;
+  updateDistrict: async ({ id, data }: { id: number; data: Partial<City> }): Promise<City> => {
+    const response = await apiClient.put(`/locations/districts/${id}`, data);
+    return response.data.data?.district || response.data.district;
   },
-
-  deleteCity: async (id: number): Promise<void> => {
-    await apiClient.delete(`/locations/cities/${id}`);
+  deleteDistrict: async (id: number): Promise<void> => {
+    await apiClient.delete(`/locations/districts/${id}`);
   },
 
   // Pincodes
-  getPincodes: async (cityId: number): Promise<Pincode[]> => {
-    try {
-      const response = await apiClient.get(`/locations/pincodes/${cityId}`, { params: { limit: 1000 } });
-      const pincodes = response.data.data || [];
-      return pincodes;
-    } catch (error) {
-      console.error('Failed to fetch pincodes:', error);
-      throw new Error('Failed to fetch pincodes');
-    }
+  getPincodes: async (districtId: number): Promise<Pincode[]> => {
+    const response = await apiClient.get(`/locations/pincodes/${districtId}`, { params: { limit: 1000 } });
+    return response.data.data || [];
   },
-
   createPincode: async (data: Partial<Pincode>): Promise<Pincode> => {
     const response = await apiClient.post('/locations/pincodes', data);
     return response.data.data?.pincode || response.data.pincode;
   },
-
   updatePincode: async ({ id, data }: { id: number; data: Partial<Pincode> }): Promise<Pincode> => {
     const response = await apiClient.put(`/locations/pincodes/${id}`, data);
     return response.data.data?.pincode || response.data.pincode;
   },
-
   deletePincode: async (id: number): Promise<void> => {
     await apiClient.delete(`/locations/pincodes/${id}`);
   },
 
-  // Localities
-  getLocalities: async (cityId: number): Promise<Locality[]> => {
-    try {
-      const response = await apiClient.get(`/locations/localities/${cityId}`, { params: { limit: 1000 } });
-      return response.data.data || [];
-    } catch (error) {
-      console.error('Failed to fetch localities:', error);
-      throw new Error('Failed to fetch localities');
-    }
+  // Cities (was Localities → /localities → now /cities)
+  // districtId=0 or undefined → fetch ALL cities
+  getCities: async (districtId?: number): Promise<Locality[]> => {
+    const url = districtId ? `/locations/cities/${districtId}` : '/locations/cities';
+    const response = await apiClient.get(url, { params: { limit: 1000 } });
+    return response.data.data || [];
   },
-
-  createLocality: async (data: CreateLocalityDto): Promise<Locality> => {
-    const response = await apiClient.post('/locations/localities', data);
-    return response.data.data?.locality || response.data.locality;
+  createCity: async (data: Partial<Locality>): Promise<Locality> => {
+    const response = await apiClient.post('/locations/cities', data);
+    return response.data.data?.city || response.data.city;
   },
-
-  updateLocality: async ({ id, data }: { id: number; data: UpdateLocalityDto }): Promise<Locality> => {
-    const response = await apiClient.put(`/locations/localities/${id}`, data);
-    return response.data.data?.locality || response.data.locality;
+  updateCity: async ({ id, data }: { id: number; data: Partial<Locality> }): Promise<Locality> => {
+    const response = await apiClient.put(`/locations/cities/${id}`, data);
+    return response.data.data?.city || response.data.city;
   },
-
-  deleteLocality: async (id: number): Promise<void> => {
-    await apiClient.delete(`/locations/localities/${id}`);
+  deleteCity: async (id: number): Promise<void> => {
+    await apiClient.delete(`/locations/cities/${id}`);
   },
 };
 
-// Countries hooks
+// ─── Country hooks ────────────────────────────────────────────────────────────
+
 export function useCountries() {
   return useQuery({
     queryKey: queryKeys.locations.countries(),
     queryFn: locationsApi.getCountries,
     retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useCreateCountry() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.createCountry,
     onSuccess: () => {
@@ -166,7 +130,6 @@ export function useCreateCountry() {
 
 export function useUpdateCountry() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.updateCountry,
     onSuccess: () => {
@@ -182,7 +145,6 @@ export function useUpdateCountry() {
 
 export function useDeleteCountry() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.deleteCountry,
     onSuccess: () => {
@@ -196,7 +158,8 @@ export function useDeleteCountry() {
   });
 }
 
-// States hooks
+// ─── State hooks ──────────────────────────────────────────────────────────────
+
 export function useStates(countryId?: number) {
   return useQuery({
     queryKey: queryKeys.locations.states(countryId),
@@ -208,7 +171,6 @@ export function useStates(countryId?: number) {
 
 export function useCreateState() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.createState,
     onSuccess: () => {
@@ -224,7 +186,6 @@ export function useCreateState() {
 
 export function useUpdateState() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.updateState,
     onSuccess: () => {
@@ -240,7 +201,6 @@ export function useUpdateState() {
 
 export function useDeleteState() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.deleteState,
     onSuccess: () => {
@@ -254,12 +214,13 @@ export function useDeleteState() {
   });
 }
 
-// Cities hooks
+// ─── District hooks (was City hooks, now call /districts) ────────────────────
+
+/** Load all districts or filter by stateId */
 export function useCities(stateId?: number) {
   return useQuery({
     queryKey: queryKeys.locations.cities(stateId),
-    queryFn: () => locationsApi.getCities(stateId || undefined),
-    enabled: stateId !== 0,
+    queryFn: () => locationsApi.getDistricts(stateId || undefined),
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });
@@ -267,58 +228,56 @@ export function useCities(stateId?: number) {
 
 export function useCreateCity() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.createCity,
+    mutationFn: locationsApi.createDistrict,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('City created successfully');
+      toast.success('District created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to create city');
+      toast.error(error.response?.data?.message || 'Failed to create district');
     },
   });
 }
 
 export function useUpdateCity() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.updateCity,
+    mutationFn: locationsApi.updateDistrict,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('City updated successfully');
+      toast.success('District updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to update city');
+      toast.error(error.response?.data?.message || 'Failed to update district');
     },
   });
 }
 
 export function useDeleteCity() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.deleteCity,
+    mutationFn: locationsApi.deleteDistrict,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('City deleted successfully');
+      toast.success('District deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to delete city');
+      toast.error(error.response?.data?.message || 'Failed to delete district');
     },
   });
 }
 
-// Pincodes hooks
-export function usePincodes(cityId: number) {
+// ─── Pincode hooks ────────────────────────────────────────────────────────────
+
+export function usePincodes(districtId: number) {
   return useQuery({
-    queryKey: queryKeys.locations.pincodes(cityId),
-    queryFn: () => locationsApi.getPincodes(cityId),
-    enabled: !!cityId,
+    queryKey: queryKeys.locations.pincodes(districtId),
+    queryFn: () => locationsApi.getPincodes(districtId),
+    enabled: !!districtId,
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });
@@ -326,7 +285,6 @@ export function usePincodes(cityId: number) {
 
 export function useCreatePincode() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.createPincode,
     onSuccess: () => {
@@ -342,7 +300,6 @@ export function useCreatePincode() {
 
 export function useUpdatePincode() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.updatePincode,
     onSuccess: () => {
@@ -358,7 +315,6 @@ export function useUpdatePincode() {
 
 export function useDeletePincode() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: locationsApi.deletePincode,
     onSuccess: () => {
@@ -372,12 +328,15 @@ export function useDeletePincode() {
   });
 }
 
-// Localities hooks
-export function useLocalities(cityId: number) {
+// ─── City hooks (was Locality hooks, now call /cities) ───────────────────────
+// KEY FIX: districtId=0 now loads ALL cities (no gate). List always shows data.
+
+export function useLocalities(districtId: number) {
   return useQuery({
-    queryKey: queryKeys.locations.localities(cityId),
-    queryFn: () => locationsApi.getLocalities(cityId),
-    enabled: !!cityId,
+    queryKey: queryKeys.locations.localities(districtId),
+    queryFn: () => locationsApi.getCities(districtId || undefined),
+    // Always enabled — districtId=0 fetches all, specific id filters by district
+    enabled: true,
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });
@@ -385,48 +344,51 @@ export function useLocalities(cityId: number) {
 
 export function useCreateLocality() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.createLocality,
-    onSuccess: () => {
+    mutationFn: locationsApi.createCity,
+    onSuccess: (newCity) => {
+      // Invalidate both the specific district's list and the "all" list
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.localities(newCity.city_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.localities(0) });
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('Locality created successfully');
+      toast.success('City created successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to create locality');
+      toast.error(error.response?.data?.message || 'Failed to create city');
     },
   });
 }
 
 export function useUpdateLocality() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.updateLocality,
-    onSuccess: () => {
+    mutationFn: locationsApi.updateCity,
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.localities(updated.city_id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.localities(0) });
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('Locality updated successfully');
+      toast.success('City updated successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to update locality');
+      toast.error(error.response?.data?.message || 'Failed to update city');
     },
   });
 }
 
 export function useDeleteLocality() {
   const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: locationsApi.deleteLocality,
+    mutationFn: locationsApi.deleteCity,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.localities(0) });
       queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-      toast.success('Locality deleted successfully');
+      toast.success('City deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to delete locality');
+      toast.error(error.response?.data?.message || 'Failed to delete city');
     },
   });
 }

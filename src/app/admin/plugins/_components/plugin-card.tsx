@@ -7,153 +7,231 @@ import { Badge } from "@/components/ui/badge";
 import type { Plugin } from "@/types";
 
 // ─── Brand SVG logos by plugin slug ──────────────────────────────────────────
+// Sources:
+//  ✅ simple-icons npm v16.9.0: google, facebook, googletagmanager*, googleanalytics,
+//     cloudflare, digitalocean, wasabi*, stripe, paypal*, razorpay, googlemaps
+//  📁 Uploaded official brand files: wasabi, flutterwave, mollie
+//  🔗 Provided inline by user: google-tag-manager, amazon-s3, cloudflare,
+//     digitalocean, paypal, google-maps, recaptcha (official paths)
+//  ✏️  Twilio, Paystack: hand-crafted from brand mark
 
 const PLUGIN_LOGOS: Record<string, React.ReactNode> = {
-    "google-oauth": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <path fill="#4285F4" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-            <path fill="#34A853" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-            <path fill="#EA4335" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-            <path fill="none" d="M0 0h48v48H0z" />
-        </svg>
-    ),
-    "facebook-oauth": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <linearGradient id="fb-grad" x1="9.993" x2="40.615" y1="9.993" y2="40.615" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#2aa4f4" />
-                <stop offset="1" stopColor="#007ad9" />
-            </linearGradient>
-            <path fill="url(#fb-grad)" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z" />
-            <path fill="#fff" d="M26.707 29.301h5.176l.813-5.258h-5.989v-2.874c0-2.184.714-4.121 2.757-4.121h3.283V12.46c-.577-.078-1.797-.248-4.102-.248-4.814 0-7.636 2.542-7.636 8.334v3.498H16.06v5.258h4.948v14.452c.98.146 1.976.247 2.992.247.933 0 1.848-.088 2.707-.214V29.301z" />
-        </svg>
-    ),
-    "google-tag-manager": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-6 h-6">
-            <path fill="#8AB4F8" d="M38.5 12.2L27.3 23.4 40.6 36.7 51.8 25.5z" />
-            <path fill="#4285F4" d="M12.2 25.5L23.4 36.7 36.7 23.4 25.5 12.2z" />
-            <path fill="#8AB4F8" d="M32 40.6l-8.6 8.6a2 2 0 000 2.8l5.7 5.7a2 2 0 002.8 0l5.7-5.7a2 2 0 000-2.8L32 40.6z" />
-            <path fill="#246FDB" d="M32 7.2l-5.7 5.7a2 2 0 000 2.8L32 21.4l5.7-5.7a2 2 0 000-2.8L32 7.2z" />
-        </svg>
-    ),
-    "google-analytics": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-6 h-6">
-            <path fill="#F9AB00" d="M45.3 10.7v42.6a5.3 5.3 0 005.4 5.4 5.3 5.3 0 005.3-5.4V10.7A5.3 5.3 0 0050.7 5.4a5.3 5.3 0 00-5.4 5.3z" />
-            <path fill="#E37400" d="M26.7 32v21.3a5.3 5.3 0 005.3 5.4 5.3 5.3 0 005.4-5.4V32a5.3 5.3 0 00-5.4-5.3 5.3 5.3 0 00-5.3 5.3z" />
-            <circle fill="#E37400" cx="13.3" cy="53.3" r="5.3" />
-        </svg>
-    ),
-    "amazon-s3": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" className="w-6 h-6">
-            <path fill="#E25444" d="M40 5L10 20v40l30 15 30-15V20L40 5z" />
-            <path fill="#fff" fillOpacity=".15" d="M40 5v55l30-15V20L40 5z" />
-            <path fill="#fff" d="M40 30a10 10 0 100 20 10 10 0 000-20zm0 16a6 6 0 110-12 6 6 0 010 12z" />
-        </svg>
-    ),
-    "cloudflare-r2": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" className="w-6 h-6">
-            <rect width="200" height="200" rx="40" fill="#F38020" />
-            <path fill="#fff" d="M130.2 125.8c1.7-5.8-.1-9.8-4.2-12.5l.2-.7c5.8-1.3 10.1-5.5 11.5-11 1.2-4.7-.6-9.8-4.7-12.8-2.8-2-6.4-3-10.3-2.9H93.5l-10 45h16.2l3.4-15.3h7.6l5.4 15.3h17.8l-3.7-5.1zm-18.6-12.5h-6.4l2.7-12.2h6.4c4.2 0 6.4 2.2 5.5 6.2-.9 3.9-3.9 6-8.2 6z" />
-        </svg>
-    ),
-    "digitalocean-spaces": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" className="w-6 h-6">
-            <circle cx="100" cy="100" r="100" fill="#0080FF" />
-            <circle cx="100" cy="100" r="42" fill="#fff" />
-            <path fill="#0080FF" d="M100 140v21.5c-33.9 0-61.5-27.6-61.5-61.5h21.5c0 22.1 17.9 40 40 40z" />
-            <path fill="#0080FF" d="M60 100H38.5c0-8.1 1.6-15.8 4.6-22.9l18.6 10.7A40.3 40.3 0 0060 100z" />
-            <path fill="#0080FF" d="M54.6 69.4L36 58.6A61.3 61.3 0 0178.6 38.5L69.9 59a40.8 40.8 0 00-15.3 10.4z" />
-        </svg>
-    ),
-    "wasabi": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" className="w-6 h-6">
-            <rect width="200" height="200" rx="40" fill="#3DB843" />
-            <path fill="#fff" d="M100 40L55 70v60l45 30 45-30V70L100 40zm0 14l35 22v46l-35 23-35-23V76L100 54zm0 12L72 83v34l28 19 28-19V83L100 66z" />
-        </svg>
-    ),
-    "google-maps": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <path fill="#34A853" d="M24 4a14 14 0 00-14 14c0 10.5 14 28 14 28s14-17.5 14-28A14 14 0 0024 4z" />
-            <circle cx="24" cy="18" r="6" fill="#fff" />
-            <path fill="#4285F4" d="M24 4a14 14 0 00-14 14c0 3.5 1.2 6.7 3 9.3L24 4z" />
-            <path fill="#EA4335" d="M24 4l11 19.3A14 14 0 0038 18 14 14 0 0024 4z" />
-            <path fill="#FBBC04" d="M13 27.3C15.7 32.9 20.5 38.9 24 44c3.5-5.1 8.3-11.1 11-16.7L24 18l-11 9.3z" />
-        </svg>
-    ),
-    "stripe": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <rect width="48" height="48" rx="10" fill="#635BFF" />
-            <path fill="#fff" d="M22.3 18.7c0-1 .9-1.4 2.3-1.4 2 0 4.6.6 6.6 1.7V13c-2.2-.9-4.4-1.2-6.6-1.2-5.4 0-9 2.8-9 7.5 0 7.3 10 6.1 10 9.3 0 1.2-1 1.6-2.5 1.6-2.2 0-5-.9-7.2-2.2v5.9c2.4 1 4.9 1.5 7.2 1.5 5.5 0 9.3-2.7 9.3-7.5-.1-7.9-10.1-6.5-10.1-9.2z" />
-        </svg>
-    ),
-    "recaptcha": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <path fill="#4CAF50" d="M24 4L6 14v20l18 10 18-10V14L24 4z" />
-            <path fill="#81C784" d="M24 4v36l18-10V14L24 4z" />
-            <path fill="#fff" d="M24 16a8 8 0 100 16 8 8 0 000-16zm0 13a5 5 0 110-10 5 5 0 010 10z" />
-            <path fill="#fff" d="M21 24l2 2 4-5-1-1-3 4-1-1-1 1z" />
-        </svg>
-    ),
-    "twilio": (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
-            <circle cx="24" cy="24" r="22" fill="#F22F46" />
-            <circle cx="17" cy="17" r="3.5" fill="#fff" />
-            <circle cx="31" cy="17" r="3.5" fill="#fff" />
-            <circle cx="17" cy="31" r="3.5" fill="#fff" />
-            <circle cx="31" cy="31" r="3.5" fill="#fff" />
-        </svg>
-    ),
+
+  // ── Google OAuth — simple-icons siGoogle #4285F4 ────────────────────────────
+  "google-oauth": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#4285F4" d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+    </svg>
+  ),
+
+  // ── Facebook OAuth — simple-icons siFacebook #0866FF ───────────────────────
+  "facebook-oauth": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#0866FF" d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/>
+    </svg>
+  ),
+
+  // ── Google Tag Manager — official SVG (user-provided) ──────────────────────
+  "google-tag-manager": (
+    <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+      <polygon fill="#8AB4F8" points="150.261818 245.516364 105.825455 202.185455 201.258182 104.730909 247.265455 149.821818"/>
+      <path fill="#4285F4" d="M150.450909,53.9381818 L106.174545,8.73090909 L9.36,104.629091 C-3.12,117.109091 -3.12,137.341818 9.36,149.836364 L104.72,245.821818 L149.810909,203.64 L77.1563636,127.232727 L150.450909,53.9381818 Z"/>
+      <path fill="#8AB4F8" d="M246.625455,105.370909 L150.625455,9.37090909 C138.130909,-3.12363636 117.869091,-3.12363636 105.374545,9.37090909 C92.88,21.8654545 92.88,42.1272727 105.374545,54.6218182 L201.374545,150.621818 C213.869091,163.116364 234.130909,163.116364 246.625455,150.621818 C259.12,138.127273 259.12,117.865455 246.625455,105.370909 Z"/>
+      <circle fill="#246FDB" cx="127.265455" cy="224.730909" r="31.2727273"/>
+    </svg>
+  ),
+
+  // ── Google Analytics — simple-icons siGoogleanalytics #E37400 ──────────────
+  "google-analytics": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#E37400" d="M22.84 2.9982v17.9987c.0086 1.6473-1.3197 2.9897-2.967 2.9984a2.9808 2.9808 0 01-.3677-.0208c-1.528-.226-2.6477-1.5558-2.6105-3.1V3.1204c-.0369-1.5458 1.0856-2.8762 2.6157-3.1 1.6361-.1915 3.1178.9796 3.3093 2.6158.014.1201.0208.241.0202.3619zM4.1326 18.0548c-1.6417 0-2.9726 1.331-2.9726 2.9726C1.16 22.6691 2.4909 24 4.1326 24s2.9726-1.3309 2.9726-2.9726-1.331-2.9726-2.9726-2.9726zm7.8728-9.0098c-.0171 0-.0342 0-.0513.0003-1.6495.0904-2.9293 1.474-2.891 3.1256v7.9846c0 2.167.9535 3.4825 2.3505 3.763 1.6118.3266 3.1832-.7152 3.5098-2.327.04-.1974.06-.3983.0593-.5998v-8.9585c.003-1.6474-1.33-2.9852-2.9773-2.9882z"/>
+    </svg>
+  ),
+
+  // ── Amazon S3 — official AWS S3 icon (user-provided) ───────────────────────
+  "amazon-s3": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-6 h-6">
+      <rect width="512" height="512" rx="15%" fill="#ffffff"/>
+      <path fill="#e05243" d="M260 348l-137 33V131l137 32z"/>
+      <path fill="#8c3123" d="M256 349l133 32V131l-133 32v186"/>
+      <path fill="#e05243" d="M256 64v97l58 14V93zm133 67v250l26-13V143zm-133 77v97l58-8v-82zm58 129l-58 14v97l58-29z"/>
+      <path fill="#8c3123" d="M256 161v-97l-58 14v69zm-133-18v250l-26-13V143zm133 18v97l-58-8v-82zm-58 168l58 14v97l-58-29z"/>
+      <path fill="#5e1f18" d="M314 175l-58 11-58-11 58-15 58 15"/>
+      <path fill="#f2b0a9" d="M314 337l-58-11-58 11 58 16 58-16"/>
+    </svg>
+  ),
+
+  // ── Cloudflare R2 — official Cloudflare icon (user-provided) ───────────────
+  "cloudflare-r2": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="w-6 h-6">
+      <rect width="512" height="512" rx="15%" fill="#ffffff"/>
+      <path fill="#f38020" d="M331 326c11-26-4-38-19-38l-148-2c-4 0-4-6 1-7l150-2c17-1 37-15 43-33 0 0 10-21 9-24a97 97 0 0 0-187-11c-38-25-78 9-69 46-48 3-65 46-60 72 0 1 1 2 3 2h274c1 0 3-1 3-3z"/>
+      <path fill="#faae40" d="M381 224c-4 0-6-1-7 1l-5 21c-5 16 3 30 20 31l32 2c4 0 4 6-1 7l-33 1c-36 4-46 39-46 39 0 2 0 3 2 3h113l3-2a81 81 0 0 0-78-103"/>
+    </svg>
+  ),
+
+  // ── DigitalOcean Spaces — official DigitalOcean icon (user-provided) ───────
+  "digitalocean-spaces": (
+    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+      <path fill="#0080FF" d="M8 12.208v2.652c4.495 0 7.988-4.34 6.518-9.053a6.642 6.642 0 00-4.333-4.333C5.48.004 1.14 3.504 1.14 7.992h2.652c0-2.815 2.792-4.993 5.756-3.92a3.975 3.975 0 012.372 2.372c1.08 2.961-1.1 5.75-3.912 5.756V9.563H5.363v2.645H8z"/>
+      <path fill="#0080FF" d="M5.363 14.245H3.325v-2.037h2.038v2.037zM1.622 12.208h1.703v-1.704H1.622v1.704z"/>
+    </svg>
+  ),
+
+  // ── Wasabi — official Wasabi symbol (uploaded file) ────────────────────────
+  "wasabi": (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="#01CD3E" viewBox="0 0 24 24" className="w-6 h-6">
+      <path d="M20.483 3.517A11.9 11.9 0 0 0 12 0a11.9 11.9 0 0 0-8.483 3.517A11.9 11.9 0 0 0 0 12a11.9 11.9 0 0 0 3.517 8.483A11.9 11.9 0 0 0 12 24a11.9 11.9 0 0 0 8.483-3.517A11.9 11.9 0 0 0 24 12a11.9 11.9 0 0 0-3.517-8.483m1.29 7.387-5.16-4.683-5.285 4.984-2.774 2.615V9.932l4.206-3.994 3.146-2.969c3.163 1.379 5.478 4.365 5.867 7.935m-.088 2.828a10.6 10.6 0 0 1-1.025 2.951l-2.952-2.668v-3.87Zm-8.183-11.47-2.227 2.103-2.739 2.598v-4.17A9.8 9.8 0 0 1 12 2.155c.513 0 1.007.035 1.502.106zM6.398 13.891l-4.083-3.658a9.7 9.7 0 0 1 1.078-2.987L6.398 9.95zm0-9.968v3.129l-1.75-1.573a8.6 8.6 0 0 1 1.75-1.556m-4.189 9.102 5.284 4.736 5.302-4.983 2.74-2.598v3.817l-7.423 7.016a9.82 9.82 0 0 1-5.903-7.988m8.306 8.695 5.02-4.754v4.206a9.8 9.8 0 0 1-3.553.654c-.495 0-.99-.035-1.467-.106m7.176-1.714v-3.11l1.714 1.555a9.6 9.6 0 0 1-1.714 1.555"/>
+    </svg>
+  ),
+
+  // ── Google Maps — official multicolor icon (user-provided) ─────────────────
+  "google-maps": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-6 h-6">
+      <path fill="#48b564" d="M35.76,26.36h0.01c0,0-3.77,5.53-6.94,9.64c-2.74,3.55-3.54,6.59-3.77,8.06C24.97,44.6,24.53,45,24,45s-0.97-0.4-1.06-0.94c-0.23-1.47-1.03-4.51-3.77-8.06c-0.42-0.55-0.85-1.12-1.28-1.7L28.24,22l8.33-9.88C37.49,14.05,38,16.21,38,18.5C38,21.4,37.17,24.09,35.76,26.36z"/>
+      <path fill="#fcc60e" d="M28.24,22L17.89,34.3c-2.82-3.78-5.66-7.94-5.66-7.94h0.01c-0.3-0.48-0.57-0.97-0.8-1.48L19.76,15c-0.79,0.95-1.26,2.17-1.26,3.5c0,3.04,2.46,5.5,5.5,5.5C25.71,24,27.24,23.22,28.24,22z"/>
+      <path fill="#2c85eb" d="M28.4,4.74l-8.57,10.18L13.27,9.2C15.83,6.02,19.69,4,24,4C25.54,4,27.02,4.26,28.4,4.74z"/>
+      <path fill="#ed5748" d="M19.83,14.92L19.76,15l-8.32,9.88C10.52,22.95,10,20.79,10,18.5c0-3.54,1.23-6.79,3.27-9.3L19.83,14.92z"/>
+      <path fill="#5695f6" d="M28.24,22c0.79-0.95,1.26-2.17,1.26-3.5c0-3.04-2.46-5.5-5.5-5.5c-1.71,0-3.24,0.78-4.24,2L28.4,4.74c3.59,1.22,6.53,3.91,8.17,7.38L28.24,22z"/>
+    </svg>
+  ),
+
+  // ── Stripe — simple-icons siStripe #635BFF ─────────────────────────────────
+  "stripe": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#635BFF" d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.594-7.305h.003z"/>
+    </svg>
+  ),
+
+  // ── PayPal — official PayPal icon (user-provided) ──────────────────────────
+  "paypal": (
+    <svg viewBox="-3.5 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+      <path fill="#022B87" d="M838.91167,663.619443 C836.67088,661.085983 832.621734,660 827.440097,660 L812.404732,660 C811.344818,660 810.443663,660.764988 810.277343,661.801472 L804.016136,701.193856 C803.892151,701.970844 804.498465,702.674333 805.292267,702.674333 L814.574458,702.674333 L816.905967,688.004562 L816.833391,688.463555 C816.999712,687.427071 817.894818,686.662083 818.95322,686.662083 L823.363735,686.662083 C832.030541,686.662083 838.814901,683.170138 840.797138,673.069296 C840.856106,672.7693 840.951363,672.194809 840.951363,672.194809 C841.513828,668.456868 840.946827,665.920407 838.91167,663.619443 Z M843.301017,674.10803 C841.144899,684.052874 834.27133,689.316292 823.363735,689.316292 L819.408334,689.316292 L816.458414,708 L822.873846,708 C823.800704,708 824.588458,707.33101 824.733611,706.423525 L824.809211,706.027531 L826.284927,696.754676 L826.380183,696.243184 C826.523823,695.335698 827.313089,694.666708 828.238435,694.666708 L829.410238,694.666708 C836.989913,694.666708 842.92604,691.611256 844.660308,682.776394 C845.35583,679.23045 845.021677,676.257496 843.301017,674.10803 Z" transform="translate(-804 -660)"/>
+    </svg>
+  ),
+
+  // ── Razorpay — simple-icons siRazorpay #0C2451 ─────────────────────────────
+  "razorpay": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#0C2451" d="M22.436 0l-11.91 7.773-1.174 4.276 6.625-4.297L11.65 24h4.391l6.395-24zM14.26 10.098L3.389 17.166 1.564 24h9.008l3.688-13.902Z"/>
+    </svg>
+  ),
+
+  // ── Paystack — hand-crafted brand mark ─────────────────────────────────────
+  "paystack": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <rect x="0" y="3" width="24" height="5.5" rx="2.75" fill="#00C3F7"/>
+      <rect x="0" y="10.25" width="17" height="5.5" rx="2.75" fill="#00C3F7" opacity=".65"/>
+      <rect x="0" y="17.5" width="21" height="5.5" rx="2.75" fill="#00C3F7" opacity=".35"/>
+    </svg>
+  ),
+
+  // ── Mollie — official Mollie wordmark (uploaded file, symbol only) ─────────
+  "mollie": (
+    <svg viewBox="0 0 2500 738.6" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+      <path d="m1057.4 241.2c-137.3 0-248.7 111.7-248.7 248.7s111.7 248.7 248.7 248.7 248.7-111.7 248.7-248.7-111.4-248.7-248.7-248.7zm0 379.7c-72.1 0-130.8-58.7-130.8-130.8s58.7-130.8 130.8-130.8 130.8 58.7 130.8 130.8-58.7 130.8-130.8 130.8z"/>
+      <path d="m1884.7 155.1c42.8 0 77.6-34.7 77.6-77.6s-34.8-77.5-77.6-77.5-77.6 34.7-77.6 77.6 34.8 77.5 77.6 77.5z"/>
+      <path d="m549.6 241.4c-6.5-.5-12.7-.8-19.1-.8-60 0-116.9 24.6-157.7 68-40.8-43.2-97.5-68-156.9-68-119 .1-215.9 96.7-215.9 215.7v272.2h116.3v-268.9c0-49.4 40.6-94.9 88.4-99.8 3.4-.3 6.7-.5 9.8-.5 53.8 0 97.7 43.9 98 97.7v271.4h118.9v-269.3c0-49.1 40.3-94.6 88.4-99.5 3.4-.3 6.7-.5 9.8-.5 53.8 0 98 43.7 98.2 97.2v272.2h118.9v-268.9c0-54.5-20.2-107.1-56.6-147.6-36.3-40.8-86.2-65.9-140.5-70.6z"/>
+      <path d="m1489.1 11.6h-118.9v717.4h118.9zm227.6 0h-118.9v717.4h118.9zm227.5 241.5h-118.9v475.7h118.9z"/>
+      <path d="m2500 478.8c0-63.1-24.6-122.5-69-167.8-44.7-45.2-103.7-70.3-166.5-70.3h-3.1c-65.1.8-126.7 26.6-172.7 72.9s-71.9 107.5-72.6 172.9c-.8 66.7 24.8 129.8 72.1 177.6s109.9 74.2 176.6 74.2h.3c87.4 0 169.3-46.8 214.1-122l5.7-9.6-98.2-48.3-4.9 8c-24.8 40.6-67.4 64.6-114.7 64.6-60.5 0-112.7-40.3-128.8-97.7h361.7zm-240.2-130.1c54.3 0 102.9 35.7 120 86.3h-239.7c16.8-50.6 65.4-86.3 119.7-86.3z"/>
+    </svg>
+  ),
+
+  // ── Flutterwave — official Flutterwave logo (uploaded file) ────────────────
+  "flutterwave": (
+    <svg viewBox="0 0 176 144.7" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
+      <path fill="#009A46" d="M0,31.6c0-9.4,2.7-17.4,8.5-23.1l10,10C7.4,29.6,17.1,64.1,48.8,95.8s66.2,41.4,77.3,30.3l10,10c-18.8,18.8-61.5,5.4-97.3-30.3C14,80.9,0,52.8,0,31.6z"/>
+      <path fill="#FF5805" d="M63.1,144.7c-9.4,0-17.4-2.7-23.1-8.5l10-10c11.1,11.1,45.6,1.4,77.3-30.3s41.4-66.2,30.3-77.3l10-10c18.8,18.8,5.4,61.5-30.3,97.3C112.4,130.7,84.2,144.7,63.1,144.7z"/>
+      <path fill="#F5AFCB" d="M140.5,91.6c-6.1-17.5-18.5-36.2-34.9-52.6C69.8,3.2,27.1-10.1,8.3,8.6C7,10,8.2,13.3,10.9,16s6.1,3.9,7.4,2.6c11.1-11.1,45.6-1.4,77.3,30.3c15,15,26.2,31.8,31.6,47.3c4.7,13.6,4.3,24.6-1.2,30.1c-1.3,1.3-0.2,4.6,2.6,7.4s6.1,3.9,7.4,2.6C145.6,126.6,147.2,110.7,140.5,91.6z"/>
+      <path fill="#FF9B00" d="M167.5,8.6C157.9-1,142-2.6,122.9,4c-17.5,6.1-36.2,18.5-52.6,34.9c-35.8,35.8-49.1,78.5-30.3,97.3c1.3,1.3,4.7,0.2,7.4-2.6s3.9-6.1,2.6-7.4c-11.1-11.1-1.4-45.6,30.3-77.3c15-15,31.8-26.2,47.2-31.6c13.6-4.7,24.6-4.3,30.1,1.2c1.3,1.3,4.6,0.2,7.4-2.6S168.9,10,167.5,8.6z"/>
+    </svg>
+  ),
+
+  // ── reCAPTCHA — official reCAPTCHA logo (shield + checkmark) ───────────────
+  "recaptcha": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-6 h-6">
+      <path fill="#4A90D9" d="M32 2L4 14v18c0 15.5 12.1 30 28 34 15.9-4 28-18.5 28-34V14L32 2z"/>
+      <path fill="#fff" d="M32 8l22 10v14c0 12.4-9.3 23.9-22 27.4C19.3 55.9 10 44.4 10 32V18L32 8z"/>
+      <path fill="#4A90D9" d="M27 37.2l-8-8 2.8-2.8 5.2 5.2 13.2-13.2 2.8 2.8z"/>
+    </svg>
+  ),
+
+  // ── Twilio — hand-crafted: red circle + 4 dots (official Twilio mark) ──────
+  "twilio": (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-6 h-6">
+      <path fill="#F22F46" d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8z"/>
+      <circle fill="#F22F46" cx="9.5" cy="9.5" r="1.75"/>
+      <circle fill="#F22F46" cx="14.5" cy="9.5" r="1.75"/>
+      <circle fill="#F22F46" cx="9.5" cy="14.5" r="1.75"/>
+      <circle fill="#F22F46" cx="14.5" cy="14.5" r="1.75"/>
+    </svg>
+  ),
 };
 
 function FallbackIcon() {
-    return <div className="w-6 h-6 flex items-center justify-center"><Settings className="w-5 h-5 text-muted-foreground" /></div>;
+  return (
+    <div className="w-6 h-6 flex items-center justify-center">
+      <Settings className="w-5 h-5 text-muted-foreground" />
+    </div>
+  );
 }
 
 // ─── Plugin Card ──────────────────────────────────────────────────────────────
 
 interface PluginCardProps {
-    plugin: Plugin;
-    onToggle: (slug: string) => void;
-    isToggling: boolean;
+  plugin: Plugin;
+  onToggle: (slug: string) => void;
+  isToggling: boolean;
 }
 
 export function PluginCard({ plugin, onToggle, isToggling }: PluginCardProps) {
-    const isEnabled = plugin.is_active === 1;
-    const logo = PLUGIN_LOGOS[plugin.slug] ?? <FallbackIcon />;
+  const isEnabled = plugin.is_active === 1;
+  const logo = PLUGIN_LOGOS[plugin.slug] ?? <FallbackIcon />;
 
-    return (
-        <Card className="group hover:shadow-md transition-all duration-200 border-border/60 hover:border-primary/30">
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center shadow-inner">
-                            {logo}
-                        </div>
-                        <div className="min-w-0">
-                            <CardTitle className="text-base font-semibold leading-tight truncate">{plugin.name}</CardTitle>
-                            <CardDescription className="text-xs mt-0.5 line-clamp-2">{plugin.description}</CardDescription>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2 shrink-0">
-                        <Badge
-                            variant={isEnabled ? "default" : "secondary"}
-                            className={`text-xs gap-1 ${isEnabled ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400" : ""}`}
-                        >
-                            {isEnabled ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
-                            {isEnabled ? "Enabled" : "Disabled"}
-                        </Badge>
-                        <Switch
-                            id={`plugin-toggle-${plugin.slug}`}
-                            checked={isEnabled}
-                            disabled={isToggling}
-                            onCheckedChange={() => onToggle(plugin.slug)}
-                            aria-label={`Toggle ${plugin.name}`}
-                        />
-                    </div>
-                </div>
-            </CardHeader>
-
-            <CardContent className="pt-0" />
-        </Card>
-    );
+  return (
+    <Card className="group hover:shadow-md transition-all duration-200 border-border/60 hover:border-primary/30">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center shadow-inner">
+              {logo}
+            </div>
+            <div className="min-w-0">
+              <CardTitle className="text-base font-semibold leading-tight truncate">
+                {plugin.name}
+              </CardTitle>
+              <CardDescription className="text-xs mt-0.5 line-clamp-2">
+                {plugin.description}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <Badge
+              variant={isEnabled ? "default" : "secondary"}
+              className={`text-xs gap-1 ${
+                isEnabled
+                  ? "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400"
+                  : ""
+              }`}
+            >
+              {isEnabled ? (
+                <CheckCircle className="w-3 h-3" />
+              ) : (
+                <XCircle className="w-3 h-3" />
+              )}
+              {isEnabled ? "Enabled" : "Disabled"}
+            </Badge>
+            <Switch
+              id={`plugin-toggle-${plugin.slug}`}
+              checked={isEnabled}
+              disabled={isToggling}
+              onCheckedChange={() => onToggle(plugin.slug)}
+              aria-label={`Toggle ${plugin.name}`}
+            />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0" />
+    </Card>
+  );
 }

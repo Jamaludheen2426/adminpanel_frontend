@@ -42,6 +42,8 @@ import { PermissionGuard } from "@/components/guards/permission-guard";
 import { isApprovalRequired } from "@/lib/api-client";
 import type { Currency } from "@/types";
 import { PageLoader } from '@/components/common/page-loader';
+import { useServerSort } from "@/hooks/use-server-sort";
+import { SortHead } from "@/components/ui/sort-head";
 
 export function CurrenciesContent() {
   const [search, setSearch] = useState("");
@@ -53,10 +55,14 @@ export function CurrenciesContent() {
   const [currencyToDelete, setCurrencyToDelete] =
     useState<number | null>(null);
 
-  const { data, isLoading } = useCurrencies({
+  const { sort_by, sort_order, handleSort } = useServerSort('code');
+
+  const { data, isLoading, isFetching } = useCurrencies({
     page,
     limit: 10,
     search,
+    sort_by,
+    sort_order,
   });
 
   const deleteMutation = useDeleteCurrency();
@@ -98,24 +104,24 @@ export function CurrenciesContent() {
     <PermissionGuard permission="currencies.view">
       <>
         {/* Page Loader */}
-        <PageLoader open={isLoading} />
+        <PageLoader open={isFetching} />
 
         {/* Mutation overlay (kept exactly same) */}
         {(deleteMutation.isPending ||
           setDefaultMutation.isPending ||
           toggleStatusMutation.isPending) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-              <p className="text-sm font-medium">
-                {deleteMutation.isPending && "Deleting currency..."}
-                {setDefaultMutation.isPending &&
-                  "Setting default currency..."}
-                {toggleStatusMutation.isPending &&
-                  "Updating currency status..."}
-              </p>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
+                <p className="text-sm font-medium">
+                  {deleteMutation.isPending && "Deleting currency..."}
+                  {setDefaultMutation.isPending &&
+                    "Setting default currency..."}
+                  {toggleStatusMutation.isPending &&
+                    "Updating currency status..."}
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {!isLoading && (
           <div className="space-y-6">
@@ -152,9 +158,9 @@ export function CurrenciesContent() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Code</TableHead>
+                      <SortHead field="code" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Code</SortHead>
                       <TableHead>Symbol</TableHead>
-                      <TableHead>Exchange Rate</TableHead>
+                      <SortHead field="exchange_rate" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>Exchange Rate</SortHead>
                       <TableHead>Format</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Default</TableHead>
@@ -185,8 +191,8 @@ export function CurrenciesContent() {
                               const dec =
                                 currency.decimal_places > 0
                                   ? `${currency.decimal_separator}${"0".repeat(
-                                      currency.decimal_places
-                                    )}`
+                                    currency.decimal_places
+                                  )}`
                                   : "";
                               const amount = `1${dec}`;
                               const space = currency.space_between
@@ -208,13 +214,13 @@ export function CurrenciesContent() {
                                 toggleStatusMutation.error
                               ) &&
                               toggleStatusMutation.variables?.id ===
-                                currency.id
+                              currency.id
                             }
                             disabled={
                               currency.is_default ||
                               (toggleStatusMutation.isPending &&
                                 toggleStatusMutation.variables?.id ===
-                                  currency.id)
+                                currency.id)
                             }
                             onCheckedChange={(checked) =>
                               toggleStatusMutation.mutate({
@@ -253,7 +259,7 @@ export function CurrenciesContent() {
                             </Button>
 
                             <Button
-                              variant="ghost"
+                              variant="destructive-outline"
                               size="icon"
                               onClick={() =>
                                 handleDelete(currency.id)
@@ -263,7 +269,7 @@ export function CurrenciesContent() {
                                 Boolean(currency.is_default)
                               }
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

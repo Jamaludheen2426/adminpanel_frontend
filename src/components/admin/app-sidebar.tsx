@@ -31,6 +31,8 @@ import {
   Puzzle,
   Wrench,
   CreditCard,
+  Tag,
+  FolderOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -101,9 +103,13 @@ const menuItems: MenuItem[] = [
   },
   {
     labelKey: "nav.blog",
-    href: "/admin/blog",
     icon: BookOpen,
-    permission: "blog.view",
+    permission: "blog_posts.view",
+    children: [
+      { labelKey: "nav.blog_posts", href: "/admin/blog", icon: BookOpen, permission: "blog_posts.view" },
+      { labelKey: "nav.blog_categories", href: "/admin/blog-categories", icon: FolderOpen, permission: "blog_categories.view" },
+      { labelKey: "nav.blog_tags", href: "/admin/blog-tags", icon: Tag, permission: "blog_tags.view" },
+    ],
   },
   {
     labelKey: "nav.testimonials",
