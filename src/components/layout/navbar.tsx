@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bell, LogOut, Settings, User, Search, Clock } from "lucide-react";
+import { Bell, LogOut, Settings, User, Search, Clock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,12 +18,15 @@ import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth, useLogout } from "@/hooks";
 import { usePendingCount, useApprovals } from "@/hooks/use-approvals";
+import { useUnreadContactsCount, useContacts } from "@/hooks/use-contacts";
 
 export default function AdminNavbar() {
   const { user } = useAuth();
   const logoutMutation = useLogout();
   const { data: pendingCount = 0 } = usePendingCount();
   const { data: recentApprovals } = useApprovals({ is_active: 2, limit: 5 });
+  const { data: unreadContactsCount = 0 } = useUnreadContactsCount();
+  const { data: recentContacts } = useContacts({ status: 'unread', limit: 5 });
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -70,31 +73,63 @@ export default function AdminNavbar() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-
-                  {pendingCount > 0 && (
+                  {(pendingCount + unreadContactsCount) > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-medium">
-                      {pendingCount > 99 ? "99+" : pendingCount}
+                      {(pendingCount + unreadContactsCount) > 99 ? "99+" : pendingCount + unreadContactsCount}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[340px]">
+              <DropdownMenuContent align="end" className="w-[340px] max-h-[500px] overflow-y-auto">
+
+                {/* Unread Contacts */}
+                <DropdownMenuLabel className="flex items-center justify-between">
+                  <span>Unread Messages</span>
+                  {unreadContactsCount > 0 && (
+                    <Badge variant="secondary" className="text-xs">{unreadContactsCount}</Badge>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {recentContacts && (recentContacts as any)?.data?.length > 0 ? (
+                  ((recentContacts as any).data as any[]).map((contact: any) => (
+                    <DropdownMenuItem key={contact.id} asChild>
+                      <Link href={`/admin/contacts/${contact.id}`} className="flex items-start gap-3 py-2">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                          <Mail className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                        </div>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-medium text-sm truncate">{contact.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{contact.subject || '(No Subject)'}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(contact.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <div className="py-4 text-center text-sm text-muted-foreground">No unread messages</div>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/admin/contacts" className="text-center justify-center text-primary font-medium">
+                    View all contacts
+                  </Link>
+                </DropdownMenuItem>
+
+                {/* Pending Approvals */}
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Pending Approvals</span>
-                  {pendingCount && pendingCount > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {pendingCount}
-                    </Badge>
+                  {pendingCount > 0 && (
+                    <Badge variant="secondary" className="text-xs">{pendingCount}</Badge>
                   )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {recentApprovals?.data && recentApprovals.data.length > 0 ? (
                   recentApprovals.data.map((approval) => (
                     <DropdownMenuItem key={approval.id} asChild>
-                      <Link
-                        href="/admin/approvals"
-                        className="flex items-start gap-3 py-2"
-                      >
+                      <Link href="/admin/approvals" className="flex items-start gap-3 py-2">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/40">
                           <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-300" />
                         </div>
@@ -103,8 +138,7 @@ export default function AdminNavbar() {
                             {approval.requester?.full_name} - {approval.action}
                           </span>
                           <span className="text-xs text-muted-foreground capitalize">
-                            {approval.module_slug.replace("_", " ")} &middot;{" "}
-                            {approval.resource_type}
+                            {approval.module_slug.replace("_", " ")} &middot; {approval.resource_type}
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {new Date(approval.created_at).toLocaleDateString()}
@@ -114,19 +148,15 @@ export default function AdminNavbar() {
                     </DropdownMenuItem>
                   ))
                 ) : (
-                  <div className="py-6 text-center text-sm text-muted-foreground">
-                    No pending approvals
-                  </div>
+                  <div className="py-4 text-center text-sm text-muted-foreground">No pending approvals</div>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link
-                    href="/admin/approvals"
-                    className="text-center justify-center text-primary font-medium"
-                  >
+                  <Link href="/admin/approvals" className="text-center justify-center text-primary font-medium">
                     View all approvals
                   </Link>
                 </DropdownMenuItem>
+
               </DropdownMenuContent>
             </DropdownMenu>
           )}

@@ -6,13 +6,9 @@ import { Plus, Pencil, Trash2, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  CommonTable,
+  type CommonColumn,
+} from "@/components/common/common-table";
 import { Switch } from "@/components/ui/switch";
 import { isApprovalRequired } from "@/lib/api-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -22,8 +18,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
 import type { Role } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
-import { useServerSort } from "@/hooks/use-server-sort";
-import { SortHead } from "@/components/ui/sort-head";
+import { useMemo } from "react";
 
 export function RolesContent() {
   const { t } = useTranslation();
@@ -31,25 +26,66 @@ export function RolesContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
-  const { sort_by, sort_order, handleSort } = useServerSort('name');
+  const [sort, setSort] = useState<{ column: string; direction: "ASC" | "DESC" } | null>({
+    column: "name",
+    direction: "ASC",
+  });
 
-  const { data, isLoading, isFetching } = useRoles({ page, limit: 10, search: debouncedSearch, sort_by, sort_order });
+  const { data, isLoading, isFetching } = useRoles({
+    page,
+    limit: 10,
+    search: debouncedSearch,
+    sort_by: sort?.column,
+    sort_order: sort?.direction,
+  });
+
   const deleteRoleMutation = useDeleteRole();
   const toggleStatusMutation = useToggleRoleStatus();
 
-  const handleEdit = (role: Role) => {
-    router.push(`/admin/platform/roles/${role.id}/edit`);
+  const handleSort = (column: string) => {
+    setSort((prev) => {
+      if (prev?.column !== column) return { column, direction: "ASC" };
+      if (prev.direction === "ASC") return { column, direction: "DESC" };
+      return null;
+    });
   };
+
+  const normalise = (item: Role) => ({
+    ...item,
+    is_active: item.is_active === 1,
+    created_at: (item as any).createdAt ?? item.created_at ?? "",
+  });
+
+  const roles = useMemo(() => (data?.data ?? []).map(normalise), [data?.data]);
 
   const isSuperAdminOrDeveloper = (role: Role) =>
     role.slug === "super_admin" || role.slug === "developer";
 
-  const handleDelete = async (role: Role) => {
-    if (isSuperAdminOrDeveloper(role)) return;
-    if (confirm(`Are you sure you want to delete the role "${role.name}"?`)) {
-      deleteRoleMutation.mutate(role.id);
-    }
-  };
+  const columns: CommonColumn<Role>[] = [
+    {
+      key: "name",
+      header: t("common.name"),
+      sortable: true,
+      render: (row) => <span className="font-medium text-sm">{row.name}</span>,
+    },
+    {
+      key: "description",
+      header: t("common.description"),
+      render: (row) => <span className="text-xs text-muted-foreground truncate max-w-xs block">{row.description || "-"}</span>,
+    },
+    {
+      key: "approved_at",
+      header: t("common.approved", "Approved"),
+      render: (row) => row.approved_at ? (
+        <span className="inline-flex items-center gap-1 text-[10px] text-green-600 bg-green-50 dark:bg-green-950/30 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-800">
+          <Check className="h-3 w-3" />
+          {new Date(row.approved_at).toLocaleDateString()}
+        </span>
+      ) : (
+        <span className="text-[10px] text-muted-foreground">—</span>
+      ),
+    },
+  ];
 
   return (
     <PermissionGuard permission="roles.view">
@@ -82,121 +118,54 @@ export function RolesContent() {
           </CardHeader>
 
           <CardContent>
+            <CommonTable
+              columns={columns}
+              data={roles as any}
+              isLoading={isLoading}
+              onSort={handleSort}
+              sortColumn={sort?.column}
+              sortDirection={sort?.direction}
+              onStatusToggle={(row, val) => toggleStatusMutation.mutate({ id: row.id, is_active: val ? 1 : 0 })}
+              onEdit={(row) => router.push(`/admin/platform/roles/${row.id}/edit`)}
+              onDelete={(row) => {
+                if (isSuperAdminOrDeveloper(row)) return;
+                if (confirm(`Are you sure you want to delete the role "${row.name}"?`)) {
+                  deleteRoleMutation.mutate(row.id);
+                }
+              }}
+              emptyMessage={t("roles.no_roles_found")}
+              showStatus
+              showCreated
+              showActions
+            />
 
-            {!isLoading && (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <SortHead field="name" sort_by={sort_by} sort_order={sort_order} onSort={handleSort}>{t("common.name")}</SortHead>
-                      <TableHead>{t("common.description")}</TableHead>
-                      <TableHead>{t("common.status")}</TableHead>
-                      <TableHead>{t("common.approved", "Approved")}</TableHead>
-                      <TableHead className="text-right">{t("common.actions")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-
-                  <TableBody>
-                    {data?.data?.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell className="font-medium">{role.name}</TableCell>
-                        <TableCell className="max-w-xs truncate">
-                          {role.description || "-"}
-                        </TableCell>
-
-                        <TableCell>
-                          <Switch
-                            checked={role.is_active === 1}
-                            onText="ACTIVE"
-                            offText="INACTIVE"
-                            pending={role.is_active === 2 || (isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === role.id)}
-                            disabled={
-                              isSuperAdminOrDeveloper(role) ||
-                              (toggleStatusMutation.isPending &&
-                                toggleStatusMutation.variables?.id === role.id)
-                            }
-                            onCheckedChange={(checked) => {
-                              toggleStatusMutation.mutate({ id: role.id, is_active: checked ? 1 : 0 });
-                            }}
-                          />
-                        </TableCell>
-
-                        <TableCell>
-                          {role.approved_at ? (
-                            <span className="inline-flex items-center gap-1 text-xs text-green-600">
-                              <Check className="h-3 w-3" />
-                              {new Date(role.approved_at).toLocaleDateString()}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(role)}
-                              disabled={isSuperAdminOrDeveloper(role)}
-                              title={isSuperAdminOrDeveloper(role) ? "Cannot edit super admin" : "Edit Role"}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-
-                            <Button
-                              variant="destructive-outline"
-                              size="icon"
-                              onClick={() => handleDelete(role)}
-                              disabled={isSuperAdminOrDeveloper(role) || deleteRoleMutation.isPending}
-                              title={isSuperAdminOrDeveloper(role) ? "Cannot delete super admin" : "Delete Role"}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {data?.data?.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                          {t("roles.no_roles_found")}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-
-                {data?.pagination && data.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                      {t("common.page", "Page")} {data.pagination.page} /{" "}
-                      {data.pagination.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={!data.pagination.hasPrevPage}
-                      >
-                        {t("common.previous", "Previous")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!data.pagination.hasNextPage}
-                      >
-                        {t("common.next", "Next")}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
+            {data?.pagination && data.pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
+                <p>
+                  {t("common.page", "Page")} {data.pagination.page} / {data.pagination.totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[10px]"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={!data.pagination.hasPrevPage}
+                  >
+                    {t("common.previous", "Previous")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-[10px]"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={!data.pagination.hasNextPage}
+                  >
+                    {t("common.next", "Next")}
+                  </Button>
+                </div>
+              </div>
             )}
-
           </CardContent>
         </Card>
       </div>

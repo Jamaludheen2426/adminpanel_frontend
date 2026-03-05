@@ -1,11 +1,9 @@
 ﻿"use client";
 
 import { useActivityLogs } from "@/hooks";
-import { DataTable } from "@/components/ui/data-table";
-import { Card } from "@/components/ui/card";
-import { ColumnDef } from "@tanstack/react-table";
+import { CommonTable, type CommonColumn } from "@/components/common/common-table";
+import { Card, CardContent } from "@/components/ui/card";
 import { ActivityLog } from "@/types";
-import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useTranslation } from "@/hooks/use-translation";
 import { PermissionGuard } from "@/components/guards/permission-guard";
@@ -17,66 +15,73 @@ export function ActivityLogsContent() {
 
   const logs = logsData?.data || [];
 
-  const columns: ColumnDef<ActivityLog>[] = [
+  const columns: CommonColumn<ActivityLog>[] = [
     {
-      accessorKey: "action",
+      key: "action",
       header: t("common.action"),
+      sortable: true,
+      render: (row) => <span className="font-semibold">{row.action}</span>
     },
     {
-      accessorKey: "description",
+      key: "description",
       header: t("common.description"),
+      render: (row) => <span className="text-sm">{row.description}</span>
     },
     {
-      accessorKey: "createdAt",
+      key: "user",
+      header: t("common.user"),
+      render: (row) => <span className="text-sm font-medium">{row.user?.email || "-"}</span>,
+    },
+    {
+      key: "ip_address",
+      header: t("activity.ip_address"),
+      render: (row) => <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{row.ip_address}</code>
+    },
+    {
+      key: "createdAt",
       header: t("activity.date_time"),
-      cell: ({ row }) => {
-        const value = row.original.createdAt;
-
+      sortable: true,
+      render: (row) => {
+        const value = row.createdAt;
         if (!value) return "-";
-
         const date = new Date(value);
         if (isNaN(date.getTime())) return "-";
-
-        return format(date, "MMM dd, yyyy HH:mm:ss");
+        return (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">{format(date, "MMM dd, yyyy")}</span>
+            <span className="text-[10px] text-muted-foreground uppercase">{format(date, "HH:mm:ss")}</span>
+          </div>
+        );
       },
-    },
-    {
-      id: "user",
-      header: t("common.user"),
-      cell: ({ row }) => row.original.user?.email || "-",
-    },
-    {
-      accessorKey: "ip_address",
-      header: t("activity.ip_address"),
     },
   ];
 
   return (
     <PermissionGuard permission="activity_logs.view">
       <div className="space-y-6">
-
-        {/* Page Loader */}
         <PageLoader open={isLoading} />
 
-        <div>
-          <h1 className="text-3xl font-bold">{t("activity.logs")}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t("activity.logs_desc")}
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">{t("activity.logs")}</h1>
+            <p className="text-muted-foreground mt-1">
+              {t("activity.logs_desc")}
+            </p>
+          </div>
         </div>
 
-        <Card className="p-6">
-          {!isLoading && logs.length > 0 && (
-            <DataTable columns={columns} data={logs} />
-          )}
-
-          {!isLoading && logs.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {t("activity.no_activity")}
-              </p>
-            </div>
-          )}
+        <Card>
+          <CardContent className="pt-6">
+            <CommonTable
+              columns={columns}
+              data={logs as any}
+              isLoading={isLoading}
+              showStatus={false}
+              showCreated={false}
+              showActions={false}
+              emptyMessage={t("activity.no_activity")}
+            />
+          </CardContent>
         </Card>
       </div>
     </PermissionGuard>

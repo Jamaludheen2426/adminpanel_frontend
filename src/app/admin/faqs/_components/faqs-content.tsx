@@ -4,12 +4,11 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useFaqs, useCreateFaq, useUpdateFaq, useDeleteFaq, Faq } from '@/hooks/use-faqs';
 import { useFaqCategories } from '@/hooks/use-faq-categories';
 import { useTranslation } from '@/hooks/use-translation';
-import { DataTable } from '@/components/ui/data-table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,9 +41,19 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+// ─── normalise function for CommonTable ───────────────────────────────────────
+function normalise(item: Faq): Faq & { created_at: string; is_active: boolean } {
+    return {
+        ...item,
+        is_active: Boolean(item.is_active),
+        created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
+    };
+}
+
 export function FaqsContent() {
     const { t } = useTranslation();
-    const { data: faqs = [], isLoading } = useFaqs();
+    const { data: rawFaqs = [], isLoading } = useFaqs();
+    const faqs = useMemo(() => rawFaqs.map(normalise), [rawFaqs]);
     const { data: categories = [] } = useFaqCategories();
     const createFaq = useCreateFaq();
     const updateFaq = useUpdateFaq();
@@ -97,52 +106,27 @@ export function FaqsContent() {
         }
     };
 
-    const columns = useMemo<ColumnDef<Faq>[]>(() => [
+    const columns: CommonColumn<Faq>[] = [
         {
-            accessorKey: 'sort_order',
+            key: 'sort_order',
             header: t('faq.sort_order', 'Sort Order'),
-            cell: ({ row }) => <span className="text-muted-foreground">{row.original.sort_order}</span>,
+            render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
-            accessorKey: 'category.name',
+            key: 'category.name',
             header: t('faq.category', 'Category'),
-            cell: ({ row }) => (
+            render: (row) => (
                 <Badge variant="secondary">
-                    {row.original.category?.name || 'Unassigned'}
+                    {row.category?.name || 'Unassigned'}
                 </Badge>
             ),
         },
         {
-            accessorKey: 'question',
+            key: 'question',
             header: t('faq.question', 'Question'),
-            cell: ({ row }) => <span className="font-medium block max-w-sm truncate">{row.original.question}</span>,
+            render: (row) => <span className="font-medium block max-w-sm truncate">{row.question}</span>,
         },
-        {
-            accessorKey: 'is_active',
-            header: t('common.active', 'Active'),
-            cell: ({ row }) => (
-                <Switch
-                    checked={Boolean(row.original.is_active)}
-                    onCheckedChange={(checked) => updateFaq.mutate({ id: row.original.id, data: { is_active: checked } })}
-                    disabled={updateFaq.isPending}
-                />
-            ),
-        },
-        {
-            id: 'actions',
-            header: () => <div className="text-right">{t('common.actions', 'Actions')}</div>,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive-outline" size="icon" onClick={() => setDeleteId(row.original.id)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ], [t, updateFaq]);
+    ];
 
     const isPending = createFaq.isPending || updateFaq.isPending;
 
@@ -162,8 +146,20 @@ export function FaqsContent() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PageLoader open={isLoading} />
-                    {!isLoading && <DataTable columns={columns} data={faqs} searchKey="question" />}
+                    <CommonTable
+                        columns={columns}
+                        data={faqs as any}
+                        isLoading={isLoading}
+                        emptyMessage={t('faq.no_faqs', 'No FAQs found.')}
+                        onStatusToggle={(row, val) =>
+                            updateFaq.mutate({ id: row.id, data: { is_active: val } })
+                        }
+                        onEdit={openEdit}
+                        onDelete={(row) => setDeleteId(row.id)}
+                        showStatus
+                        showCreated
+                        showActions
+                    />
                 </CardContent>
             </Card>
 

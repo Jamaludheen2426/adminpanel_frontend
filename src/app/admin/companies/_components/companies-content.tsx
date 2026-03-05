@@ -6,14 +6,7 @@ import Link from 'next/link';
 import { useCompanies, useDeleteCompany, useUpdateCompanyStatus } from '@/hooks/use-companies';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +38,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { EditCompanyDialog } from '@/components/admin/companies/edit-company-dialog';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { PageLoader } from '@/components/common/page-loader';
+import { cn } from '@/lib/utils';
 
 export function CompaniesContent() {
   const [search, setSearch] = useState('');
@@ -95,6 +89,59 @@ export function CompaniesContent() {
 
   const companies = data?.data || [];
   const pagination = data?.pagination;
+
+  const columns: CommonColumn<Company & { user_count?: number }>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (row) => (
+        <div className="flex items-center gap-2">
+          {row.logo ? (
+            <img
+              src={row.logo}
+              alt={row.name}
+              className="h-8 w-8 rounded object-cover"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
+              {row.name.charAt(0)}
+            </div>
+          )}
+          <div>
+            <div className="font-semibold text-foreground">{row.name}</div>
+            <div className="text-xs text-muted-foreground">{row.slug}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (row) => <span className="text-muted-foreground">{row.email || '—'}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (row) => (
+        <Badge
+          variant={row.is_active === 1 ? 'default' : 'secondary'}
+          className={cn('text-[10px] px-2 py-0 h-5 font-bold', getStatusColor(row.is_active))}
+        >
+          {getStatusLabel(row.is_active)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'user_count',
+      header: 'Users',
+      render: (row) => <span className="font-medium text-muted-foreground">{row.user_count || 0}</span>,
+    },
+    {
+      key: 'max_users',
+      header: 'Max Users',
+      render: (row) => <span className="font-medium text-muted-foreground">{row.max_users || '∞'}</span>,
+    },
+  ];
 
   return (
     <PermissionGuard developerOnly>
@@ -180,145 +227,54 @@ export function CompaniesContent() {
 
             <div className="mb-4">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search companies..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-8"
+                  className="pl-9 h-10 rounded-xl bg-muted/20 border-border/40 focus:bg-background transition-all"
                 />
               </div>
             </div>
 
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Users</TableHead>
-                    <TableHead>Max Users</TableHead>
-                    <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+            <CommonTable
+              columns={columns}
+              data={companies as any}
+              isLoading={isLoading}
+              emptyMessage="No companies found."
+              showStatus={false}
+              showCreated={true}
+              showActions={true}
+              onEdit={(row) => setEditId(row.id)}
+              onDelete={(row) => setDeleteId(row.id)}
+            />
 
-                <TableBody>
-
-                  {!isLoading && companies.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8">
-                        No companies found
-                      </TableCell>
-                    </TableRow>
-                  )}
-
-                  {!isLoading &&
-                    companies.map((company: Company & { user_count?: number }) => (
-                      <TableRow key={company.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {company.logo ? (
-                              <img
-                                src={company.logo}
-                                alt={company.name}
-                                className="h-8 w-8 rounded object-cover"
-                              />
-                            ) : (
-                              <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center">
-                                <Building2 className="h-4 w-4 text-primary" />
-                              </div>
-                            )}
-                            <div>
-                              <div>{company.name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {company.slug}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>{company.email || '—'}</TableCell>
-
-                        <TableCell>
-                          <Badge
-                            variant={company.is_active === 1 ? 'default' : 'secondary'}
-                            className={getStatusColor(company.is_active)}
-                          >
-                            {getStatusLabel(company.is_active)}
-                          </Badge>
-                        </TableCell>
-
-                        <TableCell>{company.user_count || 0}</TableCell>
-                        <TableCell>{company.max_users || '∞'}</TableCell>
-                        <TableCell>
-                          {new Date(company.created_at).toLocaleDateString()}
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => setEditId(company.id)}>
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleStatusToggle(company.id, company.is_active)}
-                              >
-                                {company.is_active === 1 ? 'Suspend' : 'Activate'}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => setDeleteId(company.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                </TableBody>
-              </Table>
-            </div>
-
-          {/* Pagination */}
-          {pagination && pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Page {pagination.page} of {pagination.totalPages}
+            {/* Pagination */}
+            {pagination && pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Page {pagination.page} of {pagination.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page - 1)}
+                    disabled={!pagination.hasPrevPage}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(page + 1)}
+                    disabled={!pagination.hasNextPage}
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={!pagination.hasPrevPage}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={!pagination.hasNextPage}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+            )}
           </CardContent>
         </Card>
 

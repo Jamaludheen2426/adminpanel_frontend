@@ -370,6 +370,10 @@ export interface EmailConfig extends BaseEntity {
   api_key: string | null;
   domain: string | null;
   region: string | null;
+  imap_host: string | null;
+  imap_port: number | null;
+  imap_encryption: 'ssl' | 'tls' | 'none' | null;
+  imap_enabled: boolean;
   is_default: boolean;
   is_active: boolean;
 }
@@ -388,6 +392,10 @@ export interface CreateEmailConfigDto {
   domain?: string;
   region?: string;
   is_default?: boolean;
+  imap_host?: string;
+  imap_port?: number;
+  imap_encryption?: 'ssl' | 'tls' | 'none';
+  imap_enabled?: boolean;
 }
 
 export interface UpdateEmailConfigDto {

@@ -216,9 +216,26 @@ export const queryKeys = {
     detail: (id: number | string) => [...queryKeys.testimonials.all, 'detail', id] as const,
   },
 
+  pages: {
+    all: ['pages'] as const,
+    lists: () => [...queryKeys.pages.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.pages.lists(), params] as const,
+    details: () => [...queryKeys.pages.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.pages.details(), id] as const,
+    translations: (id: number | string) => [...queryKeys.pages.all, 'translations', id] as const,
+  },
+
   setup: {
     all: ['setup'] as const,
     status: () => [...queryKeys.setup.all, 'status'] as const,
     preflight: () => [...queryKeys.setup.all, 'preflight'] as const,
+  },
+
+  simpleSliders: {
+    all: ['simpleSliders'] as const,
+    lists: () => [...queryKeys.simpleSliders.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.simpleSliders.lists(), params] as const,
+    details: () => [...queryKeys.simpleSliders.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.simpleSliders.details(), id] as const,
   },
 };

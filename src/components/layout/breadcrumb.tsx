@@ -39,6 +39,18 @@ const segmentTranslationMap: Record<string, string> = {
   // Actions
   "create": "common.create",
   "edit": "common.edit",
+  "view": "common.view",
+
+  // Content modules
+  "contacts": "nav.contact",
+  "blog": "nav.blog",
+  "ads": "nav.ads",
+  "banners": "nav.banners",
+  "announcements": "nav.announcements",
+  "approvals": "nav.approvals",
+  "plugins": "nav.plugins",
+  "payments": "nav.payments",
+  "companies": "nav.companies",
 
   // Appearance
   "appearance": "nav.appearance",

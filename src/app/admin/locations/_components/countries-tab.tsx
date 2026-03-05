@@ -36,6 +36,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import {
+  CommonTable,
+  type CommonColumn,
+} from "@/components/common/common-table";
+import {
   Table,
   TableBody,
   TableCell,
@@ -80,46 +84,6 @@ const countrySchema = z.object({
 
 type CountryForm = z.infer<typeof countrySchema>;
 
-// ─── Sort ─────────────────────────────────────────────────────────────────────
-
-type SortKey = keyof Pick<
-  Country,
-  "name" | "code" | "nationality" | "sort_order" | "is_active" | "created_at"
->;
-type SortDirection = "asc" | "desc";
-interface SortConfig {
-  key: SortKey;
-  direction: SortDirection;
-}
-
-function SortableHeader({
-  children,
-  sortKey,
-  sortConfig,
-  onSort,
-}: {
-  children: React.ReactNode;
-  sortKey: SortKey;
-  sortConfig: SortConfig | null;
-  onSort: (key: SortKey) => void;
-}) {
-  const direction = sortConfig?.key === sortKey ? sortConfig.direction : null;
-  return (
-    <button
-      onClick={() => onSort(sortKey)}
-      className="flex items-center gap-1 text-left hover:text-foreground transition-colors font-medium"
-    >
-      {children}
-      {direction === "asc" ? (
-        <ArrowUp className="h-3.5 w-3.5" />
-      ) : direction === "desc" ? (
-        <ArrowDown className="h-3.5 w-3.5" />
-      ) : (
-        <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
-      )}
-    </button>
-  );
-}
 
 // ─── CSV helpers ──────────────────────────────────────────────────────────────
 
@@ -153,13 +117,10 @@ function parseCSV(text: string): Record<string, string>[] {
 
 export function CountriesTab() {
   const [search, setSearch] = useState("");
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Country | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    label: string;
-    onConfirm: () => void;
-  } | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(
     null,
   );
@@ -183,34 +144,74 @@ export function CountriesTab() {
     },
   });
 
-  // ── Sort ──
+  // ── normalise function for CommonTable ──
+  const normalise = (item: Country) => ({
+    ...item,
+    is_active: Boolean(item.is_active),
+    created_at: (item as any).createdAt ?? item.created_at ?? "",
+  });
 
-  const handleSort = (key: SortKey) => {
-    setSortConfig((prev) => {
-      if (prev?.key !== key) return { key, direction: "asc" };
-      if (prev.direction === "asc") return { key, direction: "desc" };
+  const processedCountries = useMemo(() => {
+    let items = countries.map(normalise);
+    if (search) {
+      const q = search.toLowerCase();
+      items = items.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.code.toLowerCase().includes(q) ||
+          (c.nationality ?? "").toLowerCase().includes(q),
+      );
+    }
+    return items;
+  }, [countries, search]);
+
+  const handleSort = (column: string) => {
+    setSort((prev) => {
+      if (prev?.column !== column) return { column, direction: "asc" };
+      if (prev.direction === "asc") return { column, direction: "desc" };
       return null;
     });
   };
 
-  const filteredAndSorted = useMemo(() => {
-    const q = search.toLowerCase();
-    let items = countries.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        (c.nationality ?? "").toLowerCase().includes(q),
-    );
-    if (sortConfig) {
-      items = [...items].sort((a, b) => {
-        const av = (a[sortConfig.key] ?? "") as string | number | boolean;
-        const bv = (b[sortConfig.key] ?? "") as string | number | boolean;
-        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-        return sortConfig.direction === "asc" ? cmp : -cmp;
-      });
-    }
-    return items;
-  }, [countries, search, sortConfig]);
+  const columns: CommonColumn<Country>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      render: (row) => <span className="font-medium text-sm">{row.name}</span>,
+    },
+    {
+      key: "code",
+      header: "ISO Code",
+      sortable: true,
+      render: (row) => <Badge variant="outline" className="font-mono text-[10px]">{row.code}</Badge>,
+    },
+    {
+      key: "nationality",
+      header: "Nationality",
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.nationality ?? "–"}</span>,
+    },
+    {
+      key: "sort_order",
+      header: "Order",
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.sort_order}</span>,
+    },
+    {
+      key: "is_default",
+      header: "Default",
+      render: (row) => (
+        <Switch
+          checked={Boolean(row.is_default)}
+          onCheckedChange={(checked) => {
+            if (checked) updateCountry.mutate({ id: row.id, data: { is_default: true } });
+          }}
+          disabled={Boolean(row.is_default) || !row.is_active || updateCountry.isPending}
+        />
+      ),
+    },
+  ];
 
   // ── Dialog ──
 
@@ -382,163 +383,21 @@ export function CountriesTab() {
             />
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="name"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Name
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="code"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      ISO Code
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="nationality"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Nationality
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="sort_order"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Sort Order
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="is_active"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Status
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>Default</TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="created_at"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Created
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSorted.length === 0 && !isLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No countries found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredAndSorted.map((country) => (
-                    <TableRow key={country.id}>
-                      <TableCell className="font-medium">
-                        {country.name}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{country.code}</Badge>
-                      </TableCell>
-                      <TableCell>{country.nationality ?? "–"}</TableCell>
-                      <TableCell>{country.sort_order}</TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={Boolean(country.is_active)}
-                          onCheckedChange={(checked) =>
-                            updateCountry.mutate({
-                              id: country.id,
-                              data: { is_active: checked },
-                            })
-                          }
-                          disabled={updateCountry.isPending}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={Boolean(country.is_default)}
-                          onCheckedChange={(checked) => {
-                            if (checked)
-                              updateCountry.mutate({
-                                id: country.id,
-                                data: { is_default: true },
-                              });
-                          }}
-                          disabled={
-                            Boolean(country.is_default) ||
-                            !country.is_active ||
-                            updateCountry.isPending
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {(() => {
-                          const d =
-                            (country as unknown as { createdAt?: string })
-                              .createdAt ?? country.created_at;
-                          return d && !isNaN(new Date(d).getTime())
-                            ? new Date(d).toLocaleDateString()
-                            : "–";
-                        })()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(country)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive-outline"
-                            size="icon"
-                            disabled={deleteCountry.isPending}
-                            onClick={() =>
-                              setDeleteConfirm({
-                                label: `Delete "${country.name}"?`,
-                                onConfirm: () =>
-                                  deleteCountry.mutate(country.id),
-                              })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <p className="text-sm text-muted-foreground mt-2">
-            {filteredAndSorted.length} of {countries.length} countries
-          </p>
+          <CommonTable
+            columns={columns}
+            data={processedCountries as any}
+            isLoading={isLoading}
+            onSort={handleSort}
+            sortColumn={sort?.column}
+            sortDirection={sort?.direction}
+            onStatusToggle={(row, val) => updateCountry.mutate({ id: row.id, data: { is_active: val } })}
+            onEdit={openEdit}
+            onDelete={(row) => setDeleteId(row.id)}
+            emptyMessage="No countries found"
+            showStatus
+            showCreated
+            showActions
+          />
         </CardContent>
       </Card>
 
@@ -769,24 +628,24 @@ export function CountriesTab() {
 
       {/* Delete Confirmation */}
       <AlertDialog
-        open={!!deleteConfirm}
+        open={!!deleteId}
         onOpenChange={(open) => {
-          if (!open) setDeleteConfirm(null);
+          if (!open) setDeleteId(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteConfirm?.label} This action cannot be undone.
+              Delete this country? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                deleteConfirm?.onConfirm();
-                setDeleteConfirm(null);
+                if (deleteId) deleteCountry.mutate(deleteId);
+                setDeleteId(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

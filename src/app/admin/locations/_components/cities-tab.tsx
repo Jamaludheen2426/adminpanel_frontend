@@ -9,6 +9,10 @@ import {
   ArrowUp, ArrowDown, ArrowUpDown, Upload, Download,
 } from "lucide-react";
 import {
+  CommonTable,
+  type CommonColumn,
+} from "@/components/common/common-table";
+import {
   useCities, useCreateCity, useUpdateCity, useDeleteCity,
   useStates, useCountries,
 } from "@/hooks/use-locations";
@@ -22,8 +26,14 @@ import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
 } from "@/components/ui/card";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -54,42 +64,6 @@ const citySchema = z.object({
 
 type CityForm = z.infer<typeof citySchema>;
 
-// ─── Sort types ───────────────────────────────────────────────────────────────
-
-type CitySortKey =
-  | keyof Pick<City, "name" | "sort_order" | "is_active" | "created_at">
-  | "state_name"
-  | "country_name";
-type SortDirection = "asc" | "desc";
-interface CitySortConfig { key: CitySortKey; direction: SortDirection }
-
-// ─── SortableHeader ───────────────────────────────────────────────────────────
-
-function SortableHeader<T extends string>({
-  children, sortKey, sortConfig, onSort,
-}: {
-  children: React.ReactNode;
-  sortKey: T;
-  sortConfig: { key: T; direction: SortDirection } | null;
-  onSort: (key: T) => void;
-}) {
-  const direction = sortConfig?.key === sortKey ? sortConfig.direction : null;
-  return (
-    <button
-      onClick={() => onSort(sortKey)}
-      className="flex items-center gap-1 text-left hover:text-foreground transition-colors font-medium"
-    >
-      {children}
-      {direction === "asc" ? (
-        <ArrowUp className="h-3.5 w-3.5" />
-      ) : direction === "desc" ? (
-        <ArrowDown className="h-3.5 w-3.5" />
-      ) : (
-        <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
-      )}
-    </button>
-  );
-}
 
 // ─── CSV helpers ──────────────────────────────────────────────────────────────
 
@@ -119,10 +93,10 @@ export function CitiesTab() {
   const [search, setSearch] = useState("");
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
   const [filterStateId, setFilterStateId] = useState<string>("all");
-  const [sortConfig, setSortConfig] = useState<CitySortConfig | null>(null);
+  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<City | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ label: string; onConfirm: () => void } | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(null);
   const [csvImporting, setCsvImporting] = useState(false);
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
@@ -161,38 +135,78 @@ export function CitiesTab() {
     city.country_id ?? city.state?.country_id ??
     allStates.find((s) => s.id === city.state_id)?.country_id ?? null;
 
-  const filteredAndSorted = useMemo(() => {
-    const q = search.toLowerCase();
-    let items = cities.filter((c) => {
-      const countryName = getCityCountryName(c);
-      const matchSearch =
-        c.name.toLowerCase().includes(q) ||
-        (c.state?.name ?? "").toLowerCase().includes(q) ||
-        countryName.toLowerCase().includes(q);
-      const cityCountryId = getCityCountryId(c);
-      const matchCountry = filterCountryId === "all" || cityCountryId === Number(filterCountryId);
-      const matchState = filterStateId === "all" || c.state_id === Number(filterStateId);
-      return matchSearch && matchCountry && matchState;
-    });
-    if (sortConfig) {
-      items = [...items].sort((a, b) => {
-        let av: string | number | boolean = "";
-        let bv: string | number | boolean = "";
-        if (sortConfig.key === "state_name") { av = a.state?.name ?? ""; bv = b.state?.name ?? ""; }
-        else if (sortConfig.key === "country_name") { av = getCityCountryName(a); bv = getCityCountryName(b); }
-        else {
-          const aAny = a as unknown as Record<string, unknown>;
-          const bAny = b as unknown as Record<string, unknown>;
-          const rawKey = sortConfig.key === "created_at" ? (aAny["createdAt"] ? "createdAt" : "created_at") : sortConfig.key;
-          av = (aAny[rawKey] as string | number | boolean) ?? "";
-          bv = (bAny[rawKey] as string | number | boolean) ?? "";
-        }
-        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-        return sortConfig.direction === "asc" ? cmp : -cmp;
+  const normalise = (item: City) => ({
+    ...item,
+    is_active: Boolean(item.is_active),
+    created_at: (item as any).createdAt ?? item.created_at ?? "",
+    state_name: item.state?.name ?? "–",
+    country_name: getCityCountryName(item),
+  });
+
+  const processedCities = useMemo(() => {
+    let items = cities.map(normalise);
+    if (search || filterCountryId !== "all" || filterStateId !== "all") {
+      const q = search.toLowerCase();
+      items = items.filter((c) => {
+        const countryName = c.country_name;
+        const matchSearch =
+          c.name.toLowerCase().includes(q) ||
+          c.state_name.toLowerCase().includes(q) ||
+          countryName.toLowerCase().includes(q);
+        const cityCountryId = getCityCountryId(c);
+        const matchCountry = filterCountryId === "all" || cityCountryId === Number(filterCountryId);
+        const matchState = filterStateId === "all" || c.state_id === Number(filterStateId);
+        return matchSearch && matchCountry && matchState;
       });
     }
     return items;
-  }, [cities, search, filterCountryId, filterStateId, sortConfig]);
+  }, [cities, search, filterCountryId, filterStateId]);
+
+  const handleSort = (column: string) => {
+    setSort((prev) => {
+      if (prev?.column !== column) return { column, direction: "asc" };
+      if (prev.direction === "asc") return { column, direction: "desc" };
+      return null;
+    });
+  };
+
+  const columns: CommonColumn<any>[] = [
+    {
+      key: "name",
+      header: t("common.name", "Name"),
+      sortable: true,
+      render: (row) => <span className="font-medium text-sm">{row.name}</span>,
+    },
+    {
+      key: "state_name",
+      header: t("locations.state", "State"),
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.state_name}</span>,
+    },
+    {
+      key: "country_name",
+      header: t("locations.country", "Country"),
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.country_name}</span>,
+    },
+    {
+      key: "sort_order",
+      header: t("locations.sort_order", "Order"),
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.sort_order}</span>,
+    },
+    {
+      key: "is_default",
+      header: t("locations.default", "Default"),
+      render: (row) => (
+        <Switch
+          checked={Boolean(row.is_default)}
+          onCheckedChange={(checked) => { if (checked) updateCity.mutate({ id: row.id, data: { is_default: true } }); }}
+          disabled={Boolean(row.is_default) || !row.is_active || updateCity.isPending}
+        />
+      ),
+    },
+  ];
 
   const closeDialog = () => {
     setDialogOpen(false); setEditItem(null); form.reset(); setSelectedCountryId(null);
@@ -328,76 +342,22 @@ export function CitiesTab() {
             </Select>
           </div>
 
-          <PageLoader open={isLoading} />
-          <div className="rounded-md border">
-            {!isLoading && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead><SortableHeader sortKey="name" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("common.name", "Name")}</SortableHeader></TableHead>
-                    <TableHead><SortableHeader sortKey="state_name" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("locations.state", "State")}</SortableHeader></TableHead>
-                    <TableHead><SortableHeader sortKey="country_name" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("locations.country", "Country")}</SortableHeader></TableHead>
-                    <TableHead><SortableHeader sortKey="sort_order" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("locations.sort_order", "Sort Order")}</SortableHeader></TableHead>
-                    <TableHead><SortableHeader sortKey="is_active" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("common.status", "Status")}</SortableHeader></TableHead>
-                    <TableHead>{t("locations.default", "Default")}</TableHead>
-                    <TableHead><SortableHeader sortKey="created_at" sortConfig={sortConfig} onSort={(k) => setSortConfig((p) => p?.key !== k ? { key: k, direction: "asc" } : p.direction === "asc" ? { key: k, direction: "desc" } : null)}>{t("common.date", "Created")}</SortableHeader></TableHead>
-                    <TableHead className="text-right">{t("common.actions", "Actions")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSorted.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                        {t("locations.no_districts_found", "No districts found")}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredAndSorted.map((city) => (
-                      <TableRow key={city.id}>
-                        <TableCell className="font-medium">{city.name}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{city.state?.name ?? "–"}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{getCityCountryName(city)}</TableCell>
-                        <TableCell>{city.sort_order}</TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={Boolean(city.is_active)}
-                            onCheckedChange={(checked) => updateCity.mutate({ id: city.id, data: { is_active: checked } })}
-                            disabled={updateCity.isPending}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Switch
-                            checked={Boolean(city.is_default)}
-                            onCheckedChange={(checked) => { if (checked) updateCity.mutate({ id: city.id, data: { is_default: true } }); }}
-                            disabled={Boolean(city.is_default) || !city.is_active || updateCity.isPending}
-                          />
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {(() => {
-                            const d = (city as unknown as { createdAt?: string }).createdAt ?? city.created_at;
-                            return d && !isNaN(new Date(d).getTime()) ? new Date(d).toLocaleDateString() : "–";
-                          })()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(city)}><Pencil className="h-4 w-4" /></Button>
-                            <Button variant="destructive-outline" size="icon" disabled={deleteCity.isPending}
-                              onClick={() => setDeleteConfirm({ label: `${t("common.delete", "Delete")} "${city.name}"?`, onConfirm: () => deleteCity.mutate(city.id) })}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </div>
+          <CommonTable
+            columns={columns}
+            data={processedCities as any}
+            isLoading={isLoading}
+            onSort={handleSort}
+            sortColumn={sort?.column}
+            sortDirection={sort?.direction}
+            onStatusToggle={(row, val) => updateCity.mutate({ id: row.id, data: { is_active: val } })}
+            onEdit={openEdit}
+            onDelete={(row) => setDeleteId(row.id)}
+            emptyMessage={t("locations.no_districts_found", "No districts found")}
+            showStatus
+            showCreated
+            showActions
+          />
 
-          <p className="text-sm text-muted-foreground mt-2">
-            {filteredAndSorted.length} {t("common.of", "of")} {cities.length} {t("locations.districts", "districts")}
-          </p>
         </CardContent>
       </Card>
 
@@ -509,15 +469,15 @@ export function CitiesTab() {
       </Dialog>
 
       {/* Delete Confirm */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("common.are_you_sure", "Are you sure?")}</AlertDialogTitle>
-            <AlertDialogDescription>{deleteConfirm?.label} {t("common.cannot_undo", "This action cannot be undone.")}</AlertDialogDescription>
+            <AlertDialogDescription>{t("common.delete_confirm", "Are you sure you want to delete this?")} {t("common.cannot_undo", "This action cannot be undone.")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { deleteConfirm?.onConfirm(); setDeleteConfirm(null); }}>{t("common.delete", "Delete")}</AlertDialogAction>
+            <AlertDialogAction onClick={() => { if (deleteId) deleteCity.mutate(deleteId); setDeleteId(null); }}>{t("common.delete", "Delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

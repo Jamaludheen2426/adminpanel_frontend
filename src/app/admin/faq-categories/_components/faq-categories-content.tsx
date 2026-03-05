@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Pencil, Trash2, List } from 'lucide-react';
 import {
     useFaqCategories,
@@ -14,7 +13,7 @@ import {
     FaqCategory
 } from '@/hooks/use-faq-categories';
 import { useTranslation } from '@/hooks/use-translation';
-import { DataTable } from '@/components/ui/data-table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,9 +37,19 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+// ─── normalise function for CommonTable ───────────────────────────────────────
+function normalise(item: FaqCategory): FaqCategory & { created_at: string; is_active: boolean } {
+    return {
+        ...item,
+        is_active: Boolean(item.is_active),
+        created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
+    };
+}
+
 export function FaqCategoriesContent() {
     const { t } = useTranslation();
-    const { data: categories = [], isLoading } = useFaqCategories();
+    const { data: rawCategories = [], isLoading } = useFaqCategories();
+    const categories = useMemo(() => rawCategories.map(normalise), [rawCategories]);
     const createCategory = useCreateFaqCategory();
     const updateCategory = useUpdateFaqCategory();
     const deleteCategory = useDeleteFaqCategory();
@@ -89,48 +98,23 @@ export function FaqCategoriesContent() {
         }
     };
 
-    const columns = useMemo<ColumnDef<FaqCategory>[]>(() => [
+    const columns: CommonColumn<FaqCategory>[] = [
         {
-            accessorKey: 'sort_order',
+            key: 'sort_order',
             header: t('faq.sort_order', 'Sort Order'),
-            cell: ({ row }) => <span className="text-muted-foreground">{row.original.sort_order}</span>,
+            render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('faq.category_name', 'Category Name'),
-            cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+            render: (row) => <span className="font-medium">{row.name}</span>,
         },
         {
-            accessorKey: 'description',
+            key: 'description',
             header: t('faq.description', 'Description'),
-            cell: ({ row }) => <span className="text-muted-foreground truncate max-w-xs block">{row.original.description || '—'}</span>,
+            render: (row) => <span className="text-muted-foreground truncate max-w-xs block">{row.description || '—'}</span>,
         },
-        {
-            accessorKey: 'is_active',
-            header: t('common.active', 'Active'),
-            cell: ({ row }) => (
-                <Switch
-                    checked={Boolean(row.original.is_active)}
-                    onCheckedChange={(checked) => updateCategory.mutate({ id: row.original.id, data: { is_active: checked } })}
-                    disabled={updateCategory.isPending}
-                />
-            ),
-        },
-        {
-            id: 'actions',
-            header: () => <div className="text-right">{t('common.actions', 'Actions')}</div>,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive-outline" size="icon" onClick={() => setDeleteId(row.original.id)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ], [t, updateCategory]);
+    ];
 
     const isPending = createCategory.isPending || updateCategory.isPending;
 
@@ -139,9 +123,14 @@ export function FaqCategoriesContent() {
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>
-                            <CardDescription>{t('faq.categories_desc', 'Manage categories for your FAQ section')}</CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <List className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>
+                                <CardDescription>{t('faq.categories_desc', 'Manage categories for your FAQ section')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -150,10 +139,23 @@ export function FaqCategoriesContent() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PageLoader open={isLoading} />
-                    {!isLoading && <DataTable columns={columns} data={categories} searchKey="name" />}
+                    <CommonTable
+                        columns={columns}
+                        data={categories as any}
+                        isLoading={isLoading}
+                        emptyMessage={t('faq.no_categories', 'No categories found.')}
+                        onStatusToggle={(row, val) =>
+                            updateCategory.mutate({ id: row.id, data: { is_active: val } })
+                        }
+                        onEdit={openEdit}
+                        onDelete={(row) => setDeleteId(row.id)}
+                        showStatus
+                        showCreated
+                        showActions
+                    />
                 </CardContent>
             </Card>
+
 
             <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
                 <DialogContent>

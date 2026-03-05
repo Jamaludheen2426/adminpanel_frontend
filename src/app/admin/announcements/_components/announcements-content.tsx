@@ -5,7 +5,6 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { ColumnDef } from '@tanstack/react-table';
 import {
     Plus, Pencil, Trash2, BellRing, CalendarIcon,
 } from 'lucide-react';
@@ -16,7 +15,7 @@ import {
 import { useTranslation } from '@/hooks/use-translation';
 import { isApprovalRequired } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { DataTable } from '@/components/ui/data-table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -136,12 +135,23 @@ function DateTimePicker({ value, onChange, placeholder }: {
 }
 
 
+// ─── normalise function for CommonTable ───────────────────────────────────────
+function normalise(item: Announcement): Announcement & { created_at: string; is_active: boolean } {
+    return {
+        ...item,
+        is_active: Boolean(item.is_active),
+        created_at: item.created_at ?? (item as any).createdAt ?? '',
+    };
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AnnouncementsContent() {
     const { t } = useTranslation();
 
-    const { data: announcements = [], isLoading } = useAnnouncements();
+    const { data: rawAnnouncements = [], isLoading } = useAnnouncements();
+    const announcements = useMemo(() => rawAnnouncements.map(normalise), [rawAnnouncements]);
+
     const createAnnouncement = useCreateAnnouncement();
     const updateAnnouncement = useUpdateAnnouncement();
     const deleteAnnouncement = useDeleteAnnouncement();
@@ -207,87 +217,57 @@ export function AnnouncementsContent() {
 
     const isPending = createAnnouncement.isPending || updateAnnouncement.isPending;
 
-    // ── TanStack column definitions ───────────────────────────────────────────
-    const columns = useMemo<ColumnDef<Announcement>[]>(() => [
+    // ── CommonTable column definitions ───────────────────────────────────────────
+    const columns: CommonColumn<Announcement>[] = [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('announcements.name', 'Name'),
-            enableSorting: true,
-            cell: ({ row }) => (
-                <span className="font-medium max-w-xs truncate block">{row.original.name}</span>
+            render: (row) => (
+                <span className="font-medium max-w-xs truncate block">{row.name}</span>
             ),
         },
         {
-            accessorKey: 'start_date',
+            key: 'start_date',
             header: t('announcements.start_date', 'Start Date'),
-            enableSorting: true,
-            cell: ({ row }) => (
+            render: (row) => (
                 <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    {fmtDate(row.original.start_date)}
+                    {fmtDate(row.start_date)}
                 </span>
             ),
         },
         {
-            accessorKey: 'end_date',
+            key: 'end_date',
             header: t('announcements.end_date', 'End Date'),
-            enableSorting: true,
-            cell: ({ row }) => (
+            render: (row) => (
                 <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    {fmtDate(row.original.end_date)}
+                    {fmtDate(row.end_date)}
                 </span>
             ),
         },
         {
-            accessorKey: 'has_action',
+            key: 'has_action',
             header: t('announcements.has_action', 'Has Action'),
-            enableSorting: false,
-            cell: ({ row }) => Boolean(row.original.has_action)
-                ? <Badge variant="outline">{row.original.action_label || t('announcements.cta', 'CTA')}</Badge>
+            render: (row) => Boolean(row.has_action)
+                ? <Badge variant="outline">{row.action_label || t('announcements.cta', 'CTA')}</Badge>
                 : <span className="text-muted-foreground">—</span>,
         },
-        {
-            accessorKey: 'is_active',
-            header: t('locations.is_active', 'Active'),
-            enableSorting: false,
-            cell: ({ row }) => (
-                <Switch
-                    checked={Boolean(row.original.is_active)}
-                    onCheckedChange={(checked) => updateAnnouncement.mutate({ id: row.original.id, data: { is_active: checked } })}
-                    disabled={updateAnnouncement.isPending}
-                />
-            ),
-        },
-        {
-            id: 'actions',
-            header: () => <div className="text-right">{t('common.actions', 'Actions')}</div>,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive-outline" size="icon" disabled={deleteAnnouncement.isPending}
-                        onClick={() => setDeleteConfirm({
-                            label: `${t('common.delete', 'Delete')} "${row.original.name}"?`,
-                            onConfirm: () => deleteAnnouncement.mutate(row.original.id),
-                        })}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    ], [updateAnnouncement.isPending, deleteAnnouncement.isPending]);
+    ];
 
     return (
         <>
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-3">
-                        <div>
-                            <CardTitle>{t('announcements.title', 'Announcements')}</CardTitle>
-                            <CardDescription>{t('announcements.desc', 'Manage site-wide announcements shown to users')}</CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <BellRing className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('announcements.title', 'Announcements')}</CardTitle>
+                                <CardDescription>{t('announcements.desc', 'Manage site-wide announcements shown to users')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -297,16 +277,26 @@ export function AnnouncementsContent() {
                 </CardHeader>
 
                 <CardContent>
-                    <PageLoader open={isLoading} />
-                    {!isLoading && (
-                        <DataTable
-                            columns={columns}
-                            data={announcements}
-                            searchKey="name"
-                        />
-                    )}
+                    <CommonTable
+                        columns={columns}
+                        data={announcements as any}
+                        isLoading={isLoading}
+                        emptyMessage={t('announcements.empty', 'No announcements found.')}
+                        onStatusToggle={(row, val) =>
+                            updateAnnouncement.mutate({ id: row.id, data: { is_active: val } })
+                        }
+                        onEdit={openEdit}
+                        onDelete={(row) => setDeleteConfirm({
+                            label: `${t('common.delete', 'Delete')} "${row.name}"?`,
+                            onConfirm: () => deleteAnnouncement.mutate(row.id),
+                        })}
+                        showStatus
+                        showCreated
+                        showActions
+                    />
                 </CardContent>
             </Card>
+
 
             {/* ── Add / Edit Dialog ── */}
             <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); }}>

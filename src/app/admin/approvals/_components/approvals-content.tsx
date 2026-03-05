@@ -13,20 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { ApprovalBadge } from '@/components/admin/approvals/approval-badge';
 import { ApprovalDetailDialog } from '@/components/admin/approvals/approval-detail-dialog';
 import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { PageLoader } from '@/components/common/page-loader';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 
 export function ApprovalsContent() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -43,8 +36,8 @@ export function ApprovalsContent() {
         ? statusFilter === 'pending'
           ? 2
           : statusFilter === 'approved'
-          ? 1
-          : 0
+            ? 1
+            : 0
         : undefined,
     module_slug: moduleFilter !== 'all' ? moduleFilter : undefined,
     page: currentPage,
@@ -62,6 +55,38 @@ export function ApprovalsContent() {
     setDialogOpen(false);
     setSelectedId(null);
   };
+
+  const columns: CommonColumn<ApprovalRequest>[] = [
+    {
+      key: 'requester',
+      header: 'Requester',
+      render: (row) => (
+        <div>
+          <div className="font-medium text-foreground">{row.requester?.full_name}</div>
+          <div className="text-xs text-muted-foreground">{row.requester?.email}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'module_slug',
+      header: 'Module',
+      render: (row) => (
+        <span className="capitalize text-muted-foreground">
+          {row.module_slug.replace('_', ' ')}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      render: (row) => <span className="capitalize text-muted-foreground">{row.action}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (row) => <ApprovalBadge status={row.is_active} />,
+    },
+  ];
 
   return (
     <PermissionGuard minLevel={100}>
@@ -142,108 +167,47 @@ export function ApprovalsContent() {
 
           <CardContent>
 
-            {!isLoading && data?.data.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No approval requests found
+            {!isLoading && (
+              <CommonTable
+                columns={columns}
+                data={data?.data || []}
+                isLoading={isLoading}
+                emptyMessage="No approval requests found"
+                showStatus={false}
+                showCreated={true}
+                showActions={true}
+                onEdit={(row) => handleViewDetails(row.id)}
+              />
+            )}
+
+            {data && data.pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Page {data.pagination.page} of {data.pagination.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={!data.pagination.hasPrevPage}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => p + 1)}
+                    disabled={!data.pagination.hasNextPage}
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
-
-            {!isLoading && data?.data.length !== 0 && (
-              <>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Requester</TableHead>
-                        <TableHead>Module</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Requested</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                      {data?.data.map((approval: ApprovalRequest) => (
-                        <TableRow key={approval.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{approval.requester?.full_name}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {approval.requester?.email}
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          <TableCell>
-                            <span className="capitalize">
-                              {approval.module_slug.replace('_', ' ')}
-                            </span>
-                          </TableCell>
-
-                          <TableCell>
-                            <span className="capitalize">{approval.action}</span>
-                          </TableCell>
-
-                          <TableCell>
-                            <ApprovalBadge status={approval.is_active} />
-                          </TableCell>
-
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(
-                                approval.createdAt || approval.created_at
-                              ).toLocaleDateString()}
-                            </span>
-                          </TableCell>
-
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(approval.id)}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {data && data.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-muted-foreground">
-                      Page {data.pagination.page} of {data.pagination.totalPages}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={!data.pagination.hasPrevPage}
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        Previous
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => p + 1)}
-                        disabled={!data.pagination.hasNextPage}
-                      >
-                        Next
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
           </CardContent>
         </Card>
 

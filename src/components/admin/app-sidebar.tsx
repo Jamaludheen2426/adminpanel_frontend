@@ -57,6 +57,7 @@ import { useSettingsByGroup } from "@/hooks/use-settings";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
 import { usePendingCount } from "@/hooks/use-approvals";
+import { useUnreadContactsCount } from "@/hooks/use-contacts";
 import { usePermissionCheck } from "@/hooks";
 import { Badge } from "@/components/ui/badge";
 import { PageLoader } from "@/components/common/page-loader";
@@ -119,9 +120,18 @@ const menuItems: MenuItem[] = [
   },
   {
     labelKey: "nav.ads",
-    href: "/admin/ads",
     icon: Megaphone,
     permission: "ads.view",
+    children: [
+      { labelKey: "nav.ads", href: "/admin/ads", icon: Megaphone, permission: "ads.view" },
+      { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "banners.view" },
+    ],
+  },
+  {
+    labelKey: "nav.simple_sliders",
+    href: "/admin/simple-sliders",
+    icon: Image,
+    permission: "simpleSliders.view",
   },
   {
     labelKey: "nav.announcements",
@@ -152,7 +162,7 @@ const menuItems: MenuItem[] = [
   },
   {
     labelKey: "nav.contact",
-    href: "/admin/contact",
+    href: "/admin/contacts",
     icon: Phone,
     permission: "contact.view",
   },
@@ -244,6 +254,7 @@ export function AppSidebar() {
   const { user } = useAuth();
   const { data: settings } = useSettingsByGroup("appearance");
   const { data: pendingCount } = usePendingCount();
+  const { data: unreadContactsCount = 0 } = useUnreadContactsCount();
 
   const adminTitle =
     settings?.find((s) => s.key === "admin_title")?.value || "Admin Panel";
@@ -397,6 +408,14 @@ export function AppSidebar() {
                               className="ml-auto h-5 min-w-5 px-1 flex items-center justify-center text-[10px]"
                             >
                               {pendingCount > 99 ? '99+' : pendingCount}
+                            </Badge>
+                          )}
+                          {item.labelKey === "nav.contact" && unreadContactsCount > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="ml-auto h-5 min-w-5 px-1 flex items-center justify-center text-[10px]"
+                            >
+                              {unreadContactsCount > 99 ? '99+' : unreadContactsCount}
                             </Badge>
                           )}
                         </Link>

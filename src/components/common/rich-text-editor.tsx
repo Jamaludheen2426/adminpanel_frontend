@@ -55,9 +55,14 @@ interface RichTextEditorProps {
     variant?: 'full' | 'compact' | 'basic';
     toolbar?: any[];
     disableVisual?: boolean;
+    customButtons?: React.ReactNode;
 }
 
-export function RichTextEditor({
+export interface RichTextEditorRef {
+    insertTextAtCursor: (text: string) => void;
+}
+
+export const RichTextEditor = React.forwardRef<RichTextEditorRef, RichTextEditorProps>(({
     value = "",
     onChange,
     placeholder = "Type here...",
@@ -65,7 +70,8 @@ export function RichTextEditor({
     variant = 'full',
     toolbar,
     disableVisual = false,
-}: RichTextEditorProps) {
+    customButtons,
+}, ref) => {
     const [isSourceMode, setIsSourceMode] = useState(disableVisual);
     const [isUploading, setIsUploading] = useState(false);
     const quillRef = useRef<any>(null);
@@ -83,6 +89,39 @@ export function RichTextEditor({
         'list', 'indent', 'script', 'align', 'direction',
         'link', 'image', 'video', 'color', 'background', 'code-block'
     ];
+
+    React.useImperativeHandle(ref, () => ({
+        insertTextAtCursor: (text: string) => {
+            if (!isSourceMode && quillRef.current) {
+                const quill = quillRef.current.getEditor();
+                quill.focus();
+                let range = quill.getSelection();
+                if (!range) {
+                    range = { index: quill.getLength(), length: 0 };
+                }
+                // Quill's insertText works well here
+                quill.insertText(range.index, text);
+                quill.setSelection(range.index + text.length);
+            } else {
+                const textarea = document.getElementById('rich-text-source-area') as HTMLTextAreaElement;
+                if (textarea) {
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const currentValue = textarea.value;
+                    const before = currentValue.substring(0, start);
+                    const after = currentValue.substring(end, currentValue.length);
+                    onChange(before + text + after);
+                    
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(start + text.length, start + text.length);
+                    }, 0);
+                } else {
+                    onChange(value + text);
+                }
+            }
+        }
+    }));
 
     const toggleSource = () => {
         setIsSourceMode(!isSourceMode);
@@ -157,7 +196,7 @@ export function RichTextEditor({
 
     return (
         <div className={`rich-text-editor-wrapper ${className || ""}`}>
-            <div className="flex gap-2 mb-2">
+            <div className="flex gap-2 mb-2 items-center flex-wrap">
                 <Button
                     type="button"
                     variant="outline"
@@ -185,6 +224,7 @@ export function RichTextEditor({
                     )}
                     {isUploading ? "Uploading..." : "Add media"}
                 </Button>
+                {customButtons}
             </div>
 
             <div className={isSourceMode ? "hidden" : "block"}>
@@ -267,5 +307,6 @@ export function RichTextEditor({
             `}</style>
         </div>
     );
-}
+});
 
+RichTextEditor.displayName = 'RichTextEditor';

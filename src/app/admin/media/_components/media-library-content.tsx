@@ -33,8 +33,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import ReactCrop, { type Crop, type PixelCrop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import { MediaCropDialog } from '@/components/common/media-crop-dialog';
 import { PageLoader } from '@/components/common/page-loader';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -197,9 +196,6 @@ export function MediaLibraryContent() {
     const [newFolderOpen, setNewFolderOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
     const [cropTarget, setCropTarget] = useState<MediaFile | null>(null);
-    const [crop, setCrop] = useState<Crop>({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
-    const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
     const [renameTarget, setRenameTarget] = useState<MediaFile | MediaFolder | null>(null);
     const [renameName, setRenameName] = useState('');
     const [moveTarget, setMoveTarget] = useState<MediaFile | MediaFolder | null>(null);
@@ -695,24 +691,24 @@ export function MediaLibraryContent() {
 
                 {/* ── Preview Dialog ── */}
                 <Dialog open={!!preview} onOpenChange={o => !o && setPreview(null)}>
-                    <DialogContent className="max-w-3xl">
-                        <DialogHeader>
-                            <DialogTitle className="truncate">{preview?.name}</DialogTitle>
-                            <DialogDescription className="flex gap-3 text-xs">
+                    <DialogContent className="max-w-3xl gap-0 p-0 overflow-hidden">
+                        <DialogHeader className="px-6 py-4 border-b">
+                            <DialogTitle className="truncate text-sm font-medium pr-6">{preview?.name}</DialogTitle>
+                            <DialogDescription className="flex gap-3 text-xs mt-0.5">
                                 <span>{formatBytes(preview?.size ?? 0)}</span>
                                 <span>{preview?.mimetype}</span>
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="flex-1 min-h-[300px] flex items-center justify-center bg-black/5 rounded-md overflow-hidden p-2">
+                        <div className="h-[55vh] flex items-center justify-center bg-muted/40 overflow-hidden">
                             {preview && getFileType(preview.mimetype) === 'image' ? (
                                 <img
                                     key={globalRefreshKey}
                                     src={getImageUrl(preview, globalRefreshKey, cropPreviews[preview?.path ?? ''])}
                                     alt={preview.name}
-                                    className="max-w-full max-h-[70vh] object-contain shadow-lg"
+                                    className="max-w-full max-h-full object-contain"
                                 />
                             ) : preview && getFileType(preview.mimetype) === 'video' ? (
-                                <video src={preview.url} controls className="max-h-[60vh] w-full" />
+                                <video src={preview.url} controls className="max-h-full w-full" />
                             ) : (
                                 <div className="p-12 text-center text-muted-foreground">
                                     <FileIcon mime={preview?.mimetype ?? ''} className="h-16 w-16 mx-auto mb-2" />
@@ -720,16 +716,16 @@ export function MediaLibraryContent() {
                                 </div>
                             )}
                         </div>
-                        <DialogFooter className="gap-2">
-                            <Button variant="outline" onClick={() => preview && copyLink(preview.url)}>
+                        <DialogFooter className="gap-2 px-6 py-4 border-t">
+                            <Button variant="outline" size="sm" onClick={() => preview && copyLink(preview.url)}>
                                 <Copy className="mr-2 h-4 w-4" /> Copy Link
                             </Button>
-                            <Button asChild variant="outline">
+                            <Button asChild variant="outline" size="sm">
                                 <a href={preview?.url} target="_blank" rel="noreferrer" download>
                                     <Download className="mr-2 h-4 w-4" /> Download
                                 </a>
                             </Button>
-                            <Button variant="destructive" onClick={() => { setDeleteTarget(preview); setPreview(null); }}>
+                            <Button variant="destructive" size="sm" onClick={() => { setDeleteTarget(preview); setPreview(null); }}>
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </Button>
                         </DialogFooter>
@@ -834,127 +830,31 @@ export function MediaLibraryContent() {
                     </DialogContent>
                 </Dialog>
 
-                {/* Crop Dialog */}
-                <Dialog open={!!cropTarget} onOpenChange={(open) => {
-                    if (!open) {
-                        setCropTarget(null);
-                        setCompletedCrop(null);
-                    } else {
-                        // Reset to default crop on open
-                        setCrop({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
-                    }
-                }}>
-                    <DialogContent className="max-w-3xl overflow-hidden p-6">
-                        <DialogHeader>
-                            <DialogTitle>{t('common.crop', 'Crop')} {cropTarget?.name}</DialogTitle>
-                            <DialogDescription>{t('media.crop_desc', 'Adjust boundaries to crop the image.')}</DialogDescription>
-                        </DialogHeader>
-                        <div className="text-center max-h-[80vh] overflow-auto bg-black/5 rounded-md border p-2">
-                            {cropTarget && (
-                                <ReactCrop className="inline-block" crop={crop} onChange={(_, percentCrop) => setCrop(percentCrop)} onComplete={(c) => setCompletedCrop(c)}>
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                        key={globalRefreshKey}
-                                        src={getImageUrl(cropTarget, globalRefreshKey)}
-                                        ref={imgRef}
-                                        alt="Crop preview"
-                                        crossOrigin="anonymous"
-                                        style={{ maxHeight: '75vh', maxWidth: '100%', width: 'auto' }}
-                                    />
-                                </ReactCrop>
-                            )}
-                        </div>
-                        <DialogFooter>
-                            <Button variant="outline" onClick={() => setCropTarget(null)}>
-                                {t('common.cancel', 'Cancel')}
-                            </Button>
-                            <Button onClick={async () => {
-                                if (!cropTarget || !imgRef.current) return;
-
-                                const image = imgRef.current;
-                                const nW = image.naturalWidth;
-                                const nH = image.naturalHeight;
-
-                                // PURE PERCENTAGE MATH (Resolution Independent)
-                                // We use the current 'crop' state which is always normalized 0-100%
-                                if (!crop.width || !crop.height) {
-                                    toast.error(t('media.crop_error_select', 'Please select an area to crop'));
-                                    return;
-                                }
-
-                                const sx = (crop.x * nW) / 100;
-                                const sy = (crop.y * nH) / 100;
-                                const sw = (crop.width * nW) / 100;
-                                const sh = (crop.height * nH) / 100;
-
-                                console.log('[CROP_DEBUG]', {
-                                    resolution: `${nW}x${nH}`,
-                                    percent: crop,
-                                    pixels: { sx, sy, sw, sh }
-                                });
-
-                                const canvas = document.createElement('canvas');
-                                const ctx = canvas.getContext('2d');
-                                if (!ctx) return;
-
-                                canvas.width = Math.round(sw);
-                                canvas.height = Math.round(sh);
-                                ctx.imageSmoothingQuality = 'high';
-
-                                ctx.drawImage(
-                                    image,
-                                    sx, sy, sw, sh,     // Source (Absolute natural pixels)
-                                    0, 0, Math.round(sw), Math.round(sh) // Destination
-                                );
-
-                                canvas.toBlob((blob) => {
-                                    if (!blob) {
-                                        toast.error(t('media.crop_error', 'Failed to crop image'));
-                                        return;
-                                    }
-
-                                    console.log('[CROP_BLOB_DEBUG]', {
-                                        size: `${(blob.size / 1024).toFixed(2)} KB`,
-                                        type: blob.type
-                                    });
-
-                                    const file = new window.File([blob], cropTarget.name, { type: cropTarget.mimetype });
-                                    const croppedPath = cropTarget.path;
-
-                                    // Convert blob → data URL (base64 string) so we can store it in
-                                    // React Query cache permanently — no revocation needed, no memory-leak
-                                    // risk, and no premature re-fetch that would pull the still-cached
-                                    // old image from CloudFront.
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                        const dataUrl = reader.result as string;
-
-                                        uploadMutation.mutate({ file, folder, path: croppedPath }, {
-                                            onSuccess: () => {
-                                                // Store the data URL in component state keyed by path.
-                                                // getImageUrl() checks cropPreviews[f.path] first, so
-                                                // the cropped image displays instantly for all img tags
-                                                // without touching the React Query cache or the real URL.
-                                                // CDN propagation happens in the background; the preview
-                                                // stays until the user navigates away or refreshes.
-                                                setCropPreviews(prev => ({ ...prev, [croppedPath]: dataUrl }));
-                                                incrementUpdate();
-                                                toast.success(t('media.crop_success', 'Image cropped and replaced successfully'));
-                                                setCropTarget(null);
-                                            },
-                                            onError: () => {
-                                                toast.error(t('media.crop_upload_error', 'Failed to upload cropped image'));
-                                            },
-                                        });
-                                    };
-                                    reader.readAsDataURL(blob);
-                                }, cropTarget.mimetype, 0.98); // High quality
-                            }} disabled={uploadMutation.isPending}>
-                                {uploadMutation.isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                {/* ── Crop Dialog (common MediaCropDialog) ── */}
+                {cropTarget && (
+                    <MediaCropDialog
+                        open={!!cropTarget}
+                        imageUrl={getImageUrl(cropTarget, globalRefreshKey)}
+                        fileName={cropTarget.name}
+                        mimeType={cropTarget.mimetype}
+                        isSaving={uploadMutation.isPending}
+                        onClose={() => setCropTarget(null)}
+                        onCropped={(file, dataUrl) => {
+                            const croppedPath = cropTarget.path;
+                            uploadMutation.mutate({ file, folder, path: croppedPath }, {
+                                onSuccess: () => {
+                                    setCropPreviews(prev => ({ ...prev, [croppedPath]: dataUrl }));
+                                    incrementUpdate();
+                                    toast.success(t('media.crop_success', 'Image cropped and replaced successfully'));
+                                    setCropTarget(null);
+                                },
+                                onError: () => {
+                                    toast.error(t('media.crop_upload_error', 'Failed to upload cropped image'));
+                                },
+                            });
+                        }}
+                    />
+                )}
             </div>
         </TooltipProvider>
     );

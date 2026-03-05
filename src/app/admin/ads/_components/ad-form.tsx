@@ -28,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from '@/hooks/use-translation';
 import { Ad } from '@/hooks/use-ads';
+import { useAdBanners } from '@/hooks/use-ad-banners';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ImageCropper } from '@/components/common/image-cropper';
 import { apiClient } from '@/lib/api-client';
@@ -50,7 +51,10 @@ const adSchema = z.object({
     mobile_image: z.string().nullable(),
     google_adsense_slot_id: z.string().nullable(),
     location: z.string().min(1, 'Location is required'),
-    expired_at: z.string().nullable(),
+    banner_id: z.coerce.number().nullable().optional(),
+    started_at: z.string().nullable().optional(),
+    expired_at: z.string().nullable().optional(),
+    is_scheduled: z.coerce.number().default(0),
     is_active: z.coerce.number().default(1),
 });
 
@@ -68,6 +72,10 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
     const { t } = useTranslation();
     const [uploadingField, setUploadingField] = useState<string | null>(null);
     const [cropperKeys, setCropperKeys] = useState({ image: 0, tablet_image: 0, mobile_image: 0 });
+    const [neverExpires, setNeverExpires] = useState(false);
+
+    const { data: bannersRes } = useAdBanners({ limit: 100 });
+    const banners = bannersRes?.data || [];
 
     const form = useForm<AdFormValues>({
         resolver: zodResolver(adSchema),
@@ -86,7 +94,10 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
             mobile_image: '',
             google_adsense_slot_id: '',
             location: '',
+            banner_id: undefined,
+            started_at: '',
             expired_at: '',
+            is_scheduled: 0,
             is_active: 1,
         },
     });
@@ -105,8 +116,13 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                 tablet_image: ad.tablet_image || '',
                 mobile_image: ad.mobile_image || '',
                 google_adsense_slot_id: ad.google_adsense_slot_id || '',
+                banner_id: ad.banner_id || undefined,
+                started_at: ad.started_at ? new Date(ad.started_at).toISOString().split('T')[0] : '',
                 expired_at: ad.expired_at ? new Date(ad.expired_at).toISOString().split('T')[0] : '', // Format Date to YYYY-MM-DD for simple input[type=date]
+                is_scheduled: ad.is_scheduled ? 1 : 0,
+                is_active: ad.is_active ? 1 : 0,
             });
+            setNeverExpires(ad.is_scheduled === 0);
         } else {
             form.reset({
                 name: '',
@@ -123,13 +139,31 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                 mobile_image: '',
                 google_adsense_slot_id: '',
                 location: '',
+                started_at: '',
                 expired_at: '',
+                is_scheduled: 0,
                 is_active: 1,
             });
+            setNeverExpires(true);
         }
     }, [ad, form, open]);
 
     const onSubmit = (data: AdFormValues) => {
+        if (!neverExpires && !data.started_at && !data.expired_at) {
+            toast.error(t('ads.schedule_required_error', 'Please provide a Start Date or End Date when scheduling is enabled.'));
+            form.setError('started_at', { type: 'manual', message: 'Required if End Date is empty.' });
+            form.setError('expired_at', { type: 'manual', message: 'Required if Start Date is empty.' });
+            return;
+        }
+
+        if (!neverExpires && data.started_at && data.expired_at) {
+            if (new Date(data.started_at) > new Date(data.expired_at)) {
+                toast.error(t('ads.schedule_order_error', 'End Date must be after Start Date.'));
+                form.setError('expired_at', { type: 'manual', message: 'Must be after Start Date.' });
+                return;
+            }
+        }
+
         // cleanup empty strings to null for DB consistency
         const cleanData = {
             ...data,
@@ -141,9 +175,27 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
             tablet_image: data.tablet_image || null,
             mobile_image: data.mobile_image || null,
             google_adsense_slot_id: data.google_adsense_slot_id || null,
-            expired_at: data.expired_at || null,
+            banner_id: data.banner_id || null,
+            is_scheduled: neverExpires ? 0 : 1,
+            started_at: neverExpires ? null : (data.started_at || null),
+            expired_at: neverExpires ? null : (data.expired_at || null),
         };
         onSave(cleanData);
+    };
+
+    const selectedBannerId = form.watch('banner_id');
+    const selectedBanner = banners.find((b: any) => b.id === Number(selectedBannerId));
+
+    const getTargetDims = (field: 'image' | 'tablet_image' | 'mobile_image') => {
+        if (!selectedBanner) {
+            return {
+                w: field === 'image' ? 1200 : (field === 'tablet_image' ? 768 : 480),
+                h: field === 'image' ? 400 : (field === 'tablet_image' ? 400 : 300)
+            };
+        }
+        if (field === 'image') return { w: selectedBanner.desktop_width, h: selectedBanner.desktop_height };
+        if (field === 'tablet_image') return { w: selectedBanner.tablet_width, h: selectedBanner.tablet_height };
+        return { w: selectedBanner.mobile_width, h: selectedBanner.mobile_height };
     };
 
     const handleImageUpload = async (file: File, fieldName: 'image' | 'tablet_image' | 'mobile_image') => {
@@ -179,9 +231,9 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                                 <ImageCropper
                                     key={cropperKeys[fieldName]}
                                     title={label}
-                                    description={fieldName === 'image' ? 'e.g. 1200x400' : 'Recommended smaller size'}
-                                    targetWidth={fieldName === 'image' ? 1200 : fieldName === 'tablet_image' ? 768 : 480}
-                                    targetHeight={fieldName === 'image' ? 400 : fieldName === 'tablet_image' ? 400 : 300}
+                                    description={fieldName === 'image' ? `e.g. ${getTargetDims('image').w}x${getTargetDims('image').h}` : 'Recommended smaller size'}
+                                    targetWidth={getTargetDims(fieldName).w}
+                                    targetHeight={getTargetDims(fieldName).h}
                                     currentImage={field.value || ''}
                                     onImageCropped={(file) => handleImageUpload(file, fieldName)}
                                     onRemove={() => {
@@ -255,6 +307,31 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                                             <Input placeholder={t('ads.location_placeholder', 'e.g. top_banner, sidebar')} {...field} />
                                         </FormControl>
                                         <FormDescription>Physical placement reference in the frontend.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="banner_id"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>{t('nav.ad_banners', 'Ad Banner Template')}</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value?.toString()}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a banner template" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="none">None (Free-form image sizes)</SelectItem>
+                                                {banners.map((b: any) => (
+                                                    <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormDescription>Binds the image cropper to specific dimensions.</FormDescription>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -363,32 +440,72 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 border-t pt-4">
-                                        {renderImagePicker('image', t('ads.image_desktop', 'Desktop Image (Required)') || '')}
-                                        {renderImagePicker('tablet_image', t('ads.image_tablet', 'Tablet Image (Optional)') || '')}
-                                        {renderImagePicker('mobile_image', t('ads.image_mobile', 'Mobile Image (Optional)') || '')}
+                                        {(!selectedBanner || (Array.isArray(selectedBanner.type) && selectedBanner.type.includes('desktop')) || selectedBanner.type === 'desktop' || selectedBanner.type === 'all') &&
+                                            renderImagePicker('image', t('ads.image_desktop', 'Desktop Image (Required)') || '')}
+                                        {(!selectedBanner || (Array.isArray(selectedBanner.type) && selectedBanner.type.includes('tablet')) || selectedBanner.type === 'tablet' || selectedBanner.type === 'all') &&
+                                            renderImagePicker('tablet_image', t('ads.image_tablet', 'Tablet Image (Optional)') || '')}
+                                        {(!selectedBanner || (Array.isArray(selectedBanner.type) && selectedBanner.type.includes('mobile')) || selectedBanner.type === 'mobile' || selectedBanner.type === 'all') &&
+                                            renderImagePicker('mobile_image', t('ads.image_mobile', 'Mobile Image (Optional)') || '')}
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* --- Settings --- */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="expired_at"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>{t('ads.expired_at', 'Expired At')}</FormLabel>
-                                        <FormControl>
-                                            {/* @ts-ignore */}
-                                            <Input type="date" {...field} value={field.value || ''} />
-                                        </FormControl>
-                                        <FormDescription>Leave blank if it never expires.</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                        <div className="bg-muted/30 p-4 rounded-lg space-y-4">
+                            <div className="flex items-center justify-between border-b pb-4">
+                                <h3 className="text-sm font-medium">{t('ads.schedule', 'Ad Schedule')}</h3>
+                                <div className="flex items-center space-x-2">
+                                    <Switch
+                                        id="never-expires"
+                                        checked={neverExpires}
+                                        onCheckedChange={(checked) => {
+                                            setNeverExpires(checked);
+                                        }}
+                                    />
+                                    <label htmlFor="never-expires" className="text-xs font-medium leading-none cursor-pointer">
+                                        {t('ads.never_expires', 'Never expires')}
+                                    </label>
+                                </div>
+                            </div>
 
+                            {!neverExpires && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="started_at"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('ads.started_at', 'Start Date')}</FormLabel>
+                                                <FormControl>
+                                                    {/* @ts-ignore */}
+                                                    <Input type="date" {...field} value={field.value || ''} />
+                                                </FormControl>
+                                                <FormDescription>Leave blank to start immediately.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="expired_at"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>{t('ads.expired_at', 'End Date')}</FormLabel>
+                                                <FormControl>
+                                                    {/* @ts-ignore */}
+                                                    <Input type="date" {...field} value={field.value || ''} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* --- Settings --- */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
                                 name="sort_order"
@@ -437,6 +554,6 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
 }

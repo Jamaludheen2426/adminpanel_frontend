@@ -148,9 +148,18 @@ queryKeys.settings.group('general')
 | Approvals | `/admin/approvals` | `use-approvals.ts` |
 | Plugins | `/admin/plugins` | `use-plugins.ts` |
 | Payments | `/admin/payments` | `use-payments.ts` |
-| Ads | `/admin/ads` | `use-ads.ts` (if exists) |
+| Ads | `/admin/ads` | `use-ads.ts` |
+| Ad Banners | `/admin/banners` | `use-ad-banners.ts` |
 | Translations | `/admin/settings/translations` | `use-translations.ts` |
 | Email | `/admin/settings/email` | `use-email-configs.ts` |
+| Contact | `/admin/contacts` | `use-contacts.ts` |
+
+## Contact Module Design
+- **Flow:** User submits public contact form → Admin reads → Admin sends ONE reply email → Done
+- **Single reply only:** Admin can reply once per contact. After reply is sent, the reply form is hidden and the sent reply is displayed.
+- **Status:** `unread` (new) → `read` (admin replied or manually marked)
+- **Reply:** Uses `RichEditor` (WYSIWYG). Sends via selected email config (`sendDirect`, no template). Marks contact as `read` after sending.
+- **No conversation threading** — no inbound/outbound reply chain.
 
 ## Approval Workflow
 - Some mutations return HTTP 202 with `approval_required: true`
@@ -176,7 +185,14 @@ queryKeys.settings.group('general')
 - Backend images served via `/uploads/*` (rewritten to backend in `next.config.ts`)
 - Image proxy API route: `/api/proxy-image`
 - Upload via `useUploadMedia()` or form with `multipart/form-data`
-- Crop component: `ImageCropper` from `@/components/common/image-cropper.tsx`
+- **Crop (upload-time):** `ImageCropper` from `@/components/common/image-cropper.tsx`
+  - For new file uploads (file input → crop → `onImageCropped(file)` callback)
+  - Fixed aspect ratio, 90×90 preview thumbnail, zoom + reset
+  - Used in: Blog, Ads, Blog Categories, Settings branding, Testimonials, Install wizard
+- **Crop (existing file):** `MediaCropDialog` from `@/components/common/media-crop-dialog.tsx`
+  - For cropping server-side image URLs (URL → crop → `onCropped(file, dataUrl)` callback)
+  - Free-form aspect ratio, returns cropped `File` + data URL for immediate local preview
+  - Used in: Media Library module (replaces original file on save)
 
 ## Dark Mode
 - Provider: `next-themes` with class strategy

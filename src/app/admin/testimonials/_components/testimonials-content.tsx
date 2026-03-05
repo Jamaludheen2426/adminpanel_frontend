@@ -4,11 +4,10 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ColumnDef } from '@tanstack/react-table';
 import { Plus, Pencil, Trash2, User, Building } from 'lucide-react';
 import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial, Testimonial } from '@/hooks/use-testimonials';
 import { useTranslation } from '@/hooks/use-translation';
-import { DataTable } from '@/components/ui/data-table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,9 +38,19 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+// ─── normalise function for CommonTable ───────────────────────────────────────
+function normalise(item: Testimonial): Testimonial & { created_at: string; is_active: boolean } {
+    return {
+        ...item,
+        is_active: Boolean(item.is_active),
+        created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
+    };
+}
+
 export function TestimonialsContent() {
     const { t } = useTranslation();
-    const { data: testimonials = [], isLoading } = useTestimonials();
+    const { data: rawTestimonials = [], isLoading } = useTestimonials();
+    const testimonials = useMemo(() => rawTestimonials.map(normalise), [rawTestimonials]);
     const createTestimonial = useCreateTestimonial();
     const updateTestimonial = useUpdateTestimonial();
     const deleteTestimonial = useDeleteTestimonial();
@@ -136,60 +145,35 @@ export function TestimonialsContent() {
         }
     };
 
-    const columns = useMemo<ColumnDef<Testimonial>[]>(() => [
+    const columns: CommonColumn<Testimonial>[] = [
         {
-            accessorKey: 'sort_order',
+            key: 'sort_order',
             header: t('common.sort_order', 'Order'),
-            cell: ({ row }) => <span className="text-muted-foreground">{row.original.sort_order}</span>,
+            render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
-            accessorKey: 'image',
+            key: 'image',
             header: t('common.image', 'Image'),
-            cell: ({ row }) => (
+            render: (row) => (
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={resolveMediaUrl(row.original.image)} />
+                    <AvatarImage src={resolveMediaUrl(row.image || '')} />
                     <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                 </Avatar>
             ),
         },
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('common.name', 'Name'),
-            cell: ({ row }) => (
+            render: (row) => (
                 <div className="flex flex-col">
-                    <span className="font-medium">{row.original.name}</span>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Building className="h-3 w-3" /> {row.original.designation}
+                    <span className="font-medium text-foreground">{row.name}</span>
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                        <Building className="h-3 w-3" /> {row.designation}
                     </span>
                 </div>
             ),
         },
-        {
-            accessorKey: 'is_active',
-            header: t('common.active', 'Active'),
-            cell: ({ row }) => (
-                <Switch
-                    checked={Boolean(row.original.is_active)}
-                    onCheckedChange={(checked) => updateTestimonial.mutate({ id: row.original.id, data: { is_active: checked } })}
-                    disabled={updateTestimonial.isPending}
-                />
-            ),
-        },
-        {
-            id: 'actions',
-            header: () => <div className="text-right">{t('common.actions', 'Actions')}</div>,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive-outline" size="icon" onClick={() => setDeleteId(row.original.id)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ], [t, updateTestimonial]);
+    ];
 
     const isPending = createTestimonial.isPending || updateTestimonial.isPending || isUploading;
 
@@ -209,8 +193,20 @@ export function TestimonialsContent() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <PageLoader open={isLoading} />
-                    {!isLoading && <DataTable columns={columns} data={testimonials} searchKey="name" />}
+                    <CommonTable
+                        columns={columns}
+                        data={testimonials as any}
+                        isLoading={isLoading}
+                        emptyMessage={t('testimonial.no_results', 'No testimonials found.')}
+                        onStatusToggle={(row, val) =>
+                            updateTestimonial.mutate({ id: row.id, data: { is_active: val } })
+                        }
+                        onEdit={openEdit}
+                        onDelete={(row) => setDeleteId(row.id)}
+                        showStatus
+                        showCreated
+                        showActions
+                    />
                 </CardContent>
             </Card>
 

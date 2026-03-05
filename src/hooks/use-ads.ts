@@ -18,7 +18,21 @@ export interface Ad {
     mobile_image: string | null;
     google_adsense_slot_id: string | null;
     location: string;
+    banner_id: number | null;
+    banner?: {
+        id: number;
+        name: string;
+        type: 'desktop' | 'tablet' | 'mobile' | 'all';
+        desktop_width: number;
+        desktop_height: number;
+        tablet_width: number;
+        tablet_height: number;
+        mobile_width: number;
+        mobile_height: number;
+    } | null;
+    started_at: string | null;
     expired_at: string | null;
+    is_scheduled: number;
     clicked: number;
     is_active: number;
     created_at: string;

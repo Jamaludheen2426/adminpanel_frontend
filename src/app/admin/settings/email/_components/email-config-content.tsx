@@ -9,7 +9,9 @@ import {
   Star,
   Pencil,
   HelpCircle,
+  Inbox,
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,6 +92,10 @@ const defaultForm: CreateEmailConfigDto = {
   domain: "",
   region: "",
   is_default: false,
+  imap_host: "",
+  imap_port: 993,
+  imap_encryption: "ssl",
+  imap_enabled: false,
 };
 
 export function EmailConfigContent() {
@@ -139,6 +145,10 @@ export function EmailConfigContent() {
       domain: config.domain || "",
       region: config.region || "",
       is_default: config.is_default,
+      imap_host: (config as any).imap_host || "",
+      imap_port: (config as any).imap_port || 993,
+      imap_encryption: (config as any).imap_encryption || "ssl",
+      imap_enabled: (config as any).imap_enabled || false,
     });
     setDialogOpen(true);
   };
@@ -566,6 +576,78 @@ export function EmailConfigContent() {
                   </div>
 
                   {renderDriverFields()}
+
+                  {/* IMAP Section — only for SMTP driver */}
+                  {form.driver === "smtp" && (
+                    <>
+                      <Separator />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium flex items-center gap-2">
+                              <Inbox className="h-4 w-4 text-blue-500" />
+                              Inbound Email (IMAP)
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Enable to capture replies users send back to your emails (e.g. contact thread replies).
+                            </p>
+                          </div>
+                          <Switch
+                            checked={!!(form as any).imap_enabled}
+                            onCheckedChange={(val) => setForm({ ...form, imap_enabled: val } as any)}
+                          />
+                        </div>
+
+                        {(form as any).imap_enabled && (
+                          <div className="space-y-3 pl-1">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>IMAP Host</Label>
+                                <Input
+                                  placeholder="imap.secureserver.net"
+                                  value={(form as any).imap_host || ""}
+                                  onChange={(e) => setForm({ ...form, imap_host: e.target.value } as any)}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>IMAP Port</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="993"
+                                  value={(form as any).imap_port || 993}
+                                  onChange={(e) => setForm({ ...form, imap_port: parseInt(e.target.value) || 993 } as any)}
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>IMAP Encryption</Label>
+                              <Select
+                                value={(form as any).imap_encryption || "ssl"}
+                                onValueChange={(val) => setForm({ ...form, imap_encryption: val } as any)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="ssl">SSL (port 993)</SelectItem>
+                                  <SelectItem value="tls">TLS/STARTTLS (port 143)</SelectItem>
+                                  <SelectItem value="none">None</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <p className="text-xs text-muted-foreground">
+                                Uses the same username/password as SMTP above.
+                              </p>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950 text-xs text-blue-700 dark:text-blue-300">
+                              <strong>GoDaddy:</strong> imap.secureserver.net · port 993 · SSL<br />
+                              <strong>Gmail:</strong> imap.gmail.com · port 993 · SSL<br />
+                              <strong>Outlook:</strong> outlook.office365.com · port 993 · SSL
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <DialogFooter>

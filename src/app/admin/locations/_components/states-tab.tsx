@@ -37,6 +37,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import {
+  CommonTable,
+  type CommonColumn,
+} from "@/components/common/common-table";
+import {
   Table,
   TableBody,
   TableCell,
@@ -86,48 +90,6 @@ const stateSchema = z.object({
 
 type StateForm = z.infer<typeof stateSchema>;
 
-// ─── Sort ─────────────────────────────────────────────────────────────────────
-
-type SortKey =
-  | keyof Pick<
-    State,
-    "name" | "code" | "sort_order" | "is_active" | "created_at"
-  >
-  | "country_name";
-type SortDirection = "asc" | "desc";
-interface SortConfig {
-  key: SortKey;
-  direction: SortDirection;
-}
-
-function SortableHeader({
-  children,
-  sortKey,
-  sortConfig,
-  onSort,
-}: {
-  children: React.ReactNode;
-  sortKey: SortKey;
-  sortConfig: SortConfig | null;
-  onSort: (key: SortKey) => void;
-}) {
-  const direction = sortConfig?.key === sortKey ? sortConfig.direction : null;
-  return (
-    <button
-      onClick={() => onSort(sortKey)}
-      className="flex items-center gap-1 text-left hover:text-foreground transition-colors font-medium"
-    >
-      {children}
-      {direction === "asc" ? (
-        <ArrowUp className="h-3.5 w-3.5" />
-      ) : direction === "desc" ? (
-        <ArrowDown className="h-3.5 w-3.5" />
-      ) : (
-        <ArrowUpDown className="h-3.5 w-3.5 opacity-50" />
-      )}
-    </button>
-  );
-}
 
 // ─── CSV helpers ──────────────────────────────────────────────────────────────
 
@@ -162,13 +124,10 @@ function parseCSV(text: string): Record<string, string>[] {
 export function StatesTab() {
   const [search, setSearch] = useState("");
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<State | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    label: string;
-    onConfirm: () => void;
-  } | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(
     null,
   );
@@ -193,48 +152,79 @@ export function StatesTab() {
     },
   });
 
-  // ── Sort ──
+  // ── normalise function for CommonTable ──
+  const normalise = (item: State) => ({
+    ...item,
+    is_active: Boolean(item.is_active),
+    created_at: (item as any).createdAt ?? item.created_at ?? "",
+    country_name: item.country?.name ?? "",
+  });
 
-  const handleSort = (key: SortKey) => {
-    setSortConfig((prev) => {
-      if (prev?.key !== key) return { key, direction: "asc" };
-      if (prev.direction === "asc") return { key, direction: "desc" };
+  const processedStates = useMemo(() => {
+    let items = states.map(normalise);
+    if (search || filterCountryId !== "all") {
+      const q = search.toLowerCase();
+      items = items.filter((s) => {
+        const matchSearch =
+          !q ||
+          s.name.toLowerCase().includes(q) ||
+          (s.code ?? "").toLowerCase().includes(q) ||
+          (s.country_name ?? "").toLowerCase().includes(q);
+        const matchCountry =
+          filterCountryId === "all" || s.country_id === Number(filterCountryId);
+        return matchSearch && matchCountry;
+      });
+    }
+    return items;
+  }, [states, search, filterCountryId]);
+
+  const handleSort = (column: string) => {
+    setSort((prev) => {
+      if (prev?.column !== column) return { column, direction: "asc" };
+      if (prev.direction === "asc") return { column, direction: "desc" };
       return null;
     });
   };
 
-  const filteredAndSorted = useMemo(() => {
-    const q = search.toLowerCase();
-    let items = states.filter((s) => {
-      const matchSearch =
-        s.name.toLowerCase().includes(q) ||
-        (s.code ?? "").toLowerCase().includes(q) ||
-        (s.country?.name ?? "").toLowerCase().includes(q);
-      const matchCountry =
-        filterCountryId === "all" || s.country_id === Number(filterCountryId);
-      return matchSearch && matchCountry;
-    });
-    if (sortConfig) {
-      items = [...items].sort((a, b) => {
-        let av: string | number | boolean = "";
-        let bv: string | number | boolean = "";
-        if (sortConfig.key === "country_name") {
-          av = a.country?.name ?? "";
-          bv = b.country?.name ?? "";
-        } else {
-          av =
-            (a[sortConfig.key as keyof State] as string | number | boolean) ??
-            "";
-          bv =
-            (b[sortConfig.key as keyof State] as string | number | boolean) ??
-            "";
-        }
-        const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-        return sortConfig.direction === "asc" ? cmp : -cmp;
-      });
-    }
-    return items;
-  }, [states, search, filterCountryId, sortConfig]);
+  const columns: CommonColumn<any>[] = [
+    {
+      key: "name",
+      header: "Name",
+      sortable: true,
+      render: (row) => <span className="font-medium text-sm">{row.name}</span>,
+    },
+    {
+      key: "code",
+      header: "Code",
+      sortable: true,
+      render: (row) => row.code ? <Badge variant="outline" className="text-[10px]">{row.code}</Badge> : "–",
+    },
+    {
+      key: "country_name",
+      header: "Country",
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.country?.name ?? "–"}</span>,
+    },
+    {
+      key: "sort_order",
+      header: "Order",
+      sortable: true,
+      render: (row) => <span className="text-xs text-muted-foreground">{row.sort_order}</span>,
+    },
+    {
+      key: "is_default",
+      header: "Default",
+      render: (row) => (
+        <Switch
+          checked={Boolean(row.is_default)}
+          onCheckedChange={(checked) => {
+            if (checked) updateState.mutate({ id: row.id, data: { is_default: true } });
+          }}
+          disabled={Boolean(row.is_default) || !row.is_active || updateState.isPending}
+        />
+      ),
+    },
+  ];
 
   // ── Dialog ──
 
@@ -437,168 +427,21 @@ export function StatesTab() {
             </Select>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="name"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Name
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="code"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Code
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="country_name"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Country
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="sort_order"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Sort Order
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="is_active"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Status
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead>Default</TableHead>
-                  <TableHead>
-                    <SortableHeader
-                      sortKey="created_at"
-                      sortConfig={sortConfig}
-                      onSort={handleSort}
-                    >
-                      Created
-                    </SortableHeader>
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAndSorted.length === 0 && !isLoading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No states found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredAndSorted.map((state) => (
-                    <TableRow key={state.id}>
-                      <TableCell className="font-medium">
-                        {state.name}
-                      </TableCell>
-                      <TableCell>
-                        {state.code ? (
-                          <Badge variant="outline">{state.code}</Badge>
-                        ) : (
-                          "–"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {state.country?.name ?? "–"}
-                      </TableCell>
-                      <TableCell>{state.sort_order}</TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={Boolean(state.is_active)}
-                          onCheckedChange={(checked) =>
-                            updateState.mutate({
-                              id: state.id,
-                              data: { is_active: checked },
-                            })
-                          }
-                          disabled={updateState.isPending}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Switch
-                          checked={Boolean(state.is_default)}
-                          onCheckedChange={(checked) => {
-                            if (checked)
-                              updateState.mutate({
-                                id: state.id,
-                                data: { is_default: true },
-                              });
-                          }}
-                          disabled={
-                            Boolean(state.is_default) ||
-                            !state.is_active ||
-                            updateState.isPending
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {(() => {
-                          const d =
-                            (state as unknown as { createdAt?: string })
-                              .createdAt ?? state.created_at;
-                          return d && !isNaN(new Date(d).getTime())
-                            ? new Date(d).toLocaleDateString()
-                            : "–";
-                        })()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(state)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="destructive-outline"
-                            size="icon"
-                            disabled={deleteState.isPending}
-                            onClick={() =>
-                              setDeleteConfirm({
-                                label: `Delete "${state.name}"?`,
-                                onConfirm: () => deleteState.mutate(state.id),
-                              })
-                            }
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <p className="text-sm text-muted-foreground mt-2">
-            {filteredAndSorted.length} of {states.length} states
-          </p>
+          <CommonTable
+            columns={columns}
+            data={processedStates as any}
+            isLoading={isLoading}
+            onSort={handleSort}
+            sortColumn={sort?.column}
+            sortDirection={sort?.direction}
+            onStatusToggle={(row, val) => updateState.mutate({ id: row.id, data: { is_active: val } })}
+            onEdit={openEdit}
+            onDelete={(row) => setDeleteId(row.id)}
+            emptyMessage="No states found"
+            showStatus
+            showCreated
+            showActions
+          />
         </CardContent>
       </Card>
 
@@ -860,24 +703,24 @@ export function StatesTab() {
 
       {/* Delete Confirmation */}
       <AlertDialog
-        open={!!deleteConfirm}
+        open={!!deleteId}
         onOpenChange={(open) => {
-          if (!open) setDeleteConfirm(null);
+          if (!open) setDeleteId(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteConfirm?.label} This action cannot be undone.
+              Delete this state? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                deleteConfirm?.onConfirm();
-                setDeleteConfirm(null);
+                if (deleteId) deleteState.mutate(deleteId);
+                setDeleteId(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

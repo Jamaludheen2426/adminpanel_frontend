@@ -10,19 +10,17 @@ import {
 } from '@/hooks/use-blog-categories';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { PageHeader } from '@/components/common/page-header';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+    TextInput,
+    TextAreaInput,
+    SwitchField,
+} from '@/components/admin/form-field';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImageCropper } from '@/components/common/image-cropper';
 import { apiClient } from '@/lib/api-client';
@@ -174,25 +172,20 @@ export function BlogCategoriesContent() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold">{t('blog.categories_title', 'Blog Categories')}</h1>
-                <p className="text-muted-foreground mt-1">{t('blog.categories_desc', 'Manage categories for blog posts')}</p>
-            </div>
+            <PageHeader
+                title={t('blog.categories_title', 'Blog Categories')}
+                description={t('blog.categories_desc', 'Manage categories for blog posts')}
+                icon={<FolderOpen className="h-6 w-6" />}
+                action={
+                    <Button onClick={openCreate}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {t('blog.add_category', 'Add Category')}
+                    </Button>
+                }
+            />
 
             <Card>
-                <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle>{t('blog.categories_title', 'Blog Categories')}</CardTitle>
-                            <CardDescription>{t('blog.categories_desc', 'Manage categories for blog posts')}</CardDescription>
-                        </div>
-                        <Button size="sm" onClick={openCreate}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {t('blog.add_category', 'Add Category')}
-                        </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <CommonTable
                         columns={columns}
                         data={categories as any}
@@ -202,13 +195,15 @@ export function BlogCategoriesContent() {
                         onEdit={(row) => openEdit(row as BlogCategory)}
                         onDelete={(row) => setDeleteId(row.id)}
                         showCreated={false}
+                        showStatus
+                        showActions
                     />
                 </CardContent>
             </Card>
 
             {/* Create / Edit Dialog */}
             <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-xl">
                     <DialogHeader>
                         <DialogTitle>
                             {editItem ? t('blog.edit_category', 'Edit Category') : t('blog.create_category', 'Create Category')}
@@ -216,55 +211,70 @@ export function BlogCategoriesContent() {
                         <DialogDescription>{t('blog.category_form_desc', 'Fill in the blog category details.')}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="cat-name">{t('common.name', 'Name')} *</Label>
-                            <Input id="cat-name" placeholder="e.g. Technology" {...form.register('name')} onChange={handleNameChange} />
-                            {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cat-slug">{t('common.slug', 'Slug')} *</Label>
-                            <Input
-                                id="cat-slug"
-                                placeholder="e.g. technology"
-                                {...form.register('slug')}
-                                onChange={(e) => { setSlugManuallyEdited(true); form.setValue('slug', e.target.value, { shouldValidate: true }); }}
-                            />
-                            <p className="text-xs text-muted-foreground">{t('common.slug_hint', 'Auto-generated from name.')}</p>
-                            {form.formState.errors.slug && <p className="text-xs text-destructive">{form.formState.errors.slug.message}</p>}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cat-desc">{t('common.description', 'Description')}</Label>
-                            <Textarea id="cat-desc" placeholder="Optional description..." rows={3} {...form.register('description')} />
-                        </div>
-                        <ImageCropper
-                            key={cropperKey}
-                            title={t('common.image', 'Image')}
-                            description={t('blog.category_image_desc', 'Recommended size: 600x400 px')}
-                            targetWidth={600}
-                            targetHeight={400}
-                            currentImage={previewImageUrl}
-                            onImageCropped={handleImageChange}
-                            onRemove={() => { form.setValue('image', ''); setPreviewImageUrl(''); }}
-                            rounded={false}
+                        <TextInput
+                            label={t('common.name', 'Name')}
+                            placeholder="e.g. Technology"
+                            {...form.register('name')}
+                            onChange={handleNameChange}
+                            error={form.formState.errors.name?.message}
+                            required
                         />
-                        {isUploading && <p className="text-xs text-muted-foreground">{t('common.uploading', 'Uploading...')}</p>}
+
+                        <TextInput
+                            label={t('common.slug', 'Slug')}
+                            placeholder="e.g. technology"
+                            {...form.register('slug')}
+                            onChange={(e) => { setSlugManuallyEdited(true); form.setValue('slug', e.target.value, { shouldValidate: true }); }}
+                            error={form.formState.errors.slug?.message}
+                            helper={t('common.slug_hint', 'Auto-generated from name.')}
+                            required
+                        />
+
+                        <TextAreaInput
+                            label={t('common.description', 'Description')}
+                            placeholder="Optional description..."
+                            rows={3}
+                            {...form.register('description')}
+                        />
+
+                        <div className="space-y-2">
+                            <ImageCropper
+                                key={cropperKey}
+                                title={t('common.image', 'Image')}
+                                description={t('blog.category_image_desc', 'Recommended size: 600x400 px')}
+                                targetWidth={600}
+                                targetHeight={400}
+                                currentImage={previewImageUrl}
+                                onImageCropped={handleImageChange}
+                                onRemove={() => { form.setValue('image', ''); setPreviewImageUrl(''); }}
+                                rounded={false}
+                            />
+                            {isUploading && <p className="text-xs text-muted-foreground">{t('common.uploading', 'Uploading...')}</p>}
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cat-order">{t('common.sort_order', 'Sort Order')}</Label>
-                                <Input id="cat-order" type="number" {...form.register('sort_order')} />
-                            </div>
-                            <div className="space-y-2">
-                                <Label>{t('common.active', 'Active')}</Label>
-                                <div className="flex items-center h-10">
-                                    <Controller
-                                        control={form.control}
-                                        name="is_active"
-                                        render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} />}
-                                    />
-                                </div>
+                            <TextInput
+                                label={t('common.sort_order', 'Sort Order')}
+                                type="number"
+                                {...form.register('sort_order')}
+                            />
+
+                            <div className="flex flex-col justify-end">
+                                <Controller
+                                    control={form.control}
+                                    name="is_active"
+                                    render={({ field }) => (
+                                        <SwitchField
+                                            label={t('common.active', 'Active')}
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    )}
+                                />
                             </div>
                         </div>
-                        <DialogFooter>
+
+                        <DialogFooter className="pt-4">
                             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel', 'Cancel')}</Button>
                             <Button type="submit" disabled={isPending}>
                                 {isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
@@ -274,24 +284,16 @@ export function BlogCategoriesContent() {
                 </DialogContent>
             </Dialog>
 
-            {/* Delete Confirm */}
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>{t('common.delete_confirm', 'This action cannot be undone.')}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => { if (deleteId) deleteCategory.mutate(deleteId, { onSuccess: () => setDeleteId(null) }); }}
-                        >
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteCategory.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+                    }
+                }}
+                isDeleting={deleteCategory.isPending}
+            />
         </div>
     );
 }

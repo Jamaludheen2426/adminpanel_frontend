@@ -1,12 +1,11 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -15,8 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DataTable } from "@/components/ui/data-table";
-import { ColumnDef } from "@tanstack/react-table";
+import { CommonTable, type CommonColumn } from "@/components/common/common-table";
 import { Plus, Edit, Trash2, Eye, Mail } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,9 +102,9 @@ export function EmailTemplatesContent() {
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (template: EmailTemplate) => {
     if (confirm("Are you sure you want to delete this template?")) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(template.id);
     }
   };
 
@@ -146,61 +144,37 @@ export function EmailTemplatesContent() {
     }
   };
 
-  const columns: ColumnDef<EmailTemplate>[] = [
-    { accessorKey: "name", header: "Name" },
-    { accessorKey: "slug", header: "Slug" },
-    { accessorKey: "subject", header: "Subject" },
+  const columns: CommonColumn<EmailTemplate>[] = [
+    { key: "name", header: "Name", sortable: true },
+    { key: "slug", header: "Slug", sortable: true },
+    { key: "subject", header: "Subject", sortable: true },
     {
-      accessorKey: "is_active",
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? "Active" : "Inactive"}
-        </Badge>
-      ),
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
+      key: "custom_actions",
+      header: "Quick Actions",
+      render: (row) => (
         <div className="flex gap-2">
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => handlePreview(row.original)}
+            onClick={() => handlePreview(row)}
             title="Preview"
+            className="h-8 px-2"
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             size="sm"
-            variant="ghost"
-            onClick={() => handleSendTest(row.original)}
+            variant="outline"
+            onClick={() => handleSendTest(row)}
             title="Send Test Email"
-            className="bg-blue-500 text-white"
+            className="h-8 gap-1 px-2 text-[10px] font-bold uppercase"
           >
-            <Mail className="h-4 w-4" />
+            <Mail className="h-3.5 w-3.5" />
             TEST
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => handleEdit(row.original)}
-            title="Edit"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="destructive-outline"
-            onClick={() => handleDelete(row.original.id)}
-            title="Delete"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
         </div>
-      ),
-    },
+      )
+    }
   ];
 
   const templates = templatesData?.data || [];
@@ -212,8 +186,8 @@ export function EmailTemplatesContent() {
         <PageLoader open={isLoading} />
         <div className="flex items-center justify-between">
           <div>
-            {/* <h1 className="text-3xl font-bold">Email Templates</h1> */}
-            <p className="text-gray-600 mt-1">Manage system email templates</p>
+            <h1 className="text-3xl font-bold tracking-tight">Email Templates</h1>
+            <p className="text-muted-foreground mt-1">Manage system email templates</p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -401,19 +375,21 @@ export function EmailTemplatesContent() {
           </DialogContent>
         </Dialog>
 
-        <Card className="p-6">
-          {!isLoading && templates.length > 0 && (
-            <DataTable columns={columns} data={templates} searchKey="name" />
-          )}
-
-          {!isLoading && templates.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No templates created yet</p>
-              <Button onClick={() => setIsDialogOpen(true)} size="sm">
-                Create First Template
-              </Button>
-            </div>
-          )}
+        <Card>
+          <CardContent className="pt-6">
+            <CommonTable
+              columns={columns}
+              data={templates as any}
+              isLoading={isLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onStatusToggle={(row, val) => updateMutation.mutate({ id: row.id, data: { is_active: val } })}
+              showStatus
+              showCreated
+              showActions
+              emptyMessage="No templates created yet"
+            />
+          </CardContent>
         </Card>
       </div>
     </PermissionGuard>
