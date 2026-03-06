@@ -76,11 +76,9 @@ export function TranslationProvider({
   const { data: translations = {}, isLoading, isFetching } = useQuery({
     queryKey: ['translations', language],
     queryFn: async () => {
-      console.log('[Translation] Fetching translations for language:', language);
       const response = await apiClient.get(`/translations/${language}`);
       // Extract translations from API response: { success: true, data: { translations: {...} } }
       const translationData = response.data?.data?.translations || {};
-      console.log('[Translation] Received', Object.keys(translationData).length, 'keys for', language);
       return translationData as TranslationMap;
     },
     enabled: isInitialized && !!language,
@@ -94,8 +92,6 @@ export function TranslationProvider({
   const applyLanguage = useCallback((lang: string) => {
     if (lang === language) return; // No change needed
 
-    console.log('[Translation] Applying language:', language, '→', lang);
-
     // Update state
     setLanguageState(lang);
 
@@ -106,8 +102,6 @@ export function TranslationProvider({
   // Set language and save to settings API
   const setLanguage = useCallback((lang: string) => {
     if (lang === language) return; // No change needed
-
-    console.log('[Translation] Switching language:', language, '→', lang);
 
     // Update state immediately for responsive UI
     setLanguageState(lang);
@@ -133,11 +127,7 @@ export function TranslationProvider({
       batch.map((report) =>
         apiClient.post('/translations/report-missing', report).catch(() => {})
       )
-    ).then(() => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Translation] Batch reported', batch.length, 'missing keys');
-      }
-    });
+    );
   }, []);
 
   // Report missing key to backend (batched, non-blocking)
@@ -187,17 +177,8 @@ export function TranslationProvider({
     let text = translationExists ? translations[key] : (defaultValue || key);
 
     // Report missing key if not found (only after translations are loaded)
-    if (!translationExists) {
-      if (isInitialized && !isLoading && Object.keys(translations).length > 0) {
-        reportMissingKey(key, defaultValue);
-      } else if (process.env.NODE_ENV === 'development') {
-        // Debug: log why missing key wasn't reported
-        console.log('[Translation] Key not found but not reporting:', key, {
-          isInitialized,
-          isLoading,
-          translationsCount: Object.keys(translations).length
-        });
-      }
+    if (!translationExists && isInitialized && !isLoading && Object.keys(translations).length > 0) {
+      reportMissingKey(key, defaultValue);
     }
 
     // Variable interpolation: {name} -> value
@@ -218,13 +199,6 @@ export function TranslationProvider({
     translations,
     isLoading: !isInitialized || isLoading || isFetching,
   }), [language, setLanguage, applyLanguage, t, translations, isInitialized, isLoading, isFetching]);
-
-  // Debug: Log when translations are loaded
-  useEffect(() => {
-    if (isInitialized && !isLoading && !isFetching) {
-      console.log('[Translation] Ready:', language, '|', Object.keys(translations).length, 'keys');
-    }
-  }, [language, translations, isLoading, isFetching, isInitialized]);
 
   return (
     <TranslationContext.Provider value={contextValue}>

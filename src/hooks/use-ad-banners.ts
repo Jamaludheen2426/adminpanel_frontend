@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface AdBanner {
@@ -28,10 +29,12 @@ interface AdBannersParams {
 // ─── List ──────────────────────────────────────────────────────────────────────
 export const useAdBanners = (params: AdBannersParams = {}) => {
     return useQuery({
-        queryKey: ['ad-banners', params],
+        queryKey: queryKeys.adBanners.list(params as Record<string, unknown>),
         queryFn: async () => {
             const res = await apiClient.get('/ad-banners', { params });
-            return res.data.data;
+            const raw = res.data.data;
+            if (Array.isArray(raw)) return { data: raw, pagination: res.data.pagination };
+            return { data: raw?.data || [], pagination: raw?.pagination || res.data.pagination };
         },
     });
 };
@@ -39,7 +42,7 @@ export const useAdBanners = (params: AdBannersParams = {}) => {
 // ─── Single ────────────────────────────────────────────────────────────────────
 export const useAdBanner = (id: number | null) => {
     return useQuery({
-        queryKey: ['ad-banners', id],
+        queryKey: queryKeys.adBanners.detail(id!),
         queryFn: async () => {
             const res = await apiClient.get(`/ad-banners/${id}`);
             return res.data.data?.banner as AdBanner;
@@ -57,7 +60,7 @@ export const useCreateAdBanner = () => {
             return res.data.data?.banner as AdBanner;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['ad-banners'] });
+            qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner created successfully');
         },
         onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to create banner'),
@@ -73,7 +76,7 @@ export const useUpdateAdBanner = () => {
             return res.data.data?.banner as AdBanner;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['ad-banners'] });
+            qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner updated successfully');
         },
         onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to update banner'),
@@ -89,7 +92,7 @@ export const useDeleteAdBanner = () => {
             return id;
         },
         onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ['ad-banners'] });
+            qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner deleted successfully');
         },
         onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to delete banner'),

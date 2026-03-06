@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface BlogTag {
@@ -37,11 +38,9 @@ const blogTagsApi = {
     },
 };
 
-const QUERY_KEY = ['blog-tags'];
-
 export function useBlogTags() {
     return useQuery({
-        queryKey: QUERY_KEY,
+        queryKey: queryKeys.blogTags.list({}),
         queryFn: blogTagsApi.getAll,
         staleTime: 2 * 60 * 1000,
     });
@@ -49,7 +48,7 @@ export function useBlogTags() {
 
 export function useBlogTag(id: number) {
     return useQuery({
-        queryKey: [...QUERY_KEY, id],
+        queryKey: queryKeys.blogTags.detail(id),
         queryFn: () => blogTagsApi.getById(id),
         enabled: !!id,
     });
@@ -60,7 +59,7 @@ export function useCreateBlogTag() {
     return useMutation({
         mutationFn: blogTagsApi.create,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
             toast.success('Blog tag created successfully');
         },
         onError: (error: any) => {
@@ -74,8 +73,8 @@ export function useUpdateBlogTag() {
     return useMutation({
         mutationFn: blogTagsApi.update,
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, vars.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.detail(vars.id) });
             toast.success('Blog tag updated successfully');
         },
         onError: (error: any) => {
@@ -89,7 +88,7 @@ export function useDeleteBlogTag() {
     return useMutation({
         mutationFn: blogTagsApi.delete,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
             toast.success('Blog tag deleted successfully');
         },
         onError: (error: any) => {

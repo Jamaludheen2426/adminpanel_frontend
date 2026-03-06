@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface BlogCategory {
@@ -40,11 +41,9 @@ const blogCategoriesApi = {
     },
 };
 
-const QUERY_KEY = ['blog-categories'];
-
 export function useBlogCategories() {
     return useQuery({
-        queryKey: QUERY_KEY,
+        queryKey: queryKeys.blogCategories.list({}),
         queryFn: blogCategoriesApi.getAll,
         staleTime: 2 * 60 * 1000,
     });
@@ -52,7 +51,7 @@ export function useBlogCategories() {
 
 export function useBlogCategory(id: number) {
     return useQuery({
-        queryKey: [...QUERY_KEY, id],
+        queryKey: queryKeys.blogCategories.detail(id),
         queryFn: () => blogCategoriesApi.getById(id),
         enabled: !!id,
     });
@@ -63,7 +62,7 @@ export function useCreateBlogCategory() {
     return useMutation({
         mutationFn: blogCategoriesApi.create,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
             toast.success('Blog category created successfully');
         },
         onError: (error: any) => {
@@ -77,8 +76,8 @@ export function useUpdateBlogCategory() {
     return useMutation({
         mutationFn: blogCategoriesApi.update,
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, vars.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.detail(vars.id) });
             toast.success('Blog category updated successfully');
         },
         onError: (error: any) => {
@@ -92,7 +91,7 @@ export function useDeleteBlogCategory() {
     return useMutation({
         mutationFn: blogCategoriesApi.delete,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
             toast.success('Blog category deleted successfully');
         },
         onError: (error: any) => {

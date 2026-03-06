@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface ContactReply {
@@ -31,7 +32,7 @@ export interface Contact {
 
 export const useUnreadContactsCount = () => {
     return useQuery({
-        queryKey: ['contacts', 'unread-count'],
+        queryKey: [...queryKeys.contacts.all, 'unread-count'],
         queryFn: async () => {
             const res = await apiClient.get('/contacts/unread-count');
             return (res.data.data?.count ?? 0) as number;
@@ -43,7 +44,7 @@ export const useUnreadContactsCount = () => {
 
 export const useContacts = (params?: any) => {
     return useQuery({
-        queryKey: ['contacts', params],
+        queryKey: queryKeys.contacts.list(params ?? {}),
         queryFn: async () => {
             const res = await apiClient.get('/contacts', { params });
             return res.data.data;
@@ -53,7 +54,7 @@ export const useContacts = (params?: any) => {
 
 export const useContact = (id: number) => {
     return useQuery({
-        queryKey: ['contacts', id],
+        queryKey: queryKeys.contacts.detail(id),
         queryFn: async () => {
             const res = await apiClient.get(`/contacts/${id}`);
             return res.data.data;
@@ -69,9 +70,9 @@ export const useUpdateContactStatus = () => {
             const res = await apiClient.put(`/contacts/${id}/status`, { status });
             return res.data;
         },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['contacts'] });
-            queryClient.invalidateQueries({ queryKey: ['contacts', variables.id] });
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.contacts.detail(variables.id) });
             toast.success('Contact status updated');
         },
         onError: (error: any) => {
@@ -88,7 +89,7 @@ export const useDeleteContact = () => {
             return res.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['contacts'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all });
             toast.success('Contact deleted successfully');
         },
         onError: (error: any) => {
@@ -104,9 +105,9 @@ export const useReplyContent = () => {
             const res = await apiClient.post(`/contacts/${id}/reply`, { message, email_config_id });
             return res.data;
         },
-        onSuccess: (data, variables) => {
-            queryClient.invalidateQueries({ queryKey: ['contacts'] });
-            queryClient.invalidateQueries({ queryKey: ['contacts', variables.id] });
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.contacts.detail(variables.id) });
             toast.success('Reply sent successfully');
         },
         onError: (error: any) => {

@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useUsers, useDeleteUser, useToggleUserStatus, useUpdateUser } from "@/hooks/use-users";
 import { useRoles } from "@/hooks/use-roles";
 import { useTranslation } from "@/hooks/use-translation";
@@ -54,6 +55,8 @@ export function UsersContent() {
     direction: "ASC",
   });
 
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+
   const [roleChangeDialog, setRoleChangeDialog] = useState<{
     user: User;
     newRoleId: string;
@@ -72,10 +75,14 @@ export function UsersContent() {
   const toggleStatusMutation = useToggleUserStatus();
   const updateUserMutation = useUpdateUser();
 
-  const handleDelete = async (user: User) => {
+  const handleDelete = (user: User) => {
     if (isSuperAdminOrDeveloper(user)) return;
-    if (confirm(`Are you sure you want to delete "${user.full_name}"?`)) {
-      deleteUserMutation.mutate(user.id);
+    setDeleteUser(user);
+  };
+
+  const confirmDelete = () => {
+    if (deleteUser) {
+      deleteUserMutation.mutate(deleteUser.id);
     }
   };
 
@@ -294,6 +301,16 @@ export function UsersContent() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation */}
+      <DeleteDialog
+        open={deleteUser !== null}
+        onOpenChange={(open) => { if (!open) setDeleteUser(null); }}
+        onConfirm={confirmDelete}
+        isDeleting={deleteUserMutation.isPending}
+        title="Delete Employee"
+        description={`Are you sure you want to delete "${deleteUser?.full_name}"? This action cannot be undone.`}
+      />
 
       {/* Role Change Confirmation Dialog */}
       <AlertDialog

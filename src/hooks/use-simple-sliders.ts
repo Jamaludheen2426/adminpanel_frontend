@@ -128,6 +128,7 @@ export const useDeleteSimpleSlider = () => {
             toast.success('Simple Slider deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) return;
             toast.error(error.response?.data?.message || 'Failed to delete slider');
         },
     });

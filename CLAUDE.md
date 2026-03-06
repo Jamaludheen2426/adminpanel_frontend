@@ -164,8 +164,25 @@ queryKeys.settings.group('general')
 ## Approval Workflow
 - Some mutations return HTTP 202 with `approval_required: true`
 - This throws `ApprovalRequiredError` (in `api-client.ts`)
-- Show toast: "Your request has been submitted for approval"
-- Hooks auto-invalidate `queryKeys.approvals` on this error
+- The axios interceptor auto-shows toast and invalidates approval queries
+- Hooks must check `isApprovalRequired(error)` in `onError` to suppress the error toast
+- **Status toggle mutations (PATCH /status, PATCH /toggle) do NOT go through approval** — backend excludes them
+
+### Hooks with approval-aware backend routes (must use `isApprovalRequired` check):
+| Hook | Mutations requiring check |
+|------|--------------------------|
+| `use-users.ts` | create, update, delete (status toggle excluded) |
+| `use-roles.ts` | create, update, delete |
+| `use-settings.ts` | update, bulkUpdate |
+| `use-currencies.ts` | create, update, delete |
+| `use-languages.ts` | create, update, delete |
+| `use-email-configs.ts` | create, update, delete (toggle excluded) |
+| `use-email-campaigns.ts` | create, update, delete |
+| `use-email-templates.ts` | create, update, delete |
+| `use-translations.ts` | create, update, delete, bulkImport |
+| `use-testimonials.ts` | create, update, delete |
+| `use-media-files.ts` | upload, delete |
+| `use-simple-sliders.ts` | create, update, delete |
 
 ## Routing Conventions
 - Dynamic routes: `[id]` for resources, `[...path]` for catch-all, `[gateway]` for payment gateways

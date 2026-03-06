@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export interface MediaFile {
@@ -59,7 +59,10 @@ export const useUploadMediaFile = () => {
             qc.invalidateQueries({ queryKey: ['media-files', vars.folder] });
             if (!vars.path) toast.success('File uploaded');
         },
-        onError: (e: any) => toast.error(e?.response?.data?.message || 'Upload failed'),
+        onError: (e: any) => {
+            if (isApprovalRequired(e)) return;
+            toast.error(e?.response?.data?.message || 'Upload failed');
+        },
     });
 };
 
@@ -75,7 +78,10 @@ export const useDeleteMediaFile = () => {
             qc.invalidateQueries({ queryKey: ['media-files', folder] });
             toast.success('File deleted');
         },
-        onError: (e: any) => toast.error(e?.response?.data?.message || 'Delete failed'),
+        onError: (e: any) => {
+            if (isApprovalRequired(e)) return;
+            toast.error(e?.response?.data?.message || 'Delete failed');
+        },
     });
 };
 

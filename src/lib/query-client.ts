@@ -57,10 +57,8 @@ export const queryKeys = {
     all: ['permissions'] as const,
     lists: () => [...queryKeys.permissions.all, 'list'] as const,
     list: (params: Record<string, unknown>) => [...queryKeys.permissions.lists(), params] as const,
-    details: () =>
-      [...queryKeys.permissions.all, 'detail'] as const,
-    detail: (id: number) =>
-      [...queryKeys.permissions.details(), id] as const,
+    details: () => [...queryKeys.permissions.all, 'detail'] as const,
+    detail: (id: number) => [...queryKeys.permissions.details(), id] as const,
   },
 
   // Modules
@@ -237,5 +235,68 @@ export const queryKeys = {
     list: (params: Record<string, unknown>) => [...queryKeys.simpleSliders.lists(), params] as const,
     details: () => [...queryKeys.simpleSliders.all, 'detail'] as const,
     detail: (id: number | string) => [...queryKeys.simpleSliders.details(), id] as const,
+  },
+
+  // Ads
+  ads: {
+    all: ['ads'] as const,
+    lists: () => [...queryKeys.ads.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.ads.lists(), params] as const,
+    details: () => [...queryKeys.ads.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.ads.details(), id] as const,
+  },
+
+  // Ad Banners
+  adBanners: {
+    all: ['adBanners'] as const,
+    lists: () => [...queryKeys.adBanners.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.adBanners.lists(), params] as const,
+    details: () => [...queryKeys.adBanners.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.adBanners.details(), id] as const,
+  },
+
+  // Blog Posts
+  blogPosts: {
+    all: ['blogPosts'] as const,
+    lists: () => [...queryKeys.blogPosts.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.blogPosts.lists(), params] as const,
+    details: () => [...queryKeys.blogPosts.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.blogPosts.details(), id] as const,
+  },
+
+  // Blog Categories
+  blogCategories: {
+    all: ['blogCategories'] as const,
+    lists: () => [...queryKeys.blogCategories.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.blogCategories.lists(), params] as const,
+    details: () => [...queryKeys.blogCategories.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.blogCategories.details(), id] as const,
+  },
+
+  // Blog Tags
+  blogTags: {
+    all: ['blogTags'] as const,
+    lists: () => [...queryKeys.blogTags.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.blogTags.lists(), params] as const,
+    details: () => [...queryKeys.blogTags.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.blogTags.details(), id] as const,
+  },
+
+  // Contacts
+  contacts: {
+    all: ['contacts'] as const,
+    lists: () => [...queryKeys.contacts.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.contacts.lists(), params] as const,
+    details: () => [...queryKeys.contacts.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.contacts.details(), id] as const,
+  },
+
+  // FAQ Categories
+  faqCategories: {
+    all: ['faqCategories'] as const,
+    lists: () => [...queryKeys.faqCategories.all, 'list'] as const,
+    list: (params: Record<string, unknown>) => [...queryKeys.faqCategories.lists(), params] as const,
+    details: () => [...queryKeys.faqCategories.all, 'detail'] as const,
+    detail: (id: number | string) => [...queryKeys.faqCategories.details(), id] as const,
   },
 };

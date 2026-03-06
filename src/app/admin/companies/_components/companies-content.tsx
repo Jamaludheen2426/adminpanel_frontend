@@ -15,16 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -278,26 +269,14 @@ export function CompaniesContent() {
           </CardContent>
         </Card>
 
-        {/* Delete Dialog */}
-        <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the company and all associated data.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DeleteDialog
+          open={deleteId !== null}
+          onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+          onConfirm={handleDelete}
+          isDeleting={deleteCompany.isPending}
+          title="Delete Company"
+          description="This action cannot be undone. This will permanently delete the company and all associated data."
+        />
 
         <EditCompanyDialog
           companyId={editId}

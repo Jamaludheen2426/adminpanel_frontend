@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface FaqCategory {
@@ -17,8 +18,8 @@ export type CreateFaqCategoryDto = Omit<FaqCategory, 'id' | 'company_id' | 'crea
 export type UpdateFaqCategoryDto = Partial<CreateFaqCategoryDto>;
 
 const faqCategoriesApi = {
-    getAll: async (): Promise<FaqCategory[]> => {
-        const response = await apiClient.get('/faq-categories', { params: { limit: 200 } });
+    getAll: async (params?: Record<string, any>): Promise<FaqCategory[]> => {
+        const response = await apiClient.get('/faq-categories', { params: { limit: 200, ...params } });
         return response.data.data || [];
     },
     getById: async (id: number): Promise<FaqCategory> => {
@@ -38,18 +39,16 @@ const faqCategoriesApi = {
     },
 };
 
-const QUERY_KEY = ['faq-categories'];
-
-export function useFaqCategories() {
+export function useFaqCategories(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: faqCategoriesApi.getAll,
+        queryKey: queryKeys.faqCategories.list(params ?? {}),
+        queryFn: () => faqCategoriesApi.getAll(params),
     });
 }
 
 export function useFaqCategory(id: number) {
     return useQuery({
-        queryKey: [...QUERY_KEY, id],
+        queryKey: queryKeys.faqCategories.detail(id),
         queryFn: () => faqCategoriesApi.getById(id),
         enabled: !!id,
     });
@@ -60,7 +59,7 @@ export function useCreateFaqCategory() {
     return useMutation({
         mutationFn: faqCategoriesApi.create,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
             toast.success('FAQ Category created successfully');
         },
         onError: (error: any) => {
@@ -74,8 +73,8 @@ export function useUpdateFaqCategory() {
     return useMutation({
         mutationFn: faqCategoriesApi.update,
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, vars.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.detail(vars.id) });
             toast.success('FAQ Category updated successfully');
         },
         onError: (error: any) => {
@@ -89,7 +88,7 @@ export function useDeleteFaqCategory() {
     return useMutation({
         mutationFn: faqCategoriesApi.delete,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
             toast.success('FAQ Category deleted successfully');
         },
         onError: (error: any) => {

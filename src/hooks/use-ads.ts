@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
 export interface Ad {
@@ -41,10 +42,12 @@ export interface Ad {
 
 export const useAds = (params?: any) => {
     return useQuery({
-        queryKey: ['ads', params],
+        queryKey: queryKeys.ads.list(params ?? {}),
         queryFn: async () => {
             const res = await apiClient.get('/ads', { params });
-            return res.data.data;
+            const raw = res.data.data;
+            if (Array.isArray(raw)) return { data: raw, pagination: res.data.pagination };
+            return { data: raw?.data || [], pagination: raw?.pagination || res.data.pagination };
         },
     });
 };
@@ -57,7 +60,7 @@ export const useCreateAd = () => {
             return res.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['ads'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad created successfully');
         },
         onError: (error: any) => {
@@ -74,7 +77,7 @@ export const useUpdateAd = () => {
             return res.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['ads'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad updated successfully');
         },
         onError: (error: any) => {
@@ -91,7 +94,7 @@ export const useDeleteAd = () => {
             return res.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['ads'] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad deleted successfully');
         },
         onError: (error: any) => {

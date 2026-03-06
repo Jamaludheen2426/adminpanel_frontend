@@ -12,6 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { isApprovalRequired } from "@/lib/api-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useRoles, useDeleteRole, useToggleRoleStatus } from "@/hooks/use-roles";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -30,6 +31,8 @@ export function RolesContent() {
     column: "name",
     direction: "ASC",
   });
+
+  const [deleteRole, setDeleteRole] = useState<Role | null>(null);
 
   const { data, isLoading, isFetching } = useRoles({
     page,
@@ -129,9 +132,7 @@ export function RolesContent() {
               onEdit={(row) => router.push(`/admin/platform/roles/${row.id}/edit`)}
               onDelete={(row) => {
                 if (isSuperAdminOrDeveloper(row)) return;
-                if (confirm(`Are you sure you want to delete the role "${row.name}"?`)) {
-                  deleteRoleMutation.mutate(row.id);
-                }
+                setDeleteRole(row);
               }}
               emptyMessage={t("roles.no_roles_found")}
               showStatus
@@ -169,6 +170,15 @@ export function RolesContent() {
           </CardContent>
         </Card>
       </div>
+
+      <DeleteDialog
+        open={deleteRole !== null}
+        onOpenChange={(open) => { if (!open) setDeleteRole(null); }}
+        onConfirm={() => { if (deleteRole) deleteRoleMutation.mutate(deleteRole.id); }}
+        isDeleting={deleteRoleMutation.isPending}
+        title={t("roles.delete_role", "Delete Role")}
+        description={`Are you sure you want to delete the role "${deleteRole?.name}"? This action cannot be undone.`}
+      />
     </PermissionGuard>
   );
 }

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { BlogCategory } from './use-blog-categories';
 import type { BlogTag } from './use-blog-tags';
@@ -69,11 +70,9 @@ const blogPostsApi = {
     },
 };
 
-const QUERY_KEY = ['blog-posts'];
-
 export function useBlogPosts(params?: Record<string, any>) {
     return useQuery({
-        queryKey: [...QUERY_KEY, params],
+        queryKey: queryKeys.blogPosts.list(params ?? {}),
         queryFn: () => blogPostsApi.getAll(params),
         staleTime: 2 * 60 * 1000,
     });
@@ -81,7 +80,7 @@ export function useBlogPosts(params?: Record<string, any>) {
 
 export function useBlogPost(id: number) {
     return useQuery({
-        queryKey: [...QUERY_KEY, id],
+        queryKey: queryKeys.blogPosts.detail(id),
         queryFn: () => blogPostsApi.getById(id),
         enabled: !!id,
     });
@@ -92,7 +91,7 @@ export function useCreateBlogPost() {
     return useMutation({
         mutationFn: blogPostsApi.create,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
             toast.success('Blog post created successfully');
         },
         onError: (error: any) => {
@@ -106,8 +105,8 @@ export function useUpdateBlogPost() {
     return useMutation({
         mutationFn: blogPostsApi.update,
         onSuccess: (_, vars) => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-            queryClient.invalidateQueries({ queryKey: [...QUERY_KEY, vars.id] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.detail(vars.id) });
             toast.success('Blog post updated successfully');
         },
         onError: (error: any) => {
@@ -121,7 +120,7 @@ export function useDeleteBlogPost() {
     return useMutation({
         mutationFn: blogPostsApi.delete,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
             toast.success('Blog post deleted successfully');
         },
         onError: (error: any) => {

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-client';
 
@@ -67,6 +67,7 @@ export function useCreateTestimonial() {
             toast.success('Testimonial created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) return;
             toast.error(error.response?.data?.message || 'Failed to create testimonial');
         },
     });
@@ -82,6 +83,7 @@ export function useUpdateTestimonial() {
             toast.success('Testimonial updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) return;
             toast.error(error.response?.data?.message || 'Failed to update testimonial');
         },
     });
@@ -96,6 +98,7 @@ export function useDeleteTestimonial() {
             toast.success('Testimonial deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) return;
             toast.error(error.response?.data?.message || 'Failed to delete testimonial');
         },
     });
