@@ -124,7 +124,7 @@ export function RolesContent() {
               isLoading={isLoading}
               onSort={handleSort}
               sortColumn={sort?.column}
-              sortDirection={sort?.direction}
+              sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
               onStatusToggle={(row, val) => toggleStatusMutation.mutate({ id: row.id, is_active: val ? 1 : 0 })}
               onEdit={(row) => router.push(`/admin/platform/roles/${row.id}/edit`)}
               onDelete={(row) => {

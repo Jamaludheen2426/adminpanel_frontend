@@ -56,7 +56,14 @@ export function ApprovalsContent() {
     setSelectedId(null);
   };
 
-  const columns: CommonColumn<ApprovalRequest>[] = [
+  type NormalizedApprovalRequest = Omit<ApprovalRequest, 'is_active'> & { is_active: boolean; approval_status: number };
+  const normalise = (item: ApprovalRequest): NormalizedApprovalRequest => ({
+    ...item,
+    approval_status: item.is_active, // preserve 0=rejected,1=approved,2=pending for badge
+    is_active: item.is_active === 1,
+  });
+
+  const columns: CommonColumn<NormalizedApprovalRequest>[] = [
     {
       key: 'requester',
       header: 'Requester',
@@ -84,7 +91,7 @@ export function ApprovalsContent() {
     {
       key: 'status',
       header: 'Status',
-      render: (row) => <ApprovalBadge status={row.is_active} />,
+      render: (row) => <ApprovalBadge status={row.approval_status} />,
     },
   ];
 
@@ -168,9 +175,9 @@ export function ApprovalsContent() {
           <CardContent>
 
             {!isLoading && (
-              <CommonTable
+              <CommonTable<NormalizedApprovalRequest>
                 columns={columns}
-                data={data?.data || []}
+                data={(data?.data || []).map(normalise)}
                 isLoading={isLoading}
                 emptyMessage="No approval requests found"
                 showStatus={false}

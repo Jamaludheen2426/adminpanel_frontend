@@ -136,7 +136,9 @@ function DateTimePicker({ value, onChange, placeholder }: {
 
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: Announcement): Announcement & { created_at: string; is_active: boolean } {
+type NormalizedAnnouncement = Omit<Announcement, 'is_active' | 'created_at'> & { is_active: boolean; created_at: string };
+
+function normalise(item: Announcement): NormalizedAnnouncement {
     return {
         ...item,
         is_active: Boolean(item.is_active),
@@ -218,7 +220,7 @@ export function AnnouncementsContent() {
     const isPending = createAnnouncement.isPending || updateAnnouncement.isPending;
 
     // ── CommonTable column definitions ───────────────────────────────────────────
-    const columns: CommonColumn<Announcement>[] = [
+    const columns: CommonColumn<NormalizedAnnouncement>[] = [
         {
             key: 'name',
             header: t('announcements.name', 'Name'),
@@ -277,15 +279,15 @@ export function AnnouncementsContent() {
                 </CardHeader>
 
                 <CardContent>
-                    <CommonTable
+                    <CommonTable<NormalizedAnnouncement>
                         columns={columns}
-                        data={announcements as any}
+                        data={announcements}
                         isLoading={isLoading}
                         emptyMessage={t('announcements.empty', 'No announcements found.')}
                         onStatusToggle={(row, val) =>
                             updateAnnouncement.mutate({ id: row.id, data: { is_active: val } })
                         }
-                        onEdit={openEdit}
+                        onEdit={(row) => openEdit(row)}
                         onDelete={(row) => setDeleteConfirm({
                             label: `${t('common.delete', 'Delete')} "${row.name}"?`,
                             onConfirm: () => deleteAnnouncement.mutate(row.id),

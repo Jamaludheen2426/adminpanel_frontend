@@ -1,8 +1,11 @@
 "use client";
 
-import { Pencil, Trash2, ArrowUpDown, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, ArrowUpDown, ChevronDown, ChevronUp, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,21 +26,36 @@ export interface CommonColumn<T> {
 }
 
 interface CommonTableProps<
-  T extends { id: number; is_active: boolean; created_at: string }
+  T extends { id: number; is_active: boolean | number; created_at: string }
 > {
-  columns: CommonColumn<T>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: CommonColumn<any>[];
   data: T[];
   isLoading: boolean;
   emptyMessage?: string;
-  onStatusToggle?: (row: T, value: boolean) => void;
-  onEdit?: (row: T) => void;
-  onDelete?: (row: T) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onStatusToggle?: (row: any, value: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onEdit?: (row: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onDelete?: (row: any) => void;
   showStatus?: boolean;
   showCreated?: boolean;
   showActions?: boolean;
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   onSort?: (column: string) => void;
+  searchPlaceholder?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onSearch?: (value: string) => void;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange?: (size: number) => void;
+  };
 }
 
 function formatDate(dateStr: string): string {
@@ -49,7 +67,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function CommonTable<
-  T extends { id: number; is_active: boolean; created_at: string }
+  T extends { id: number; is_active: boolean | number; created_at: string }
 >({
   columns,
   data,
@@ -64,7 +82,12 @@ export function CommonTable<
   sortColumn,
   sortDirection,
   onSort,
+  searchPlaceholder,
+  onSearch,
+  pagination,
 }: CommonTableProps<T>) {
+  const [searchValue, setSearchValue] = useState("");
+
   const handleSortClick = (key: string, isSortable?: boolean) => {
     if (isSortable && onSort) {
       onSort(key);
@@ -72,7 +95,23 @@ export function CommonTable<
   };
 
   return (
-    <>
+    <div className="space-y-3">
+      {/* ── Search ── */}
+      {onSearch && (
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={searchPlaceholder || "Search..."}
+            value={searchValue}
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              onSearch(e.target.value);
+            }}
+            className="pl-9 h-10 rounded-xl bg-muted/20 border-border/40 focus:bg-background transition-all"
+          />
+        </div>
+      )}
+
       <PageLoader open={isLoading} />
       {!isLoading && (
         <div className="w-full overflow-hidden rounded-xl border border-border/70 bg-background">
@@ -224,6 +263,59 @@ export function CommonTable<
           </Table>
         </div>
       )}
-    </>
+
+      {/* ── Pagination ── */}
+      {pagination && !isLoading && (
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {pagination.onPageSizeChange && (
+              <>
+                <span>Rows per page</span>
+                <Select
+                  value={String(pagination.pageSize)}
+                  onValueChange={(v) => pagination.onPageSizeChange!(Number(v))}
+                >
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[10, 25, 50, 100].map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              Page {pagination.page} of {pagination.totalPages}
+              {" "}
+              <span className="hidden sm:inline">({pagination.totalItems} total)</span>
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => pagination.onPageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => pagination.onPageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

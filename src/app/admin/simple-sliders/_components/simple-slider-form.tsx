@@ -29,7 +29,7 @@ const schema = z.object({
     name: z.string().min(1, 'Name is required'),
     key: z.string().min(1, 'Key is required'),
     description: z.string().optional().nullable(),
-    is_active: z.coerce.number().default(1), // 0=inactive/draft, 1=active/published, 2=pending
+    is_active: z.union([z.literal(0), z.literal(1), z.literal(2)]).default(1), // 0=inactive, 1=active, 2=pending
     slider_items: z.array(z.any()).default([]),
 });
 

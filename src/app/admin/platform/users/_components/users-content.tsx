@@ -249,7 +249,7 @@ export function UsersContent() {
               isLoading={isLoading}
               onSort={handleSort}
               sortColumn={sort?.column}
-              sortDirection={sort?.direction}
+              sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
               onStatusToggle={(row, val) =>
                 toggleStatusMutation.mutate({
                   id: row.id,

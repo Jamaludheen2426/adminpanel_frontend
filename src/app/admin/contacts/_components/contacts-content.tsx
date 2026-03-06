@@ -166,7 +166,7 @@ export function ContactsContent() {
                         columns={columns}
                         isLoading={isLoading}
                         sortColumn={sort?.column}
-                        sortDirection={sort?.direction}
+                        sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
                         onSort={handleSort}
                         showStatus={false}
                         showCreated={false}

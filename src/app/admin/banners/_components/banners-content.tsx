@@ -134,7 +134,7 @@ export function BannersContent() {
                             updateBanner.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }
                         sortColumn={sort?.column}
-                        sortDirection={sort?.direction}
+                        sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
                         onSort={handleSort}
                         showCreated
                         showActions
