@@ -164,7 +164,7 @@ const menuItems: MenuItem[] = [
     labelKey: "nav.contact",
     href: "/admin/contacts",
     icon: Phone,
-    permission: "contact.view",
+    permission: "contacts.view",
   },
   {
     labelKey: "nav.media",

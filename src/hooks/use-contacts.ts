@@ -73,6 +73,7 @@ export const useUpdateContactStatus = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all });
             queryClient.invalidateQueries({ queryKey: queryKeys.contacts.detail(variables.id) });
+            queryClient.invalidateQueries({ queryKey: [...queryKeys.contacts.all, 'unread-count'] });
             toast.success('Contact status updated');
         },
         onError: (error: any) => {
@@ -108,6 +109,7 @@ export const useReplyContent = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all });
             queryClient.invalidateQueries({ queryKey: queryKeys.contacts.detail(variables.id) });
+            queryClient.invalidateQueries({ queryKey: [...queryKeys.contacts.all, 'unread-count'] });
             toast.success('Reply sent successfully');
         },
         onError: (error: any) => {

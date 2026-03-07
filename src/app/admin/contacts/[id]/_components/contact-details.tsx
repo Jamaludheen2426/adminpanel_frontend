@@ -32,6 +32,12 @@ export function ContactDetails({ id }: { id: number }) {
     const { data: emailConfigsRes, isLoading: emailConfigsLoading } = useEmailConfigs({ limit: 100 } as any);
     const emailConfigs = (emailConfigsRes?.data || []).filter((c: any) => c.is_active);
     const hasEmailConfigs = !emailConfigsLoading && emailConfigs.length > 0;
+    useEffect(() => {
+        if (contact && contact.status === 'unread') {
+            updateStatus.mutate({ id: contact.id, status: 'read' });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [contact?.id]);
 
     useEffect(() => {
         if (emailConfigs.length > 0 && !selectedEmailConfigId) {

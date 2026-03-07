@@ -65,35 +65,29 @@ export default function AdminNavbar() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Notifications - Pending Approvals (super_admin / developer only) */}
+          {/* Unread Contact Messages — super_admin / developer only */}
           {((user?.role?.level ?? 0) >= 100 ||
             user?.role?.slug === "super_admin" ||
-            user?.role?.slug === "developer") && (
+            user?.role?.slug === "developer") && unreadContactsCount > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {(pendingCount + unreadContactsCount) > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-medium">
-                      {(pendingCount + unreadContactsCount) > 99 ? "99+" : pendingCount + unreadContactsCount}
-                    </span>
-                  )}
+                  <Mail className="h-5 w-5" />
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-medium">
+                    {unreadContactsCount > 99 ? "99+" : unreadContactsCount}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[340px] max-h-[500px] overflow-y-auto">
-
-                {/* Unread Contacts */}
+              <DropdownMenuContent align="end" className="w-[340px] max-h-[400px] overflow-y-auto">
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Unread Messages</span>
-                  {unreadContactsCount > 0 && (
-                    <Badge variant="secondary" className="text-xs">{unreadContactsCount}</Badge>
-                  )}
+                  <Badge variant="secondary" className="text-xs">{unreadContactsCount}</Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {recentContacts && (recentContacts as any)?.data?.length > 0 ? (
                   ((recentContacts as any).data as any[]).map((contact: any) => (
                     <DropdownMenuItem key={contact.id} asChild>
-                      <Link href={`/admin/contacts/${contact.id}`} className="flex items-start gap-3 py-2">
+                      <Link href={`/admin/contacts/${contact.id}/view`} className="flex items-start gap-3 py-2">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
                           <Mail className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                         </div>
@@ -116,9 +110,26 @@ export default function AdminNavbar() {
                     View all contacts
                   </Link>
                 </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
-                {/* Pending Approvals */}
-                <DropdownMenuSeparator />
+          {/* Pending Approvals Bell — super_admin / developer only */}
+          {((user?.role?.level ?? 0) >= 100 ||
+            user?.role?.slug === "super_admin" ||
+            user?.role?.slug === "developer") && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  {pendingCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-yellow-500 text-white text-[10px] font-medium">
+                      {pendingCount > 99 ? "99+" : pendingCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[340px] max-h-[400px] overflow-y-auto">
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Pending Approvals</span>
                   {pendingCount > 0 && (
@@ -156,7 +167,6 @@ export default function AdminNavbar() {
                     View all approvals
                   </Link>
                 </DropdownMenuItem>
-
               </DropdownMenuContent>
             </DropdownMenu>
           )}
