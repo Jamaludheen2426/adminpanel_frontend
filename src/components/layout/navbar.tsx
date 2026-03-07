@@ -95,7 +95,7 @@ export default function AdminNavbar() {
                           <span className="font-medium text-sm truncate">{contact.name}</span>
                           <span className="text-xs text-muted-foreground truncate">{contact.subject || '(No Subject)'}</span>
                           <span className="text-xs text-muted-foreground">
-                            {new Date(contact.created_at).toLocaleDateString()}
+                            {new Date(contact.createdAt || contact.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </Link>

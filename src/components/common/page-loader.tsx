@@ -20,7 +20,7 @@ export function PageLoader({
   return (
     <Dialog open={open}>
       <DialogContent
-        className="z-[1000] max-w-sm flex flex-col items-center justify-center gap-4 py-10"
+        className="z-[1000] max-w-sm flex flex-col items-center justify-center gap-4 py-10 [&>button]:hidden"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
