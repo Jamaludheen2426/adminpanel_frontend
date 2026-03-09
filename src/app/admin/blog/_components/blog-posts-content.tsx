@@ -105,7 +105,7 @@ export function BlogPostsContent() {
 
     return (
         <div className="space-y-6">
-            <PageLoader open={isFetching} />
+            <PageLoader open={isFetching || createPost.isPending || updatePost.isPending || deletePost.isPending} />
 
             <div>
                 <h1 className="text-3xl font-bold">{t('blog.posts_title', 'Blog Posts')}</h1>

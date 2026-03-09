@@ -188,6 +188,7 @@ export function BlogCategoriesContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={createCategory.isPending || updateCategory.isPending} />
             <PageLoader open={isUploading} text={t('common.uploading', 'Uploading...')} />
 
             <PageHeader
@@ -298,7 +299,7 @@ export function BlogCategoriesContent() {
                         <DialogFooter className="pt-4">
                             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel', 'Cancel')}</Button>
                             <Button type="submit" disabled={isPending}>
-                                {isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                                {t('common.save', 'Save')}
                             </Button>
                         </DialogFooter>
                     </form>

@@ -7,7 +7,6 @@ import { z } from 'zod';
 import { Save, ChevronDown, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -407,12 +406,8 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
 
             {/* Submit */}
             <Button type="submit" className="w-full" disabled={isPending || isUploading}>
-                {isPending ? (
-                    <Spinner className="mr-2 h-4 w-4" />
-                ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                )}
-                {isPending ? t('common.saving', 'Saving...') : (defaultValues?.id ? t('common.save', 'Save Changes') : t('blog.create_post', 'Create Blog Post'))}
+                <Save className="mr-2 h-4 w-4" />
+                {defaultValues?.id ? t('common.save', 'Save Changes') : t('blog.create_post', 'Create Blog Post')}
             </Button>
 
         </form>

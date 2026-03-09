@@ -128,7 +128,7 @@ export function BlogTagsContent() {
 
     return (
         <div className="space-y-6">
-            <PageLoader open={isLoading} text={t('common.loading', 'Loading...')} />
+            <PageLoader open={isPending} />
 
             <div>
                 <h1 className="text-3xl font-bold">{t('blog.tags_title', 'Blog Tags')}</h1>
@@ -202,7 +202,7 @@ export function BlogTagsContent() {
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel', 'Cancel')}</Button>
                             <Button type="submit" disabled={isPending}>
-                                {isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                                {t('common.save', 'Save')}
                             </Button>
                         </DialogFooter>
                     </form>
