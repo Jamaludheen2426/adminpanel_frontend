@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Save, LogOut, ChevronDown, X, ImageIcon, FileText } from 'lucide-react';
 import { useCreatePage, useUpdatePage, type Page } from '@/hooks/use-pages';
 import { isApprovalRequired } from '@/lib/api-client';
+import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -202,7 +203,12 @@ export function PageForm({ page }: { page?: Page }) {
                 </div>
                 <div className="flex gap-2">
                     <Button type="button" variant="outline" size="sm" disabled={isSaving} onClick={onSave}>
-                        <Save className="h-3.5 w-3.5 mr-1.5" />{isSaving ? 'Saving…' : 'Save'}
+                        {isSaving ? (
+                            <Spinner className="h-3.5 w-3.5 mr-1.5" />
+                        ) : (
+                            <Save className="h-3.5 w-3.5 mr-1.5" />
+                        )}
+                        {isSaving ? 'Saving…' : 'Save'}
                     </Button>
                     <Button type="button" size="sm" disabled={isSaving} onClick={onSaveExit}>
                         <LogOut className="h-3.5 w-3.5 mr-1.5" />Save & Exit
@@ -320,12 +326,22 @@ export function PageForm({ page }: { page?: Page }) {
                 {/* ── Right sidebar ─────────────────────────────────────── */}
                 <div className="space-y-4">
 
-                    {/* Publish */}
+                    {/* Publish {isSaving ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Save className="h-4 w-4 mr-2" />
+                                )}
+                                
                     <Card>
                         <CardContent className="px-4 py-4 space-y-2.5">
                             <p className="font-semibold text-sm">Publish</p>
                             <Button type="button" className="w-full" disabled={isSaving} onClick={onSave}>
-                                <Save className="h-4 w-4 mr-2" />{isSaving ? 'Saving…' : 'Save Page'}
+                                {isSaving ? (
+                                    <Spinner className="h-4 w-4 mr-2" />
+                                ) : (
+                                    <Save className="h-4 w-4 mr-2" />
+                                )}
+                                {isSaving ? 'Saving…' : 'Save Page'}
                             </Button>
                             <Button type="button" variant="outline" className="w-full" disabled={isSaving} onClick={onSaveExit}>
                                 <LogOut className="h-4 w-4 mr-2" />Save & Exit

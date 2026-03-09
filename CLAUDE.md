@@ -153,6 +153,19 @@ queryKeys.settings.group('general')
 | Translations | `/admin/settings/translations` | `use-translations.ts` |
 | Email | `/admin/settings/email` | `use-email-configs.ts` |
 | Contact | `/admin/contacts` | `use-contacts.ts` |
+| Vendors | `/admin/vendors` | `use-vendors.ts` |
+
+## Vendor Module Design
+- **Routes:** `/admin/vendors` (list) → `/admin/vendors/new` (create) → `/admin/vendors/[id]/edit` (edit)
+- **Hook:** `src/hooks/use-vendors.ts` — `useVendors`, `useVendor`, `useCreateVendor`, `useUpdateVendor`, `useUpdateVendorStatus`, `useDeleteVendor`
+- **Form:** `src/app/admin/vendors/_components/vendor-form.tsx` uses `CommonForm` with 3 sections: Company Info, Vendor Info (includes profile image + password), Bank Info
+- **List page:** `vendors-content.tsx` uses `CommonTable` with `showCreated={true}`, `showStatus={false}` (status is a custom Switch column), `showActions={true}` (onEdit/onDelete)
+- **Status toggle:** `PATCH /vendors/:id/status` — does NOT go through approval workflow
+- **Soft delete:** Vendor model uses `paranoid: true` — table **must** have `deleted_at` column
+- **DB table:** `initial_setup.sql` has the full `CREATE TABLE vendors` at the bottom
+- **Permissions:** `vendors.view`, `vendors.create`, `vendors.edit`, `vendors.delete`
+- **Vendor portal:** `/vendor/dashboard` — separate portal for logged-in vendors using `useVendorMe()` / `useVendorLogout()`
+- **Vendor auth cookies:** `vendor_access_token`, `vendor_refresh_token`, `vendor_auth_pending`
 
 ## Contact Module Design
 - **Flow:** User submits public contact form → Admin reads → Admin sends ONE reply email → Done

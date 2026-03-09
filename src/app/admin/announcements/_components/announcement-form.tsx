@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Save, LogOut } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -241,7 +242,11 @@ export function AnnouncementForm({ defaultValues, onSave, isPending }: Announcem
                         <CardContent className="flex gap-2">
                             <Button type="submit" className="flex-1" disabled={isPending}
                                 onClick={() => { exitRef.current = false; }}>
-                                <Save className="mr-2 h-4 w-4" />
+                                {isPending ? (
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <Save className="mr-2 h-4 w-4" />
+                                )}
                                 {isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
                             </Button>
                             <Button type="submit" variant="outline" className="flex-1" disabled={isPending}

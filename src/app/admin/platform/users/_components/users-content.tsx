@@ -257,18 +257,21 @@ export function UsersContent() {
               onSort={handleSort}
               sortColumn={sort?.column}
               sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
-              onStatusToggle={(row, val) =>
+              onStatusToggle={(row, val) => {
+                // Prevent status toggle for super admin or developer
+                if (isSuperAdminOrDeveloper(row)) return;
                 toggleStatusMutation.mutate({
                   id: row.id,
                   is_active: val ? 1 : 0,
-                })
-              }
+                });
+              }}
               onEdit={(row) => router.push(`/admin/platform/users/${row.id}/edit`)}
               onDelete={handleDelete}
               emptyMessage="No employees found."
               showStatus
               showCreated
               showActions
+              disableStatusToggle={(row) => isSuperAdminOrDeveloper(row)}
             />
 
             {data?.pagination && data.pagination.totalPages > 1 && (

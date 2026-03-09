@@ -61,7 +61,16 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
 
     return (
         <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-            <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent 
+                className="max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
+                onKeyDown={(e) => {
+                    // Prevent Enter key from triggering form submission when modal is open
+                    if (e.key === 'Enter' && !selected) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                }}
+            >
 
                 {/* Header */}
                 <DialogHeader className="px-5 py-4 border-b shrink-0">
@@ -73,6 +82,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                     {/* Breadcrumb */}
                     <div className="flex items-center gap-1 text-sm flex-1 min-w-0 overflow-x-auto">
                         <button
+                            type="button"
                             className="text-muted-foreground hover:text-foreground shrink-0"
                             onClick={() => { setFolder(''); setBreadcrumbs([]); setSelected(null); }}
                         >
@@ -82,6 +92,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                             <span key={i} className="flex items-center gap-1 shrink-0">
                                 <span className="text-muted-foreground">/</span>
                                 <button
+                                    type="button"
                                     className="text-muted-foreground hover:text-foreground"
                                     onClick={() => goBack(i + 1)}
                                 >
@@ -100,7 +111,11 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                             className="pl-8 h-8 text-xs"
                         />
                         {search && (
-                            <button className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setSearch('')}>
+                            <button 
+                                type="button" 
+                                className="absolute right-2 top-1/2 -translate-y-1/2" 
+                                onClick={() => setSearch('')}
+                            >
                                 <X className="h-3 w-3 text-muted-foreground" />
                             </button>
                         )}
@@ -121,6 +136,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                             {folders.map((f) => (
                                 <button
                                     key={f.path}
+                                    type="button"
                                     className="aspect-square rounded-lg border bg-muted/40 hover:bg-muted hover:border-primary/40 transition-all flex flex-col items-center justify-center gap-2 p-2"
                                     onClick={() => openFolder(f)}
                                 >
@@ -135,6 +151,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                                 const thumb = resolveMediaUrl(file.url);
                                 return (
                                     <button
+                                        type="button"
                                         key={file.path}
                                         className={cn(
                                             'aspect-square rounded-lg border overflow-hidden relative transition-all',
@@ -185,8 +202,19 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                         )}
                     </p>
                     <div className="flex gap-2">
-                        <Button type="button" variant="ghost" size="sm" onClick={handleClose}>Cancel</Button>
-                        <Button type="button" size="sm" disabled={!selected} onClick={handleInsert}>
+                        <Button type="button" variant="ghost" size="sm" onClick={handleClose}>
+                            Cancel
+                        </Button>
+                        <Button 
+                            type="button" 
+                            size="sm" 
+                            disabled={!selected} 
+                            onClick={handleInsert}
+                            onKeyDown={(e) => {
+                                // Prevent accidental form submission
+                                e.stopPropagation();
+                            }}
+                        >
                             Insert
                         </Button>
                     </div>

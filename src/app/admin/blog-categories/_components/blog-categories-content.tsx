@@ -11,6 +11,7 @@ import {
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { PageHeader } from '@/components/common/page-header';
+import { PageLoader } from '@/components/common/page-loader';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import {
     TextInput,
@@ -58,6 +59,8 @@ export function BlogCategoriesContent() {
     const [cropperKey, setCropperKey] = useState(0);
     const [previewImageUrl, setPreviewImageUrl] = useState('');
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+    const [sortColumn, setSortColumn] = useState<string>('created_at');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -134,6 +137,15 @@ export function BlogCategoriesContent() {
         }
     };
 
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
     const columns: CommonColumn<any>[] = [
         {
             key: 'image',
@@ -146,11 +158,13 @@ export function BlogCategoriesContent() {
                     </AvatarFallback>
                 </Avatar>
             ),
+            sortable: false,
         },
         {
             key: 'name',
             header: t('common.name', 'Name'),
             render: (row: BlogCategory) => <span className="font-medium">{row.name}</span>,
+            sortable: true,
         },
         {
             key: 'slug',
@@ -158,6 +172,7 @@ export function BlogCategoriesContent() {
             render: (row: BlogCategory) => (
                 <Badge variant="outline" className="font-mono text-xs">{row.slug}</Badge>
             ),
+            sortable: true,
         },
         {
             key: 'sort_order',
@@ -165,6 +180,7 @@ export function BlogCategoriesContent() {
             render: (row: BlogCategory) => (
                 <span className="text-muted-foreground">{row.sort_order}</span>
             ),
+            sortable: true,
         },
     ];
 
@@ -172,6 +188,8 @@ export function BlogCategoriesContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isUploading} text={t('common.uploading', 'Uploading...')} />
+
             <PageHeader
                 title={t('blog.categories_title', 'Blog Categories')}
                 description={t('blog.categories_desc', 'Manage categories for blog posts')}
@@ -194,9 +212,12 @@ export function BlogCategoriesContent() {
                         onStatusToggle={(row, val) => updateCategory.mutate({ id: row.id, data: { is_active: val } })}
                         onEdit={(row) => openEdit(row as BlogCategory)}
                         onDelete={(row) => setDeleteId(row.id)}
-                        showCreated={false}
+                        showCreated={true}
                         showStatus
                         showActions
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
                     />
                 </CardContent>
             </Card>

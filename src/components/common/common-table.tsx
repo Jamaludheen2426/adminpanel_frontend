@@ -56,6 +56,8 @@ interface CommonTableProps<
     onPageChange: (page: number) => void;
     onPageSizeChange?: (size: number) => void;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  disableStatusToggle?: (row: any) => boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -85,6 +87,7 @@ export function CommonTable<
   searchPlaceholder,
   onSearch,
   pagination,
+  disableStatusToggle,
 }: CommonTableProps<T>) {
   const [searchValue, setSearchValue] = useState("");
 
@@ -217,7 +220,7 @@ export function CommonTable<
                         <Switch
                           checked={Boolean(row.is_active)}
                           onCheckedChange={(val) => onStatusToggle?.(row, val)}
-                          disabled={!onStatusToggle}
+                          disabled={!onStatusToggle || (disableStatusToggle?.(row) ?? false)}
                         />
                       </TableCell>
                     )}

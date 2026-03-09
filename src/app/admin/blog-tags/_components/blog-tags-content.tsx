@@ -10,6 +10,7 @@ import {
 } from '@/hooks/use-blog-tags';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
+import { PageLoader } from '@/components/common/page-loader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,6 +49,8 @@ export function BlogTagsContent() {
     const [editItem, setEditItem] = useState<BlogTag | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+    const [sortColumn, setSortColumn] = useState<string>('created_at');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -82,6 +85,15 @@ export function BlogTagsContent() {
         }
     };
 
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
+
     const onSubmit = (data: FormData) => {
         if (editItem) {
             updateTag.mutate({ id: editItem.id, data }, { onSuccess: closeDialog });
@@ -100,6 +112,7 @@ export function BlogTagsContent() {
                     <span className="font-medium">{row.name}</span>
                 </div>
             ),
+            sortable: true,
         },
         {
             key: 'slug',
@@ -107,6 +120,7 @@ export function BlogTagsContent() {
             render: (row: BlogTag) => (
                 <Badge variant="outline" className="font-mono text-xs">{row.slug}</Badge>
             ),
+            sortable: true,
         },
     ];
 
@@ -114,6 +128,8 @@ export function BlogTagsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading} text={t('common.loading', 'Loading...')} />
+
             <div>
                 <h1 className="text-3xl font-bold">{t('blog.tags_title', 'Blog Tags')}</h1>
                 <p className="text-muted-foreground mt-1">{t('blog.tags_desc', 'Manage tags for blog posts')}</p>
@@ -141,7 +157,10 @@ export function BlogTagsContent() {
                         onStatusToggle={(row, val) => updateTag.mutate({ id: row.id, data: { is_active: val } })}
                         onEdit={(row) => openEdit(row as BlogTag)}
                         onDelete={(row) => setDeleteId(row.id)}
-                        showCreated={false}
+                        showCreated={true}
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
                     />
                 </CardContent>
             </Card>
