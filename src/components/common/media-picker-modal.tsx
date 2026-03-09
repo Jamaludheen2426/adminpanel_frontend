@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Search, X, Folder, CheckCircle2, Image as ImageIcon, Upload } from 'lucide-react';
 import { useMediaFiles, type MediaFile, type MediaFolder } from '@/hooks/use-media-files';
 import { resolveMediaUrl } from '@/lib/utils';
@@ -22,6 +22,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
     const [search, setSearch] = useState('');
     const [selected, setSelected] = useState<MediaFile | null>(null);
     const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+    const searchInputRef = useRef<HTMLInputElement>(null);
 
     const { data, isLoading } = useMediaFiles(folder, { enabled: open });
 
@@ -61,11 +62,16 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
 
     return (
         <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-            <DialogContent 
+            <DialogContent
                 className="max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden"
+                onOpenAutoFocus={(e) => {
+                    // Redirect focus to search input instead of first image button
+                    e.preventDefault();
+                    searchInputRef.current?.focus();
+                }}
                 onKeyDown={(e) => {
-                    // Prevent Enter key from triggering form submission when modal is open
-                    if (e.key === 'Enter' && !selected) {
+                    // Block Enter from propagating to any parent form
+                    if (e.key === 'Enter') {
                         e.preventDefault();
                         e.stopPropagation();
                     }
@@ -105,6 +111,7 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                     <div className="relative w-52 shrink-0">
                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                         <Input
+                            ref={searchInputRef}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search files…"
@@ -205,14 +212,16 @@ export function MediaPickerModal({ open, onClose, onSelect, imagesOnly = true }:
                         <Button type="button" variant="ghost" size="sm" onClick={handleClose}>
                             Cancel
                         </Button>
-                        <Button 
-                            type="button" 
-                            size="sm" 
-                            disabled={!selected} 
+                        <Button
+                            type="button"
+                            size="sm"
+                            disabled={!selected}
                             onClick={handleInsert}
                             onKeyDown={(e) => {
-                                // Prevent accidental form submission
-                                e.stopPropagation();
+                                if (e.key === 'Enter') {
+                                    e.stopPropagation();
+                                    handleInsert();
+                                }
                             }}
                         >
                             Insert

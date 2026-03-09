@@ -33,6 +33,7 @@ import {
   CreditCard,
   Tag,
   FolderOpen,
+  Store,
 } from "lucide-react";
 import {
   Sidebar,
@@ -95,6 +96,12 @@ const menuItems: MenuItem[] = [
     href: "/admin/platform/users",
     icon: Users,
     permission: "employees.view",
+  },
+  {
+    labelKey: "nav.vendors",
+    href: "/admin/vendors",
+    icon: Store,
+    permission: "vendors.view",
   },
   {
     labelKey: "nav.pages",

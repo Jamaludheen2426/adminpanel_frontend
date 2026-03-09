@@ -49,6 +49,7 @@
     "react-hook-form": "^7.71.1",
     "react-image-crop": "^11.0.10",
     "react-quill-new": "^3.8.3",
+    "recharts": "^3.8.0",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.25.76"

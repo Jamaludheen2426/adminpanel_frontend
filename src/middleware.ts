@@ -46,33 +46,46 @@ export async function middleware(request: NextRequest) {
   // ── AUTH LOGIC ─────────────────────────────────────────────────────────────
 
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
-  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
-  const accessToken = request.cookies.get('access_token')?.value;
-  const refreshToken = request.cookies.get('refresh_token')?.value;
+  const isAdminRoute  = adminRoutes.some((route) => pathname.startsWith(route));
+  const isVendorRoute = pathname.startsWith('/vendor');
 
-  // Check for auth_pending flag (set by login hook for cross-domain cookie handling)
-  const authPendingCookie = request.cookies.get('auth_pending')?.value;
-  const isAuthPending = authPendingCookie === 'true';
-  const isLoggedIn = !!(accessToken || refreshToken || isAuthPending);
+  // Admin session cookies
+  const accessToken     = request.cookies.get('access_token')?.value;
+  const refreshToken    = request.cookies.get('refresh_token')?.value;
+  const authPending     = request.cookies.get('auth_pending')?.value === 'true';
+  const isAdminLoggedIn = !!(accessToken || refreshToken || authPending);
 
-  // Redirect root to admin if logged in, otherwise to login
+  // Vendor session cookies
+  const vendorAccessToken  = request.cookies.get('vendor_access_token')?.value;
+  const vendorRefreshToken = request.cookies.get('vendor_refresh_token')?.value;
+  const vendorAuthPending  = request.cookies.get('vendor_auth_pending')?.value === 'true';
+  const isVendorLoggedIn   = !!(vendorAccessToken || vendorRefreshToken || vendorAuthPending);
+
+  // Redirect root based on who is logged in
   if (pathname === '/') {
-    if (isLoggedIn) {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
+    if (isAdminLoggedIn)  return NextResponse.redirect(new URL('/admin', request.url));
+    if (isVendorLoggedIn) return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // If accessing public route, allow access
+  // Public routes (auth pages)
   if (isPublicRoute) {
-    // Redirect authenticated users away from auth pages to admin
-    if (isLoggedIn && pathname.startsWith('/auth')) {
+    if (isAdminLoggedIn && pathname.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/admin', request.url));
+    }
+    if (isVendorLoggedIn && !isAdminLoggedIn && pathname.startsWith('/auth')) {
+      return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
     }
     return NextResponse.next();
   }
 
-  if (isAdminRoute && !isLoggedIn) {
+  // Admin routes require admin session
+  if (isAdminRoute && !isAdminLoggedIn) {
+    return NextResponse.redirect(new URL('/auth/login', request.url));
+  }
+
+  // Vendor routes require vendor session
+  if (isVendorRoute && !isVendorLoggedIn) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 

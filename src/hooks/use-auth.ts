@@ -241,6 +241,53 @@ export function useUpdateProfile() {
   });
 }
 
+// Smart login — tries admin first, falls back to vendor
+export function useSmartLogin() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: async (data: LoginDto) => {
+      // 1. Try admin login
+      try {
+        const res = await apiClient.post('/auth/login', data);
+        return { type: 'admin' as const, user: res.data.data.user };
+      } catch (adminErr: any) {
+        // Only fall back to vendor on auth errors (401/403/404), not server errors
+        const status = adminErr?.response?.status;
+        if (!status || status >= 500) throw adminErr;
+      }
+
+      // 2. Fall back to vendor login
+      const res = await apiClient.post('/vendors/auth/login', data);
+      return { type: 'vendor' as const, vendor: res.data.data.vendor };
+    },
+    onSuccess: ({ type }) => {
+      if (type === 'admin') {
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+        toast.success('Login successful');
+        if (typeof window !== 'undefined') {
+          const exp = new Date();
+          exp.setSeconds(exp.getSeconds() + 15);
+          document.cookie = `auth_pending=true; path=/; expires=${exp.toUTCString()}; SameSite=Lax`;
+        }
+        setTimeout(() => router.push('/admin'), 300);
+      } else {
+        toast.success('Welcome to Vendor Portal');
+        if (typeof window !== 'undefined') {
+          const exp = new Date();
+          exp.setSeconds(exp.getSeconds() + 15);
+          document.cookie = `vendor_auth_pending=true; path=/; expires=${exp.toUTCString()}; SameSite=Lax`;
+        }
+        setTimeout(() => router.push('/vendor/dashboard'), 300);
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Invalid email or password');
+    },
+  });
+}
+
 // Auth context helper
 export function useAuth() {
   const { data: user, isLoading, error } = useCurrentUser();

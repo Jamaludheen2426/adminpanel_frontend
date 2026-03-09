@@ -78,7 +78,9 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Redirect to login if unauthorized
-      if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth')) {
+      if (typeof window !== 'undefined' &&
+          !window.location.pathname.includes('/auth') &&
+          !window.location.pathname.startsWith('/vendor')) {
         window.location.href = '/auth/login';
       }
     }

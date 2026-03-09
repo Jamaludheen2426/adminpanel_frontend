@@ -235,34 +235,17 @@ export function LanguagesContent() {
                 </Dialog>
 
                 {/* ADD LANGUAGE */}
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button onClick={() => setSelectedLanguage(null)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      {t("languages.add_language")}
-                    </Button>
-                  </DialogTrigger>
+                <Button onClick={() => { setSelectedLanguage(null); setIsDialogOpen(true); }}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t("languages.add_language")}
+                </Button>
 
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>
-                        {selectedLanguage
-                          ? t("languages.edit_language")
-                          : t("languages.add_language")}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {selectedLanguage
-                          ? t("languages.edit_desc")
-                          : t("languages.add_desc")}
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <LanguageForm
-                      language={selectedLanguage}
-                      onSuccess={handleDialogClose}
-                    />
-                  </DialogContent>
-                </Dialog>
+                <LanguageForm
+                  open={isDialogOpen}
+                  onOpenChange={setIsDialogOpen}
+                  language={selectedLanguage}
+                  onSuccess={handleDialogClose}
+                />
               </div>
             </div>
 

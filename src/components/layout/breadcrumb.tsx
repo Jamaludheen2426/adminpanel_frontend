@@ -51,6 +51,7 @@ const segmentTranslationMap: Record<string, string> = {
   "plugins": "nav.plugins",
   "payments": "nav.payments",
   "companies": "nav.companies",
+  "vendors": "nav.vendors",
 
   // Appearance
   "appearance": "nav.appearance",

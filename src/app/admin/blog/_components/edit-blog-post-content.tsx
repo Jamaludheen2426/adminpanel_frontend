@@ -5,6 +5,7 @@ import { useBlogPost, useUpdateBlogPost } from '@/hooks/use-blog-posts';
 import { BlogPostForm } from './blog-post-form';
 import { useTranslation } from '@/hooks/use-translation';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function EditBlogPostContent({ id }: { id: number }) {
     const { t } = useTranslation();
@@ -32,6 +33,7 @@ export function EditBlogPostContent({ id }: { id: number }) {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={update.isPending} />
             <div>
                 <h1 className="text-3xl font-bold">{t('blog.edit_post', 'Edit Blog Post')}</h1>
                 <p className="text-muted-foreground mt-1">{post.title}</p>

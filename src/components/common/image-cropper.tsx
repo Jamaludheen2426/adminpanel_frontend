@@ -263,6 +263,7 @@ export function ImageCropper({
 
           {displayImage && (
             <Button
+              type="button"
               variant="destructive"
               size="icon"
               className="absolute -top-2 -right-2 h-7 w-7 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
@@ -281,6 +282,7 @@ export function ImageCropper({
 
           <div className="flex items-center gap-2 flex-wrap">
             <Button
+              type="button"
               variant="outline"
               size="sm"
               className="h-9 px-4 cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
@@ -373,7 +375,7 @@ export function ImageCropper({
                   </div>
                 </div>
                 <div className="flex items-end gap-2">
-                  <Button variant="outline" size="sm" onClick={resetCrop} className="flex-1">
+                  <Button type="button" variant="outline" size="sm" onClick={resetCrop} className="flex-1">
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reset
                   </Button>
@@ -390,8 +392,8 @@ export function ImageCropper({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleCrop} disabled={!completedCrop}>
+            <Button type="button" variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button type="button" onClick={handleCrop} disabled={!completedCrop}>
               <Crop className="mr-2 h-4 w-4" />
               Crop & Save
             </Button>
