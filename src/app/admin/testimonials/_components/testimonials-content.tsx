@@ -26,7 +26,10 @@ import { toast } from 'sonner';
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
     designation: z.string().trim().min(1, 'Designation/Company is required'),
-    content: z.string().trim().min(1, 'Content is required'),
+    content: z.string().trim().min(1, 'Content is required').refine(
+        (val) => val.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, '').trim().length > 0,
+        { message: 'Content cannot be empty' }
+    ),
     image: z.string().default(''),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
     is_active: z.boolean().default(true),
