@@ -74,9 +74,17 @@ export function ImageCropper({
     onRemove();
   };
 
+  const MAX_FILE_SIZE_MB = 10;
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+        toast.error(`File size exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please choose a smaller file.`);
+        e.target.value = "";
+        return;
+      }
 
       if (skipCrop) {
         onImageCropped(file);
@@ -309,6 +317,9 @@ export function ImageCropper({
 
             <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2 py-1 border rounded bg-muted/50">
               {targetWidth}x{targetHeight} Px
+            </div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 px-2 py-1 border rounded bg-muted/50">
+              Max 10MB
             </div>
           </div>
         </div>

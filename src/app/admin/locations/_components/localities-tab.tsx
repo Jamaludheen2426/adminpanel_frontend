@@ -515,7 +515,7 @@ export function LocalitiesTab() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Country */}
             <div className="space-y-2">
-              <Label>{t('locations.country', 'Country')}</Label>
+              <Label>{t('locations.country', 'Country')} *</Label>
               <Select
                 value={selectedCountryId?.toString() ?? ''}
                 onValueChange={(v) => {
@@ -541,7 +541,7 @@ export function LocalitiesTab() {
 
             {/* State */}
             <div className="space-y-2">
-              <Label>{t('locations.state', 'State')}</Label>
+              <Label>{t('locations.state', 'State')} *</Label>
               <Select
                 value={selectedStateId?.toString() ?? ''}
                 onValueChange={(v) => {

@@ -65,6 +65,7 @@ const countrySchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
   code: z
     .string()
+    .trim()
     .min(2, "Code must be at least 2 characters")
     .max(3, "Code must be at most 3 characters"),
   nationality: z.string().optional(),
@@ -469,6 +470,7 @@ export function CountriesTab() {
                     id="c-active"
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    disabled={!!editItem}
                   />
                 )}
               />
