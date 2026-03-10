@@ -21,7 +21,7 @@ import type { Announcement, CreateAnnouncementDto } from '@/hooks/use-announceme
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
-    content: z.string().trim().min(1, 'Content is required'),
+    content: z.string().refine(val => val.replace(/<[^>]*>/g, '').trim().length > 0, 'Content is required'),
     start_date: z.string().nullable().optional(),
     end_date: z.string().nullable().optional(),
     has_action: z.boolean().default(false),
@@ -31,7 +31,15 @@ const schema = z.object({
     bg_color: z.string().default('#ffffff'),
     text_color: z.string().default('#000000'),
     is_active: z.boolean().default(true),
-});
+}).refine(
+    (data) => {
+        if (data.start_date && data.end_date) {
+            return new Date(data.start_date) < new Date(data.end_date);
+        }
+        return true;
+    },
+    { message: 'Start date must be before end date', path: ['end_date'] }
+);
 
 export type AnnouncementFormData = z.infer<typeof schema>;
 
