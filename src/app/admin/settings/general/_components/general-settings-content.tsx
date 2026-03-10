@@ -74,39 +74,102 @@ export function GeneralSettingsContent() {
 
   return (
     <PermissionGuard permission="settings.view">
-    <>
-      <PageLoader open={isLoading} />
-      <PageLoader open={bulkUpdateMutation.isPending}/>
+      <>
+        <PageLoader open={isLoading} />
+        <PageLoader open={bulkUpdateMutation.isPending} />
 
-      <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/admin/settings">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">General Settings</h1>
-            <p className="text-muted-foreground mt-1">
-              Configure system maintenance mode
-            </p>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <Link href="/admin/settings">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold">General Settings</h1>
+              <p className="text-muted-foreground mt-1">
+                Configure system maintenance mode
+              </p>
+            </div>
           </div>
+
+          {/* System Maintenance Mode */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5" />
+                System Maintenance Mode
+              </CardTitle>
+              <CardDescription>
+                Show a maintenance page while performing system updates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Switch
+                    checked={values.maintenance_enabled === "true"}
+                    pending={switchPending}
+                    onCheckedChange={(checked) =>
+                      setValues({
+                        ...values,
+                        maintenance_enabled: checked ? "true" : "false",
+                      })
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {switchPending
+                      ? "Pending approval..."
+                      : values.maintenance_enabled === "true"
+                        ? "Site is under maintenance"
+                        : "Site is operating normally"}
+                  </span>
+                </div>
+                <Can permission="general_settings.edit">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMaintenanceDialogOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                </Can>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Button */}
+          <Can permission="general_settings.edit">
+            <div className="flex justify-end">
+              <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+                <Save className="mr-2 h-4 w-4" />
+                Save General Settings
+              </Button>
+            </div>
+          </Can>
         </div>
 
-        {/* System Maintenance Mode */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              System Maintenance Mode
-            </CardTitle>
-            <CardDescription>
-              Show a maintenance page while performing system updates
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
+        {/* Maintenance Mode Edit Dialog */}
+        <Dialog
+          open={maintenanceDialogOpen}
+          onOpenChange={setMaintenanceDialogOpen}
+        >
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5" />
+                Edit Maintenance Page
+              </DialogTitle>
+              <DialogDescription>
+                Customize the HTML content that will be displayed during system
+                maintenance
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
+                <Label>Status:</Label>
                 <Switch
                   checked={values.maintenance_enabled === "true"}
                   pending={switchPending}
@@ -118,106 +181,41 @@ export function GeneralSettingsContent() {
                   }
                 />
                 <span className="text-sm text-muted-foreground">
-                  {switchPending
-                    ? "Pending approval..."
-                    : values.maintenance_enabled === "true"
-                    ? "Site is under maintenance"
-                    : "Site is operating normally"}
+                  {switchPending ? "Pending approval..." : values.maintenance_enabled === "true" ? "Active" : "Disabled"}
                 </span>
               </div>
-              <Can permission="general_settings.edit">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setMaintenanceDialogOpen(true)}
-                >
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </Can>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Save Button */}
-        <Can permission="general_settings.edit">
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-              <Save className="mr-2 h-4 w-4" />
-              {bulkUpdateMutation.isPending
-                ? "Saving..."
-                : "Save General Settings"}
-            </Button>
-          </div>
-        </Can>
-      </div>
-
-      {/* Maintenance Mode Edit Dialog */}
-      <Dialog
-        open={maintenanceDialogOpen}
-        onOpenChange={setMaintenanceDialogOpen}
-      >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Edit Maintenance Page
-            </DialogTitle>
-            <DialogDescription>
-              Customize the HTML content that will be displayed during system
-              maintenance
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Label>Status:</Label>
-              <Switch
-                checked={values.maintenance_enabled === "true"}
-                pending={switchPending}
-                onCheckedChange={(checked) =>
+              {/* HTML Editor Component */}
+              <HtmlEditor
+                value={values.maintenance_html}
+                onChange={(value) =>
                   setValues({
                     ...values,
-                    maintenance_enabled: checked ? "true" : "false",
+                    maintenance_html: value,
                   })
                 }
+                label="Maintenance Page HTML"
+                placeholder="Enter your HTML content here..."
+                rows={14}
+                helpText="You can use HTML, CSS (inline or in style tags), and basic styling"
+                showResetButton={true}
+                onReset={handleResetToDefault}
+                resetButtonText="Reset to Default"
               />
-              <span className="text-sm text-muted-foreground">
-                {switchPending ? "Pending approval..." : values.maintenance_enabled === "true" ? "Active" : "Disabled"}
-              </span>
             </div>
 
-            {/* HTML Editor Component */}
-            <HtmlEditor
-              value={values.maintenance_html}
-              onChange={(value) =>
-                setValues({
-                  ...values,
-                  maintenance_html: value,
-                })
-              }
-              label="Maintenance Page HTML"
-              placeholder="Enter your HTML content here..."
-              rows={14}
-              helpText="You can use HTML, CSS (inline or in style tags), and basic styling"
-              showResetButton={true}
-              onReset={handleResetToDefault}
-              resetButtonText="Reset to Default"
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setMaintenanceDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleMaintenanceSave}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setMaintenanceDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleMaintenanceSave}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     </PermissionGuard>
   );
 }

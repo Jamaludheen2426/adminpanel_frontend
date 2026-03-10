@@ -332,25 +332,7 @@ export function EmailConfigContent() {
   return (
     <PermissionGuard permission="email_configs.view">
       <>
-        <PageLoader open={isLoading} />
-        {/* Loading Overlay */}
-        {(createMutation.isPending ||
-          updateMutation.isPending ||
-          deleteMutation.isPending ||
-          testMutation.isPending ||
-          toggleMutation.isPending) && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-                <p className="text-sm font-medium">
-                  {createMutation.isPending && "Creating configuration..."}
-                  {updateMutation.isPending && "Updating configuration..."}
-                  {deleteMutation.isPending && "Deleting configuration..."}
-                  {testMutation.isPending && "Testing email connection..."}
-                  {toggleMutation.isPending && "Updating status..."}
-                </p>
-              </div>
-            </div>
-          )}
+        <PageLoader open={isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || testMutation.isPending || toggleMutation.isPending} />
         {!isLoading && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -622,9 +604,7 @@ export function EmailConfigContent() {
                     onClick={handleSubmit}
                     disabled={createMutation.isPending || updateMutation.isPending}
                   >
-                    {createMutation.isPending || updateMutation.isPending
-                      ? "Saving..."
-                      : editingConfig ? "Update" : "Create"}
+                    {editingConfig ? "Update" : "Create"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -633,7 +613,7 @@ export function EmailConfigContent() {
             {/* Delete Confirmation */}
             <DeleteDialog
               open={deleteDialogOpen}
-              onOpenChange={setDeleteDialogOpen}
+              onOpenChange={(open: boolean) => setDeleteDialogOpen(open)}
               onConfirm={handleDelete}
               isDeleting={deleteMutation.isPending}
               title="Delete Email Configuration"

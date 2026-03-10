@@ -21,16 +21,12 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import { PageLoader } from '@/components/common/page-loader';
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    description: z.string().optional(),
+    name: z.string().trim().min(1, 'Name is required'),
+    description: z.string().trim().optional(),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
     is_active: z.boolean().default(true),
 });
@@ -120,6 +116,7 @@ export function FaqCategoriesContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || isPending || deleteCategory.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -201,27 +198,21 @@ export function FaqCategoriesContent() {
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>{t('common.delete_confirm', 'This action cannot be undone.')}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                                if (deleteId) {
-                                    deleteCategory.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
-                                }
-                            }}
-                        >
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+                title={t('faq.delete_category', 'Delete Category')}
+                description={t('faq.delete_category_confirm', 'Are you sure you want to delete this FAQ category?')}
+                isDeleting={deleteCategory.isPending}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteCategory.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
+            />
         </div>
     );
 }

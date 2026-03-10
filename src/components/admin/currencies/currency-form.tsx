@@ -19,20 +19,20 @@ import { useCreateCurrency, useUpdateCurrency } from "@/hooks/use-currencies";
 import type { Currency } from "@/types";
 
 const NUMBER_FORMATS = [
-  { value: "western",  label: "Western (1,234,567.89)",   decimal: ".",  thousand: "," },
-  { value: "european", label: "European (1.234.567,89)",   decimal: ",",  thousand: "." },
-  { value: "swiss",    label: "Swiss (1 234 567.89)",      decimal: ".",  thousand: " " },
-  { value: "indian",   label: "Indian (1,23,45,678.90)",   decimal: ".",  thousand: "," },
-  { value: "none",     label: "No separator (1234567.89)", decimal: ".",  thousand: "" },
+  { value: "western", label: "Western (1,234,567.89)", decimal: ".", thousand: "," },
+  { value: "european", label: "European (1.234.567,89)", decimal: ",", thousand: "." },
+  { value: "swiss", label: "Swiss (1 234 567.89)", decimal: ".", thousand: " " },
+  { value: "indian", label: "Indian (1,23,45,678.90)", decimal: ".", thousand: "," },
+  { value: "none", label: "No separator (1234567.89)", decimal: ".", thousand: "" },
 ];
 
 const detectFormat = (decimal: string, thousand: string) =>
   NUMBER_FORMATS.find(f => f.decimal === decimal && f.thousand === thousand)?.value ?? "western";
 
 const currencySchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  code: z.string().min(3).max(5),
-  symbol: z.string().min(1),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  code: z.string().trim().min(3).max(5),
+  symbol: z.string().trim().min(1),
   exchange_rate: z.coerce.number().min(0),
   decimal_places: z.coerce.number().int().min(0).max(8).default(2),
   number_format: z.string().default("western"),
@@ -257,8 +257,8 @@ export function CurrencyForm({ currency, onSuccess }: CurrencyFormProps) {
         {isPending
           ? "Saving..."
           : currency
-          ? "Update Currency"
-          : "Create Currency"}
+            ? "Update Currency"
+            : "Create Currency"}
       </Button>
     </form>
   );

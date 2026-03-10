@@ -15,12 +15,8 @@ import { Switch } from '@/components/ui/switch';
 import { RichTextEditor } from "@/components/common/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImageCropper } from "@/components/common/image-cropper";
 import { apiClient } from '@/lib/api-client';
@@ -28,9 +24,9 @@ import { resolveMediaUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    designation: z.string().min(1, 'Designation/Company is required'),
-    content: z.string().min(1, 'Content is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    designation: z.string().trim().min(1, 'Designation/Company is required'),
+    content: z.string().trim().min(1, 'Content is required'),
     image: z.string().default(''),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
     is_active: z.boolean().default(true),
@@ -138,10 +134,11 @@ export function TestimonialsContent() {
     };
 
     const onSubmit = (data: FormData) => {
+        closeDialog();
         if (editItem) {
-            updateTestimonial.mutate({ id: editItem.id, data }, { onSuccess: closeDialog });
+            updateTestimonial.mutate({ id: editItem.id, data });
         } else {
-            createTestimonial.mutate(data, { onSuccess: closeDialog });
+            createTestimonial.mutate(data);
         }
     };
 
@@ -179,6 +176,7 @@ export function TestimonialsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || isPending || deleteTestimonial.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -257,7 +255,6 @@ export function TestimonialsContent() {
                                         onChange={field.onChange}
                                         placeholder="Enter testimonial content..."
                                         variant="compact"
-                                        disableVisual={true} // Defaults to HTML source mode
                                     />
                                 )}
                             />
@@ -285,35 +282,29 @@ export function TestimonialsContent() {
 
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel', 'Cancel')}</Button>
-                            <Button type="submit" disabled={isPending}>
-                                {isPending ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                            <Button type="submit">
+                                {t('common.save', 'Save')}
                             </Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>{t('common.delete_confirm', 'This action cannot be undone.')}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                                if (deleteId) {
-                                    deleteTestimonial.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
-                                }
-                            }}
-                        >
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open: boolean) => !open && setDeleteId(null)}
+                title={t('common.are_you_sure', 'Are you sure?')}
+                description={t('common.delete_confirm', 'This action cannot be undone.')}
+                isDeleting={deleteTestimonial.isPending}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteTestimonial.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
+            />
         </div>
     );
 }

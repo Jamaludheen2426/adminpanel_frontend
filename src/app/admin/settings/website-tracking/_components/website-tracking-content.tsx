@@ -68,7 +68,7 @@ export function WebsiteTrackingContent() {
   return (
     <PermissionGuard permission="settings.view">
       <div className="space-y-6">
-        <PageLoader open={isLoading} />
+        <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
 
         {!isLoading && (
           <>
@@ -640,9 +640,7 @@ export function WebsiteTrackingContent() {
             <div className="flex justify-end">
               <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                 <Save className="mr-2 h-4 w-4" />
-                {bulkUpdateMutation.isPending
-                  ? "Saving..."
-                  : "Save Analytics Settings"}
+                Save Analytics Settings
               </Button>
             </div>
           </>

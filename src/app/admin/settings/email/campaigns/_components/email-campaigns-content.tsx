@@ -52,16 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   useEmailCampaigns,
   useCreateEmailCampaign,
@@ -139,7 +130,6 @@ export function EmailCampaignsContent() {
   const processQueueMutation = useProcessQueue();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(
     null,
   );
@@ -189,7 +179,6 @@ export function EmailCampaignsContent() {
     if (deletingId) {
       deleteMutation.mutate(deletingId, {
         onSuccess: () => {
-          setDeleteDialogOpen(false);
           setDeletingId(null);
         },
       });
@@ -212,29 +201,7 @@ export function EmailCampaignsContent() {
   return (
     <PermissionGuard permission="email_campaigns.read">
       <>
-        <PageLoader open={isLoading} />
-        {/* Loading Overlay */}
-        {(createMutation.isPending ||
-          updateMutation.isPending ||
-          deleteMutation.isPending ||
-          activateMutation.isPending ||
-          pauseMutation.isPending ||
-          triggerMutation.isPending ||
-          processQueueMutation.isPending) && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-                <p className="text-sm font-medium">
-                  {createMutation.isPending && "Creating campaign..."}
-                  {updateMutation.isPending && "Updating campaign..."}
-                  {deleteMutation.isPending && "Deleting campaign..."}
-                  {activateMutation.isPending && "Activating campaign..."}
-                  {pauseMutation.isPending && "Pausing campaign..."}
-                  {triggerMutation.isPending && "Triggering campaign..."}
-                  {processQueueMutation.isPending && "Processing queue..."}
-                </p>
-              </div>
-            </div>
-          )}
+        <PageLoader open={isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || activateMutation.isPending || pauseMutation.isPending || triggerMutation.isPending || processQueueMutation.isPending} />
 
         {!isLoading && (
           <div className="space-y-6">
@@ -451,7 +418,6 @@ export function EmailCampaignsContent() {
                                 size="icon"
                                 onClick={() => {
                                   setDeletingId(campaign.id);
-                                  setDeleteDialogOpen(true);
                                 }}
                                 title="Delete"
                               >
@@ -757,37 +723,23 @@ export function EmailCampaignsContent() {
                       !form.email_template_id
                     }
                   >
-                    {createMutation.isPending || updateMutation.isPending
-                      ? "Saving..."
-                      : editingCampaign
-                        ? "Update"
-                        : "Create"}
+                    {editingCampaign
+                      ? "Update"
+                      : "Create"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
 
             {/* Delete Dialog */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete Campaign</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Are you sure you want to delete this campaign? This will also
-                    remove all queued emails for this campaign.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDelete}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+              open={!!deletingId}
+              onOpenChange={(open) => !open && setDeletingId(null)}
+              onConfirm={handleDelete}
+              title="Delete Campaign"
+              description="Are you sure you want to delete this campaign? This will also remove all queued emails for this campaign."
+              isDeleting={deleteMutation.isPending}
+            />
           </div>
         )}
       </>

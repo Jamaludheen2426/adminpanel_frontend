@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,15 +18,11 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    slug: z.string().min(1, 'Slug is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    slug: z.string().trim().min(1, 'Slug is required'),
     is_active: z.boolean().default(true),
 });
 type FormData = z.infer<typeof schema>;
@@ -40,7 +36,12 @@ function generateSlug(name: string) {
 
 export function BlogTagsContent() {
     const { t } = useTranslation();
-    const { data: tags = [], isLoading } = useBlogTags();
+    const { data: rawTags = [], isLoading } = useBlogTags();
+    const tags = useMemo(() => rawTags.map(tag => ({
+        ...tag,
+        is_active: tag.is_active === 1,
+        created_at: (tag as any).createdAt ?? tag.created_at ?? "",
+    })), [rawTags]);
     const createTag = useCreateBlogTag();
     const updateTag = useUpdateBlogTag();
     const deleteTag = useDeleteBlogTag();
@@ -94,11 +95,12 @@ export function BlogTagsContent() {
         }
     };
 
-    const onSubmit = (data: FormData) => {
+    const onSubmit = (data: typeof schema._type) => {
+        closeDialog();
         if (editItem) {
-            updateTag.mutate({ id: editItem.id, data }, { onSuccess: closeDialog });
+            updateTag.mutate({ id: editItem.id, data });
         } else {
-            createTag.mutate(data, { onSuccess: closeDialog });
+            createTag.mutate(data);
         }
     };
 
@@ -128,7 +130,7 @@ export function BlogTagsContent() {
 
     return (
         <div className="space-y-6">
-            <PageLoader open={isPending} />
+            <PageLoader open={isLoading || isPending || deleteTag.isPending} />
 
             <div>
                 <h1 className="text-3xl font-bold">{t('blog.tags_title', 'Blog Tags')}</h1>
@@ -151,7 +153,10 @@ export function BlogTagsContent() {
                 <CardContent>
                     <CommonTable
                         columns={columns}
-                        data={tags as any}
+                        data={(tags || []).map(t => ({
+                            ...t,
+                            created_at: t.created_at || (t as any).createdAt || new Date().toISOString()
+                        })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_tags', 'No blog tags found.')}
                         onStatusToggle={(row, val) => updateTag.mutate({ id: row.id, data: { is_active: val } })}
@@ -210,23 +215,34 @@ export function BlogTagsContent() {
             </Dialog>
 
             {/* Delete Confirm */}
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>{t('common.delete_confirm', 'This action cannot be undone.')}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => { if (deleteId) deleteTag.mutate(deleteId, { onSuccess: () => setDeleteId(null) }); }}
-                        >
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                title={t('common.are_you_sure', 'Are you sure?')}
+                description={t('common.delete_confirm', 'This action cannot be undone.')}
+                isDeleting={updateTag.isPending || deleteTag.isPending}
+                onConfirm={() => {
+                    if (deleteId) {
+                        const itemToDel = tags.find((c: any) => c.id === deleteId);
+                        const performDelete = () => {
+                            deleteTag.mutate(deleteId, {
+                                onSuccess: () => setDeleteId(null),
+                                onError: () => setDeleteId(null)
+                            });
+                        };
+
+                        if (itemToDel && itemToDel.slug) {
+                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
+                            updateTag.mutate({ id: deleteId, data: { slug: newSlug } }, {
+                                onSuccess: performDelete,
+                                onError: performDelete
+                            });
+                        } else {
+                            performDelete();
+                        }
+                    }
+                }}
+            />
         </div>
     );
 }

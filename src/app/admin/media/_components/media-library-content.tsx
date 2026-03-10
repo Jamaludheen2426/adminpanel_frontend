@@ -20,11 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
 } from '@/components/ui/dialog';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
@@ -329,7 +325,7 @@ export function MediaLibraryContent() {
     return (
         <TooltipProvider>
             <div className="space-y-4">
-                <PageLoader open={isAnyPending} text={t('common.processing', 'Processing...')} />
+                <PageLoader open={isLoading || isAnyPending} text={t('common.processing', 'Processing...')} />
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
@@ -756,25 +752,14 @@ export function MediaLibraryContent() {
                 </Dialog>
 
                 {/* ── Delete Confirm ── */}
-                <AlertDialog open={!!deleteTarget} onOpenChange={o => !o && setDeleteTarget(null)}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                {t('media.delete_confirm', 'This will permanently delete')} <strong>{deleteTarget?.name}</strong>
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                            <AlertDialogAction
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                onClick={handleDelete}
-                            >
-                                {t('common.delete', 'Delete')}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                <DeleteDialog
+                    open={!!deleteTarget}
+                    onOpenChange={o => !o && setDeleteTarget(null)}
+                    title={t('common.are_you_sure', 'Are you sure?')}
+                    description={`${t('media.delete_confirm', 'This will permanently delete')} ${deleteTarget?.name}`}
+                    onConfirm={handleDelete}
+                    isDeleting={deleteMutation.isPending}
+                />
 
                 {/* ── Rename Dialog ── */}
                 <Dialog open={!!renameTarget} onOpenChange={o => { if (!o) setRenameTarget(null); }}>

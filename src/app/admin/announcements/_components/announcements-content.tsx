@@ -25,19 +25,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import { PageLoader } from '@/components/common/page-loader';
 import type { Announcement } from '@/hooks/use-announcements';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    content: z.string().min(1, 'Content is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    content: z.string().trim().min(1, 'Content is required'),
     start_date: z.date().nullable().optional(),
     end_date: z.date().nullable().optional(),
     has_action: z.boolean().default(false),
@@ -160,7 +156,7 @@ export function AnnouncementsContent() {
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<Announcement | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<{ label: string; onConfirm: () => void } | null>(null);
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -259,6 +255,7 @@ export function AnnouncementsContent() {
 
     return (
         <>
+            <PageLoader open={isLoading || isPending || deleteAnnouncement.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-3">
@@ -288,10 +285,7 @@ export function AnnouncementsContent() {
                             updateAnnouncement.mutate({ id: row.id, data: { is_active: val } })
                         }
                         onEdit={(row) => openEdit(row)}
-                        onDelete={(row) => setDeleteConfirm({
-                            label: `${t('common.delete', 'Delete')} "${row.name}"?`,
-                            onConfirm: () => deleteAnnouncement.mutate(row.id),
-                        })}
+                        onDelete={(row) => setDeleteId(row.id)}
                         showStatus
                         showCreated
                         showActions
@@ -421,33 +415,30 @@ export function AnnouncementsContent() {
 
                         {/* Submit — full width */}
                         <Button type="submit" className="w-full md:col-span-2" disabled={isPending}>
-                            {isPending
-                                ? t('common.saving', 'Saving...')
-                                : editItem
-                                    ? t('announcements.update', 'Update Announcement')
-                                    : t('announcements.create_title', 'Create Announcement')}
+                            {editItem
+                                ? t('announcements.update', 'Update Announcement')
+                                : t('announcements.create_title', 'Create Announcement')}
                         </Button>
                     </form>
                 </DialogContent>
             </Dialog>
 
             {/* ── Delete Confirm ── */}
-            <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {deleteConfirm?.label} {t('common.cannot_undo', 'This action cannot be undone.')}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => { deleteConfirm?.onConfirm(); setDeleteConfirm(null); }}>
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+                title={t('common.are_you_sure', 'Are you sure?')}
+                description={t('common.cannot_undo', 'This action cannot be undone.')}
+                isDeleting={deleteAnnouncement.isPending}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteAnnouncement.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
+            />
         </>
     );
 }

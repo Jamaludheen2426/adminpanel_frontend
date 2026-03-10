@@ -82,7 +82,10 @@ export function UsersContent() {
 
   const confirmDelete = () => {
     if (deleteUser) {
-      deleteUserMutation.mutate(deleteUser.id);
+      deleteUserMutation.mutate(deleteUser.id, {
+        onSuccess: () => setDeleteUser(null),
+        onError: () => setDeleteUser(null),
+      });
     }
   };
 
@@ -226,7 +229,7 @@ export function UsersContent() {
       <div className="space-y-6">
 
         {/* Global Page Loader */}
-        <PageLoader open={isFetching} />
+        <PageLoader open={isLoading || isFetching || deleteUserMutation.isPending || toggleStatusMutation.isPending || updateUserMutation.isPending} />
 
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Employees</h1>
@@ -308,7 +311,7 @@ export function UsersContent() {
       {/* Delete Confirmation */}
       <DeleteDialog
         open={deleteUser !== null}
-        onOpenChange={(open) => { if (!open) setDeleteUser(null); }}
+        onOpenChange={(open: boolean) => { if (!open) setDeleteUser(null); }}
         onConfirm={confirmDelete}
         isDeleting={deleteUserMutation.isPending}
         title="Delete Employee"

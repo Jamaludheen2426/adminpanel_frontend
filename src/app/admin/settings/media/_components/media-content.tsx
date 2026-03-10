@@ -395,8 +395,7 @@ export function MediaContent() {
   return (
     <PermissionGuard permission="media.view">
       <>
-        <PageLoader open={isLoading} />
-        <PageLoader open={bulkUpdateMutation.isPending} />
+        <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
 
         {!isLoading && (
           <div className="space-y-6">
@@ -455,7 +454,7 @@ export function MediaContent() {
             <div className="flex justify-end">
               <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                 <Save className="mr-2 h-4 w-4" />
-                {bulkUpdateMutation.isPending ? "Saving..." : "Save Media Settings"}
+                Save Media Settings
               </Button>
             </div>
           </div>

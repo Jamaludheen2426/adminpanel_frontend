@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import type { Role, Permission } from "@/types";
 
 const roleSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
   slug: z.string().optional(),
   description: z.string().optional(),
   is_active: z.boolean().default(true),

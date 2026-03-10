@@ -77,7 +77,7 @@ export function SocialLoginContent() {
   return (
     <PermissionGuard permission="settings.view">
       <>
-        <PageLoader open={isLoading} />
+        <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
         {!isLoading && (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -296,7 +296,7 @@ export function SocialLoginContent() {
             <div className="flex justify-end">
               <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                 <Save className="mr-2 h-4 w-4" />
-                {bulkUpdateMutation.isPending ? "Saving..." : "Save Social Login Settings"}
+                Save Social Login Settings
               </Button>
             </div>
           </div>

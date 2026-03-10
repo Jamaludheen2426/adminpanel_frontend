@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,8 +29,8 @@ import { resolveMediaUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    slug: z.string().min(1, 'Slug is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    slug: z.string().trim().min(1, 'Slug is required'),
     description: z.string().optional(),
     image: z.string().default(''),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
@@ -47,7 +47,12 @@ function generateSlug(name: string) {
 
 export function BlogCategoriesContent() {
     const { t } = useTranslation();
-    const { data: categories = [], isLoading } = useBlogCategories();
+    const { data: rawCategories = [], isLoading } = useBlogCategories();
+    const categories = useMemo(() => rawCategories.map(cat => ({
+        ...cat,
+        is_active: cat.is_active === 1,
+        created_at: (cat as any).createdAt ?? cat.created_at ?? "",
+    })), [rawCategories]);
     const createCategory = useCreateBlogCategory();
     const updateCategory = useUpdateBlogCategory();
     const deleteCategory = useDeleteBlogCategory();
@@ -129,11 +134,12 @@ export function BlogCategoriesContent() {
     };
 
     const onSubmit = (data: FormData) => {
-        const payload = { ...data, description: data.description || null };
+        closeDialog();
+        const payload = { ...data, description: data.description ?? null, image: data.image || null };
         if (editItem) {
-            updateCategory.mutate({ id: editItem.id, data: payload }, { onSuccess: closeDialog });
+            updateCategory.mutate({ id: editItem.id, data: payload });
         } else {
-            createCategory.mutate(payload, { onSuccess: closeDialog });
+            createCategory.mutate(payload);
         }
     };
 
@@ -188,8 +194,7 @@ export function BlogCategoriesContent() {
 
     return (
         <div className="space-y-6">
-            <PageLoader open={createCategory.isPending || updateCategory.isPending} />
-            <PageLoader open={isUploading} text={t('common.uploading', 'Uploading...')} />
+            <PageLoader open={isLoading || createCategory.isPending || updateCategory.isPending || deleteCategory.isPending || isUploading} />
 
             <PageHeader
                 title={t('blog.categories_title', 'Blog Categories')}
@@ -207,7 +212,10 @@ export function BlogCategoriesContent() {
                 <CardContent className="pt-6">
                     <CommonTable
                         columns={columns}
-                        data={categories as any}
+                        data={(categories || []).map(c => ({
+                            ...c,
+                            created_at: c.created_at || (c as any).createdAt || new Date().toISOString()
+                        })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_categories', 'No blog categories found.')}
                         onStatusToggle={(row, val) => updateCategory.mutate({ id: row.id, data: { is_active: val } })}
@@ -309,12 +317,28 @@ export function BlogCategoriesContent() {
             <DeleteDialog
                 open={!!deleteId}
                 onOpenChange={(open) => !open && setDeleteId(null)}
+                isDeleting={updateCategory.isPending || deleteCategory.isPending}
                 onConfirm={() => {
                     if (deleteId) {
-                        deleteCategory.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+                        const itemToDel = categories.find((c: any) => c.id === deleteId);
+                        const performDelete = () => {
+                            deleteCategory.mutate(deleteId, {
+                                onSuccess: () => setDeleteId(null),
+                                onError: () => setDeleteId(null)
+                            });
+                        };
+
+                        if (itemToDel && itemToDel.slug) {
+                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
+                            updateCategory.mutate({ id: deleteId, data: { slug: newSlug } }, {
+                                onSuccess: performDelete,
+                                onError: performDelete
+                            });
+                        } else {
+                            performDelete();
+                        }
                     }
                 }}
-                isDeleting={deleteCategory.isPending}
             />
         </div>
     );

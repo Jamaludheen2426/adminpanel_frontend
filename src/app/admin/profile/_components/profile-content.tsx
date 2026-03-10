@@ -33,8 +33,8 @@ import { format } from "date-fns";
 import { PageLoader } from '@/components/common/page-loader';
 
 const profileSchema = z.object({
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email"),
+  full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
+  email: z.string().trim().email("Please enter a valid email"),
   phone: z.string().optional(),
   timezone: z.string().optional(),
 });
@@ -112,7 +112,7 @@ export function ProfileContent() {
 
   return (
     <div className="space-y-6">
-      <PageLoader open={isLoading} />
+      <PageLoader open={isLoading || updateProfileMutation.isPending || changePasswordMutation.isPending || uploadMedia.isPending} />
       <div>
         <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
         <p className="text-muted-foreground mt-1">

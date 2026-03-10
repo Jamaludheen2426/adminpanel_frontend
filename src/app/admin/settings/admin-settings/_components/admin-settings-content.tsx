@@ -227,7 +227,7 @@ export function AdminSettingsContent() {
                   <CardTitle className="flex items-center justify-between">
                     Site Logo
                     {currentSiteLogoUrl && (
-                  <a
+                      <a
                         href={values.site_logo_url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -281,7 +281,7 @@ export function AdminSettingsContent() {
                   <CardTitle className="flex items-center justify-between">
                     Site Favicon
                     {currentFaviconUrl && (
-                  <a
+                      <a
                         href={values.admin_favicon_url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -316,7 +316,7 @@ export function AdminSettingsContent() {
                   <CardTitle className="flex items-center justify-between">
                     Sidepanel Settings
                     {currentLogoUrl && (
-                  <a
+                      <a
                         href={values.admin_logo_url}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -424,7 +424,7 @@ export function AdminSettingsContent() {
                 <CardTitle className="flex items-center justify-between">
                   Login Screen Background
                   {currentBackgroundUrl && (
-                <a
+                    <a
                       href={values.login_background_url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -460,11 +460,7 @@ export function AdminSettingsContent() {
                 size="lg"
               >
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving
-                  ? "Uploading..."
-                  : bulkUpdateMutation.isPending
-                    ? "Saving..."
-                    : "Save Site Settings"}
+                Save Site Settings
               </Button>
             </div>
           </div>

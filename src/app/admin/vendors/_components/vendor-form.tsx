@@ -9,36 +9,36 @@ import { Building2, User, Landmark } from 'lucide-react';
 // ─── Schemas ─────────────────────────────────────────────────────────────────
 
 const baseSchema = z.object({
-    company_name:    z.string().min(1, 'Company name is required'),
-    reg_no:          z.string().optional(),
-    gst_no:          z.string().optional(),
-    company_address: z.string().optional(),
-    company_contact: z.string().optional(),
-    landline:        z.string().optional(),
-    company_email:   z.string().email('Invalid email').optional().or(z.literal('')),
-    website:         z.string().optional(),
-    youtube:         z.string().optional(),
-    facebook:        z.string().optional(),
-    instagram:       z.string().optional(),
-    name:            z.string().min(1, 'Vendor name is required'),
-    address:         z.string().optional(),
-    contact:         z.string().optional(),
-    email:           z.string().email('Invalid email'),
-    membership:      z.enum(['basic', 'silver', 'gold', 'platinum']).default('basic'),
-    bank_name:       z.string().optional(),
-    acc_no:          z.string().optional(),
-    ifsc_code:       z.string().optional(),
-    acc_type:        z.enum(['savings', 'current', 'overdraft']).optional(),
-    branch:          z.string().optional(),
+    company_name: z.string().trim().min(1, 'Company name is required'),
+    reg_no: z.string().trim().optional(),
+    gst_no: z.string().trim().optional(),
+    company_address: z.string().trim().optional(),
+    company_contact: z.string().trim().optional(),
+    landline: z.string().trim().optional(),
+    company_email: z.string().trim().email('Invalid email').optional().or(z.literal('')),
+    website: z.string().trim().optional(),
+    youtube: z.string().trim().optional(),
+    facebook: z.string().trim().optional(),
+    instagram: z.string().trim().optional(),
+    name: z.string().trim().min(1, 'Vendor name is required'),
+    address: z.string().trim().optional(),
+    contact: z.string().trim().optional(),
+    email: z.string().trim().email('Invalid email'),
+    membership: z.enum(['basic', 'silver', 'gold', 'platinum']).default('basic'),
+    bank_name: z.string().trim().optional(),
+    acc_no: z.string().trim().optional(),
+    ifsc_code: z.string().trim().optional(),
+    acc_type: z.enum(['savings', 'current', 'overdraft']).optional(),
+    branch: z.string().trim().optional(),
 });
 
 const createSchema = baseSchema.extend({
-    password:         z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
     confirm_password: z.string().min(1, 'Please confirm password'),
 }).refine(d => d.password === d.confirm_password, { message: 'Passwords do not match', path: ['confirm_password'] });
 
 const editSchema = baseSchema.extend({
-    password:         z.string().min(6).optional().or(z.literal('')),
+    password: z.string().min(6).optional().or(z.literal('')),
     confirm_password: z.string().optional().or(z.literal('')),
 }).refine(d => !d.password || d.password === d.confirm_password, { message: 'Passwords do not match', path: ['confirm_password'] });
 
@@ -49,17 +49,17 @@ const sections = (isEdit: boolean): CommonFormSection[] => [
         title: 'Company Information',
         icon: Building2,
         fields: [
-            { name: 'company_name',    label: 'Company Name',    type: 'text',  placeholder: 'Acme Pvt Ltd',        required: true },
-            { name: 'reg_no',          label: 'Registration No.', type: 'text', placeholder: 'REG123456' },
-            { name: 'gst_no',          label: 'GST No.',          type: 'text', placeholder: '22AAAAA0000A1Z5' },
-            { name: 'company_contact', label: 'Company Contact',  type: 'text', placeholder: '+91 9000000000' },
-            { name: 'landline',        label: 'Landline',         type: 'text', placeholder: '022-12345678' },
-            { name: 'company_email',   label: 'Company Email',    type: 'email', placeholder: 'info@company.com' },
-            { name: 'company_address', label: 'Company Address',  type: 'text', placeholder: '123 Business Park, City', colSpan: 2 },
-            { name: 'website',         label: 'Website',          type: 'text', placeholder: 'https://company.com' },
-            { name: 'youtube',         label: 'YouTube',          type: 'text', placeholder: 'https://youtube.com/channel/...' },
-            { name: 'facebook',        label: 'Facebook',         type: 'text', placeholder: 'https://facebook.com/...' },
-            { name: 'instagram',       label: 'Instagram',        type: 'text', placeholder: 'https://instagram.com/...' },
+            { name: 'company_name', label: 'Company Name', type: 'text', placeholder: 'Acme Pvt Ltd', required: true },
+            { name: 'reg_no', label: 'Registration No.', type: 'text', placeholder: 'REG123456' },
+            { name: 'gst_no', label: 'GST No.', type: 'text', placeholder: '22AAAAA0000A1Z5' },
+            { name: 'company_contact', label: 'Company Contact', type: 'text', placeholder: '+91 9000000000' },
+            { name: 'landline', label: 'Landline', type: 'text', placeholder: '022-12345678' },
+            { name: 'company_email', label: 'Company Email', type: 'email', placeholder: 'info@company.com' },
+            { name: 'company_address', label: 'Company Address', type: 'text', placeholder: '123 Business Park, City', colSpan: 2 },
+            { name: 'website', label: 'Website', type: 'text', placeholder: 'https://company.com' },
+            { name: 'youtube', label: 'YouTube', type: 'text', placeholder: 'https://youtube.com/channel/...' },
+            { name: 'facebook', label: 'Facebook', type: 'text', placeholder: 'https://facebook.com/...' },
+            { name: 'instagram', label: 'Instagram', type: 'text', placeholder: 'https://instagram.com/...' },
         ],
     },
     {
@@ -71,15 +71,15 @@ const sections = (isEdit: boolean): CommonFormSection[] => [
                 imageTitle: 'Profile Photo', imageDescription: 'Upload vendor profile photo (square)',
                 targetWidth: 200, targetHeight: 200, rounded: true, imageFolder: 'vendors',
             },
-            { name: 'name',       label: 'Vendor Name',  type: 'text',  placeholder: 'John Doe',            required: true },
-            { name: 'contact',    label: 'Contact',      type: 'text',  placeholder: '+91 9000000000' },
-            { name: 'email',      label: 'Login Email',  type: 'email', placeholder: 'vendor@example.com',  required: true },
+            { name: 'name', label: 'Vendor Name', type: 'text', placeholder: 'John Doe', required: true },
+            { name: 'contact', label: 'Contact', type: 'text', placeholder: '+91 9000000000' },
+            { name: 'email', label: 'Login Email', type: 'email', placeholder: 'vendor@example.com', required: true },
             {
                 name: 'membership', label: 'Membership', type: 'select',
                 options: [
-                    { value: 'basic',    label: 'Basic' },
-                    { value: 'silver',   label: 'Silver' },
-                    { value: 'gold',     label: 'Gold' },
+                    { value: 'basic', label: 'Basic' },
+                    { value: 'silver', label: 'Silver' },
+                    { value: 'gold', label: 'Gold' },
                     { value: 'platinum', label: 'Platinum' },
                 ],
             },
@@ -100,14 +100,14 @@ const sections = (isEdit: boolean): CommonFormSection[] => [
                 imageTitle: 'Bank Logo', imageDescription: 'Upload bank logo image',
                 targetWidth: 300, targetHeight: 100, imageFolder: 'vendors',
             },
-            { name: 'bank_name', label: 'Bank Name',       type: 'text', placeholder: 'State Bank of India' },
-            { name: 'acc_no',    label: 'Account Number',  type: 'text', placeholder: '0123456789' },
-            { name: 'ifsc_code', label: 'IFSC Code',       type: 'text', placeholder: 'SBIN0001234' },
+            { name: 'bank_name', label: 'Bank Name', type: 'text', placeholder: 'State Bank of India' },
+            { name: 'acc_no', label: 'Account Number', type: 'text', placeholder: '0123456789' },
+            { name: 'ifsc_code', label: 'IFSC Code', type: 'text', placeholder: 'SBIN0001234' },
             {
                 name: 'acc_type', label: 'Account Type', type: 'select',
                 options: [
-                    { value: 'savings',   label: 'Savings' },
-                    { value: 'current',   label: 'Current' },
+                    { value: 'savings', label: 'Savings' },
+                    { value: 'current', label: 'Current' },
                     { value: 'overdraft', label: 'Overdraft' },
                 ],
             },
@@ -121,10 +121,10 @@ const sections = (isEdit: boolean): CommonFormSection[] => [
 interface Props { vendor?: Vendor; }
 
 export function VendorForm({ vendor }: Props) {
-    const router  = useRouter();
-    const isEdit  = !!vendor;
-    const create  = useCreateVendor();
-    const update  = useUpdateVendor();
+    const router = useRouter();
+    const isEdit = !!vendor;
+    const create = useCreateVendor();
+    const update = useUpdateVendor();
 
     const defaultValues = vendor ? {
         company_name: vendor.company_name, reg_no: vendor.reg_no || '',

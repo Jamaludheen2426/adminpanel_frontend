@@ -85,7 +85,7 @@ function SidebarImagePicker({ value, onChange }: {
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
-    name: z.string().min(1, 'Page name is required'),
+    name: z.string().trim().min(1, 'Page name is required'),
     slug: z.string().optional(),
     template: z.string().default('default'),
     description: z.string().optional().nullable(),

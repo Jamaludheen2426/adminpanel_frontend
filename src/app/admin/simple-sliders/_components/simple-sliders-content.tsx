@@ -11,6 +11,7 @@ import {
     type SimpleSlider,
 } from '@/hooks/use-simple-sliders';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
+import { PageLoader } from '@/components/common/page-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteDialog } from '@/components/common/delete-dialog';
@@ -85,6 +86,7 @@ export function SimpleSlidersContent() {
 
     return (
         <>
+            <PageLoader open={isLoading || isDeleting} />
             <Card>
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -130,13 +132,16 @@ export function SimpleSlidersContent() {
 
             <DeleteDialog
                 open={!!deleteId}
-                onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
                 title={t('simple_sliders.delete', 'Delete Slider')}
                 description={t('simple_sliders.delete_confirm', 'Are you sure you want to delete this slider? All slide items will also be removed. This action cannot be undone.')}
                 isDeleting={isDeleting}
                 onConfirm={() => {
                     if (deleteId) {
-                        deleteSlider(deleteId, { onSuccess: () => setDeleteId(null) });
+                        deleteSlider(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
                     }
                 }}
             />

@@ -6,6 +6,7 @@ import { useBlogPosts, useDeleteBlogPost, useUpdateBlogPost, useCreateBlogPost, 
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
+import { PageLoader } from '@/components/common/page-loader';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +14,6 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PageLoader } from '@/components/common/page-loader';
 import { resolveMediaUrl } from '@/lib/utils';
 import { BlogPostForm } from './blog-post-form';
 import { DeleteDialog } from '@/components/common/delete-dialog';
@@ -128,7 +128,10 @@ export function BlogPostsContent() {
                 <CardContent>
                     <CommonTable
                         columns={columns}
-                        data={posts as any}
+                        data={(posts || []).map(p => ({
+                            ...p,
+                            created_at: p.created_at || (p as any).createdAt || new Date().toISOString()
+                        })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_posts', 'No blog posts found.')}
                         onStatusToggle={(row, val) =>
@@ -151,11 +154,10 @@ export function BlogPostsContent() {
                     </DialogHeader>
                     <BlogPostForm
                         isPending={createPost.isPending}
-                        onSave={(data) =>
-                            createPost.mutate(data, {
-                                onSuccess: () => setCreateOpen(false),
-                            })
-                        }
+                        onSave={(data) => {
+                            setCreateOpen(false);
+                            createPost.mutate(data);
+                        }}
                     />
                 </DialogContent>
             </Dialog>
@@ -172,11 +174,10 @@ export function BlogPostsContent() {
                             key={editPost.id}
                             defaultValues={editPost}
                             isPending={updatePost.isPending}
-                            onSave={(data) =>
-                                updatePost.mutate({ id: editPost.id, data }, {
-                                    onSuccess: () => setEditPost(null),
-                                })
-                            }
+                            onSave={(data) => {
+                                setEditPost(null);
+                                updatePost.mutate({ id: editPost.id, data });
+                            }}
                         />
                     )}
                 </DialogContent>
@@ -188,14 +189,28 @@ export function BlogPostsContent() {
                 onOpenChange={(open) => {
                     if (!open) setDeleteId(null);
                 }}
+                isDeleting={updatePost.isPending || deletePost.isPending}
                 onConfirm={() => {
                     if (deleteId) {
-                        deletePost.mutate(deleteId, {
-                            onSuccess: () => setDeleteId(null),
-                        });
+                        const itemToDel = posts.find((c: any) => c.id === deleteId);
+                        const performDelete = () => {
+                            deletePost.mutate(deleteId, {
+                                onSuccess: () => setDeleteId(null),
+                                onError: () => setDeleteId(null)
+                            });
+                        };
+
+                        if (itemToDel && itemToDel.slug) {
+                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
+                            updatePost.mutate({ id: deleteId, data: { slug: newSlug } }, {
+                                onSuccess: performDelete,
+                                onError: performDelete
+                            });
+                        } else {
+                            performDelete();
+                        }
                     }
                 }}
-                isDeleting={deletePost.isPending}
                 title={t('blog.delete_post', 'Delete Blog Post')}
                 description={t('blog.delete_confirm', 'Are you sure you want to delete this blog post?')}
             />

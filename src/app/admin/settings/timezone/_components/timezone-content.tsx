@@ -31,6 +31,7 @@ import { useCompany, useUpdateCompany } from '@/hooks/use-companies';
 import { useTimezones } from '@/hooks/use-timezones';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { Globe, User } from 'lucide-react';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function TimezoneContent() {
   const { user } = useAuth();
@@ -75,6 +76,7 @@ export function TimezoneContent() {
   return (
     <PermissionGuard permission="settings.view">
       <div className="space-y-6">
+        <PageLoader open={updateCompany.isPending || updateProfile.isPending} />
         <div>
           <h1 className="text-3xl font-bold">Timezone Settings</h1>
           <p className="text-muted-foreground mt-1">
@@ -125,7 +127,7 @@ export function TimezoneContent() {
                     )}
                   />
                   <Button type="submit" disabled={updateCompany.isPending}>
-                    {updateCompany.isPending ? 'Saving...' : 'Save Company Timezone'}
+                    Save Company Timezone
                   </Button>
                 </form>
               </Form>
@@ -178,7 +180,7 @@ export function TimezoneContent() {
                   )}
                 />
                 <Button type="submit" disabled={updateProfile.isPending}>
-                  {updateProfile.isPending ? 'Saving...' : 'Save My Timezone'}
+                  Save My Timezone
                 </Button>
               </form>
             </Form>

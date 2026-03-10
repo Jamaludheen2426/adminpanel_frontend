@@ -23,6 +23,7 @@ export function ContactDetails({ id }: { id: number }) {
     const updateStatus = useUpdateContactStatus();
     const sendReply = useReplyContent();
     const deleteContact = useDeleteContact();
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const [replyMode, setReplyMode] = useState(false);
     const [replyMessage, setReplyMessage] = useState('');
@@ -36,7 +37,7 @@ export function ContactDetails({ id }: { id: number }) {
         if (contact && contact.status === 'unread') {
             updateStatus.mutate({ id: contact.id, status: 'read' });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contact?.id]);
 
     useEffect(() => {
@@ -86,6 +87,7 @@ export function ContactDetails({ id }: { id: number }) {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={deleteContact.isPending || sendReply.isPending} />
             {/* Page title */}
             <div>
                 <h1 className="text-3xl font-bold">{contact.subject || t('contacts.no_subject', '(No Subject)')}</h1>
@@ -289,7 +291,7 @@ export function ContactDetails({ id }: { id: number }) {
 
             <DeleteDialog
                 open={deleteOpen}
-                onOpenChange={setDeleteOpen}
+                onOpenChange={(open: boolean) => setDeleteOpen(open)}
                 title={t('contacts.delete', 'Delete Contact Message')}
                 description={t('contacts.delete_confirm', 'Are you sure you want to delete this message? This action cannot be undone and will delete all replies associated with it.')}
                 isDeleting={deleteContact.isPending}
@@ -298,7 +300,8 @@ export function ContactDetails({ id }: { id: number }) {
                         onSuccess: () => {
                             setDeleteOpen(false);
                             router.push('/admin/contacts');
-                        }
+                        },
+                        onError: () => setDeleteOpen(false)
                     });
                 }}
             />

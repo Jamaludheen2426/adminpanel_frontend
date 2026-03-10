@@ -37,11 +37,11 @@ import Image from 'next/image';
 import { X, CalendarIcon } from 'lucide-react';
 
 const adSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
+    name: z.string().trim().min(1, 'Name is required'),
     title: z.string().nullable(),
     subtitle: z.string().nullable(),
     button_label: z.string().nullable(),
-    key: z.string().min(1, 'Key is required'),
+    key: z.string().trim().min(1, 'Key is required'),
     sort_order: z.coerce.number().default(0),
     ads_type: z.enum(['custom', 'google_adsense']),
     url: z.string().nullable(),
@@ -50,7 +50,7 @@ const adSchema = z.object({
     tablet_image: z.string().nullable(),
     mobile_image: z.string().nullable(),
     google_adsense_slot_id: z.string().nullable(),
-    location: z.string().min(1, 'Location is required'),
+    location: z.string().trim().min(1, 'Location is required'),
     banner_id: z.coerce.number().nullable().optional(),
     started_at: z.string().nullable().optional(),
     expired_at: z.string().nullable().optional(),
@@ -548,7 +548,7 @@ export function AdForm({ open, onOpenChange, ad, onSave, isLoading }: AdFormProp
                                 {t('common.cancel', 'Cancel')}
                             </Button>
                             <Button type="submit" disabled={isLoading}>
-                                {isLoading ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                                {t('common.save', 'Save')}
                             </Button>
                         </div>
                     </form>

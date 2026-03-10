@@ -21,7 +21,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { Monitor, Tablet, Smartphone } from 'lucide-react';
 
 const bannerSchema = z.object({
-    name: z.string().min(1, 'Name is required'),
+    name: z.string().trim().min(1, 'Name is required'),
     description: z.string().nullable().optional(),
     type: z.array(z.string()).min(1, 'Select at least one device'),
     desktop_width: z.coerce.number().min(1).default(1200),

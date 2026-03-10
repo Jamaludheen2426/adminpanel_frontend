@@ -14,7 +14,7 @@ import { PageLoader } from "@/components/common/page-loader";
 
 // Step 1: Email schema
 const emailSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
+  email: z.string().trim().email("Please enter a valid email"),
 });
 
 // Step 2: OTP schema
@@ -92,212 +92,211 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-    <PageLoader open={forgotPasswordMutation.isPending || verifyOTPMutation.isPending || resetPasswordMutation.isPending} text="Processing..." />
-    <div className="min-h-screen h-screen flex">
-      {/* Left Side - Background */}
-      <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
-        <div className="relative z-10 flex flex-col justify-center p-12 text-white">
-          <h2 className="text-4xl font-bold mb-4">Reset Password</h2>
-          <p className="text-lg text-white/80 max-w-md">
-            {step === 1 && "Enter your email to receive a verification code."}
-            {step === 2 && "Enter the 6-digit OTP sent to your email."}
-            {step === 3 && "Create a new password for your account."}
-          </p>
-        </div>
-        <div className="absolute inset-0 bg-black/20" />
-      </div>
-
-      {/* Right Side - Form */}
-      <div className="w-full lg:w-[40%] bg-white flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
-          {/* Back button */}
-          <Link
-            href="/auth/login"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft size={16} className="mr-1" />
-            Back to Login
-          </Link>
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center space-x-2">
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={`w-3 h-3 rounded-full ${
-                  s === step
-                    ? "bg-indigo-600"
-                    : s < step
-                    ? "bg-indigo-400"
-                    : "bg-gray-300"
-                }`}
-              />
-            ))}
+      <PageLoader open={forgotPasswordMutation.isPending || verifyOTPMutation.isPending || resetPasswordMutation.isPending} text="Processing..." />
+      <div className="min-h-screen h-screen flex">
+        {/* Left Side - Background */}
+        <div className="hidden lg:flex lg:w-[60%] relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500" />
+          <div className="relative z-10 flex flex-col justify-center p-12 text-white">
+            <h2 className="text-4xl font-bold mb-4">Reset Password</h2>
+            <p className="text-lg text-white/80 max-w-md">
+              {step === 1 && "Enter your email to receive a verification code."}
+              {step === 2 && "Enter the 6-digit OTP sent to your email."}
+              {step === 3 && "Create a new password for your account."}
+            </p>
           </div>
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
 
-          {/* Step 1: Email */}
-          {step === 1 && (
-            <>
-              <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold text-gray-900">Forgot Password?</h1>
-                <p className="text-gray-500 text-sm">
-                  Enter your email and we&apos;ll send you a verification code
-                </p>
-              </div>
+        {/* Right Side - Form */}
+        <div className="w-full lg:w-[40%] bg-white flex items-center justify-center p-8">
+          <div className="w-full max-w-md space-y-8">
+            {/* Back button */}
+            <Link
+              href="/auth/login"
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+            >
+              <ArrowLeft size={16} className="mr-1" />
+              Back to Login
+            </Link>
 
-              <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700 text-sm font-medium">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    className="bg-gray-50 border-gray-200 text-gray-900"
-                    {...emailForm.register("email")}
-                  />
-                  {emailForm.formState.errors.email && (
-                    <p className="text-sm text-red-500">
-                      {emailForm.formState.errors.email.message}
-                    </p>
-                  )}
+            {/* Step indicator */}
+            <div className="flex items-center justify-center space-x-2">
+              {[1, 2, 3].map((s) => (
+                <div
+                  key={s}
+                  className={`w-3 h-3 rounded-full ${s === step
+                      ? "bg-indigo-600"
+                      : s < step
+                        ? "bg-indigo-400"
+                        : "bg-gray-300"
+                    }`}
+                />
+              ))}
+            </div>
+
+            {/* Step 1: Email */}
+            {step === 1 && (
+              <>
+                <div className="space-y-2 text-center">
+                  <h1 className="text-3xl font-bold text-gray-900">Forgot Password?</h1>
+                  <p className="text-gray-500 text-sm">
+                    Enter your email and we&apos;ll send you a verification code
+                  </p>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
-                  disabled={forgotPasswordMutation.isPending}
-                >
-                  {forgotPasswordMutation.isPending ? "Sending..." : "Send OTP"}
-                </Button>
-              </form>
-            </>
-          )}
+                <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-gray-700 text-sm font-medium">
+                      Email Address
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      className="bg-gray-50 border-gray-200 text-gray-900"
+                      {...emailForm.register("email")}
+                    />
+                    {emailForm.formState.errors.email && (
+                      <p className="text-sm text-red-500">
+                        {emailForm.formState.errors.email.message}
+                      </p>
+                    )}
+                  </div>
 
-          {/* Step 2: OTP */}
-          {step === 2 && (
-            <>
-              <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold text-gray-900">Enter OTP</h1>
-                <p className="text-gray-500 text-sm">
-                  We sent a 6-digit code to <strong>{email}</strong>
-                </p>
-              </div>
+                  <Button
+                    type="submit"
+                    className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
+                    disabled={forgotPasswordMutation.isPending}
+                  >
+                    {forgotPasswordMutation.isPending ? "Sending..." : "Send OTP"}
+                  </Button>
+                </form>
+              </>
+            )}
 
-              <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-gray-700 text-sm font-medium">
-                    Verification Code
-                  </Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    placeholder="000000"
-                    maxLength={6}
-                    className="bg-gray-50 border-gray-200 text-gray-900 text-center text-2xl tracking-widest"
-                    {...otpForm.register("otp")}
-                  />
-                  {otpForm.formState.errors.otp && (
-                    <p className="text-sm text-red-500">
-                      {otpForm.formState.errors.otp.message}
-                    </p>
-                  )}
+            {/* Step 2: OTP */}
+            {step === 2 && (
+              <>
+                <div className="space-y-2 text-center">
+                  <h1 className="text-3xl font-bold text-gray-900">Enter OTP</h1>
+                  <p className="text-gray-500 text-sm">
+                    We sent a 6-digit code to <strong>{email}</strong>
+                  </p>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
-                  disabled={verifyOTPMutation.isPending}
-                >
-                  {verifyOTPMutation.isPending ? "Verifying..." : "Verify OTP"}
-                </Button>
+                <form onSubmit={otpForm.handleSubmit(onOTPSubmit)} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="otp" className="text-gray-700 text-sm font-medium">
+                      Verification Code
+                    </Label>
+                    <Input
+                      id="otp"
+                      type="text"
+                      placeholder="000000"
+                      maxLength={6}
+                      className="bg-gray-50 border-gray-200 text-gray-900 text-center text-2xl tracking-widest"
+                      {...otpForm.register("otp")}
+                    />
+                    {otpForm.formState.errors.otp && (
+                      <p className="text-sm text-red-500">
+                        {otpForm.formState.errors.otp.message}
+                      </p>
+                    )}
+                  </div>
 
-                <div className="text-center">
+                  <Button
+                    type="submit"
+                    className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
+                    disabled={verifyOTPMutation.isPending}
+                  >
+                    {verifyOTPMutation.isPending ? "Verifying..." : "Verify OTP"}
+                  </Button>
+
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      onClick={handleResendOTP}
+                      disabled={forgotPasswordMutation.isPending}
+                      className="text-indigo-600 hover:text-indigo-500"
+                    >
+                      {forgotPasswordMutation.isPending ? "Sending..." : "Resend OTP"}
+                    </Button>
+                  </div>
+
                   <Button
                     type="button"
                     variant="link"
-                    onClick={handleResendOTP}
-                    disabled={forgotPasswordMutation.isPending}
-                    className="text-indigo-600 hover:text-indigo-500"
+                    onClick={() => setStep(1)}
+                    className="w-full text-gray-500 hover:text-gray-700"
                   >
-                    {forgotPasswordMutation.isPending ? "Sending..." : "Resend OTP"}
+                    Change email address
                   </Button>
+                </form>
+              </>
+            )}
+
+            {/* Step 3: New Password */}
+            {step === 3 && (
+              <>
+                <div className="space-y-2 text-center">
+                  <h1 className="text-3xl font-bold text-gray-900">New Password</h1>
+                  <p className="text-gray-500 text-sm">
+                    Create a new password for your account
+                  </p>
                 </div>
 
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => setStep(1)}
-                  className="w-full text-gray-500 hover:text-gray-700"
-                >
-                  Change email address
-                </Button>
-              </form>
-            </>
-          )}
+                <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
+                      New Password
+                    </Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter new password"
+                      className="bg-gray-50 border-gray-200 text-gray-900"
+                      {...passwordForm.register("password")}
+                    />
+                    {passwordForm.formState.errors.password && (
+                      <p className="text-sm text-red-500">
+                        {passwordForm.formState.errors.password.message}
+                      </p>
+                    )}
+                  </div>
 
-          {/* Step 3: New Password */}
-          {step === 3 && (
-            <>
-              <div className="space-y-2 text-center">
-                <h1 className="text-3xl font-bold text-gray-900">New Password</h1>
-                <p className="text-gray-500 text-sm">
-                  Create a new password for your account
-                </p>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-gray-700 text-sm font-medium">
+                      Confirm Password
+                    </Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm new password"
+                      className="bg-gray-50 border-gray-200 text-gray-900"
+                      {...passwordForm.register("confirmPassword")}
+                    />
+                    {passwordForm.formState.errors.confirmPassword && (
+                      <p className="text-sm text-red-500">
+                        {passwordForm.formState.errors.confirmPassword.message}
+                      </p>
+                    )}
+                  </div>
 
-              <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-700 text-sm font-medium">
-                    New Password
-                  </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter new password"
-                    className="bg-gray-50 border-gray-200 text-gray-900"
-                    {...passwordForm.register("password")}
-                  />
-                  {passwordForm.formState.errors.password && (
-                    <p className="text-sm text-red-500">
-                      {passwordForm.formState.errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-gray-700 text-sm font-medium">
-                    Confirm Password
-                  </Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm new password"
-                    className="bg-gray-50 border-gray-200 text-gray-900"
-                    {...passwordForm.register("confirmPassword")}
-                  />
-                  {passwordForm.formState.errors.confirmPassword && (
-                    <p className="text-sm text-red-500">
-                      {passwordForm.formState.errors.confirmPassword.message}
-                    </p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
-                  disabled={resetPasswordMutation.isPending}
-                >
-                  {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
-                </Button>
-              </form>
-            </>
-          )}
+                  <Button
+                    type="submit"
+                    className="w-full bg-indigo-600 text-white hover:bg-indigo-700"
+                    disabled={resetPasswordMutation.isPending}
+                  >
+                    {resetPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                  </Button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </>
   );
 }

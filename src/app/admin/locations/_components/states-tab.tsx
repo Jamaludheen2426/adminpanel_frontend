@@ -55,16 +55,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   Select,
   SelectContent,
@@ -79,7 +70,7 @@ import { PageLoader } from "@/components/common/page-loader";
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
 const stateSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
   code: z.string().optional(),
   slug: z.string().optional(),
   country_id: z.number({ required_error: "Country is required" }),
@@ -369,7 +360,7 @@ export function StatesTab() {
 
   return (
     <>
-      <PageLoader open={isLoading} />
+      <PageLoader open={isLoading || isPending || deleteState.isPending || csvImporting} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -702,33 +693,21 @@ export function StatesTab() {
       )}
 
       {/* Delete Confirmation */}
-      <AlertDialog
+      <DeleteDialog
         open={!!deleteId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteId(null);
+        onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+        title="Are you sure?"
+        description="Delete this state? This action cannot be undone."
+        isDeleting={deleteState.isPending}
+        onConfirm={() => {
+          if (deleteId) {
+            deleteState.mutate(deleteId, {
+              onSuccess: () => setDeleteId(null),
+              onError: () => setDeleteId(null)
+            });
+          }
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Delete this state? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (deleteId) deleteState.mutate(deleteId);
-                setDeleteId(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </>
   );
 }

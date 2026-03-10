@@ -121,7 +121,7 @@ export function PluginsContent() {
     return (
         <PermissionGuard permission="plugins.view">
             <div className="space-y-6">
-                <PageLoader open={isLoading} />
+                <PageLoader open={isLoading || toggleMutation.isPending} />
 
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

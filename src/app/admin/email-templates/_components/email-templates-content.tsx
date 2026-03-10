@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { CommonTable, type CommonColumn } from "@/components/common/common-table";
 import { Plus, Edit, Trash2, Eye, Mail } from "lucide-react";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -32,11 +33,11 @@ import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from "@/components/common/page-loader";
 
 const templateSchema = z.object({
-  name: z.string().min(2, "Template name required"),
-  slug: z.string().optional(),
-  subject: z.string().min(5, "Subject required"),
-  body: z.string().min(10, "Body required"),
-  description: z.string().optional(),
+  name: z.string().trim().min(2, "Template name required"),
+  slug: z.string().trim().optional(),
+  subject: z.string().trim().min(5, "Subject required"),
+  body: z.string().trim().min(10, "Body required"),
+  description: z.string().trim().optional(),
 });
 
 type TemplateFormData = z.infer<typeof templateSchema>;
@@ -48,6 +49,7 @@ export function EmailTemplatesContent() {
   const [testEmail, setTestEmail] = useState("");
   const [selectedTemplate, setSelectedTemplate] =
     useState<EmailTemplate | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
   const [previewContent, setPreviewContent] = useState<{
     subject: string;
     body: string;
@@ -103,9 +105,7 @@ export function EmailTemplatesContent() {
   };
 
   const handleDelete = (template: EmailTemplate) => {
-    if (confirm("Are you sure you want to delete this template?")) {
-      deleteMutation.mutate(template.id);
-    }
+    setDeleteId(template.id);
   };
 
   const handleSendTest = (template: EmailTemplate) => {
@@ -178,12 +178,12 @@ export function EmailTemplatesContent() {
   ];
 
   const templates = templatesData?.data || [];
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || previewMutation.isPending || sendMutation.isPending;
 
   return (
     <PermissionGuard permission="email_templates.read">
       <div className="space-y-6">
-        <PageLoader open={isLoading} />
+        <PageLoader open={isLoading || isPending} />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Email Templates</h1>
@@ -391,6 +391,21 @@ export function EmailTemplatesContent() {
             />
           </CardContent>
         </Card>
+
+        <DeleteDialog
+          open={!!deleteId}
+          onOpenChange={(open) => !open && setDeleteId(null)}
+          onConfirm={() => {
+            if (deleteId) {
+              deleteMutation.mutate(deleteId, {
+                onSuccess: () => setDeleteId(null)
+              });
+            }
+          }}
+          title="Delete Template"
+          description="Are you sure you want to delete this email template? This action cannot be undone."
+          isDeleting={deleteMutation.isPending}
+        />
       </div>
     </PermissionGuard>
   );

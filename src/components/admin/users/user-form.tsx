@@ -30,9 +30,9 @@ import { getUserRoleLevel } from "@/lib/auth-utils";
 import type { User } from "@/types";
 
 const employeeSchema = z.object({
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
+  full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
   username: z.string().optional(),
-  email: z.string().email("Please enter a valid email"),
+  email: z.string().trim().email("Please enter a valid email"),
   phone: z.string().optional(),
   dob: z.string().optional(),
   gender: z.enum(["male", "female", "other"]).optional(),
@@ -180,10 +180,11 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const onSubmit = (data: EmployeeFormData) => {
     const { confirm_password, ...rest } = data;
 
-    // Clean up: remove empty strings, send null for optional fields
-    const submitData = Object.fromEntries(
-      Object.entries(rest).filter(([, v]) => v !== "" && v !== undefined)
-    );
+    // Clean up: send null for empty strings or undefined fields to ensure backend clears them on update
+    const submitData: any = {};
+    Object.entries(rest).forEach(([k, v]) => {
+      submitData[k] = (v === "" || v === undefined) ? null : v;
+    });
 
     // Remove password if blank (edit mode, keep current)
     if (!submitData.password) delete submitData.password;

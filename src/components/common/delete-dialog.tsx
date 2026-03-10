@@ -17,6 +17,7 @@ interface DeleteDialogProps {
     title?: string;
     description?: string;
     isDeleting?: boolean;
+    confirmText?: string;
 }
 
 export function DeleteDialog({
@@ -25,6 +26,7 @@ export function DeleteDialog({
     onConfirm,
     title,
     description,
+    confirmText,
     isDeleting = false,
 }: DeleteDialogProps) {
     const { t } = useTranslation();
@@ -50,7 +52,7 @@ export function DeleteDialog({
                         }}
                         disabled={isDeleting}
                     >
-                        {isDeleting ? t('common.deleting', 'Deleting...') : t('common.delete', 'Delete')}
+                        {isDeleting ? t('common.deleting', 'Deleting...') : (confirmText || t('common.delete', 'Delete'))}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

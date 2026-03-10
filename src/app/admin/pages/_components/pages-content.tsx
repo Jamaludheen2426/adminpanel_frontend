@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
+import { PageLoader } from '@/components/common/page-loader';
 
 function normalise(item: Page): Page & { created_at: string; is_active: boolean } {
     return {
@@ -60,6 +61,7 @@ export function PagesContent() {
 
     return (
         <>
+            <PageLoader open={isLoading || deletePage.isPending || updateStatus.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between flex-wrap gap-3">
@@ -101,10 +103,17 @@ export function PagesContent() {
 
             <DeleteDialog
                 open={deleteId !== null}
-                onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
                 title="Delete Page"
                 description={`Are you sure you want to delete "${deleteName}"? This cannot be undone.`}
-                onConfirm={() => { if (deleteId) { deletePage.mutate(deleteId); setDeleteId(null); } }}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deletePage.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
                 isDeleting={deletePage.isPending}
             />
         </>

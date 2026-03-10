@@ -95,7 +95,7 @@ export function RolesContent() {
       <div className="space-y-6">
 
         {/* Page Loader */}
-        <PageLoader open={isFetching} />
+        <PageLoader open={isLoading || isFetching || deleteRoleMutation.isPending || toggleStatusMutation.isPending} />
 
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{t("nav.roles")}</h1>
@@ -173,8 +173,15 @@ export function RolesContent() {
 
       <DeleteDialog
         open={deleteRole !== null}
-        onOpenChange={(open) => { if (!open) setDeleteRole(null); }}
-        onConfirm={() => { if (deleteRole) deleteRoleMutation.mutate(deleteRole.id); }}
+        onOpenChange={(open: boolean) => { if (!open) setDeleteRole(null); }}
+        onConfirm={() => {
+          if (deleteRole) {
+            deleteRoleMutation.mutate(deleteRole.id, {
+              onSuccess: () => setDeleteRole(null),
+              onError: () => setDeleteRole(null),
+            });
+          }
+        }}
         isDeleting={deleteRoleMutation.isPending}
         title={t("roles.delete_role", "Delete Role")}
         description={`Are you sure you want to delete the role "${deleteRole?.name}"? This action cannot be undone.`}

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Monitor, Tablet, Smartphone, LayoutTemplate, Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
+import { PageLoader } from '@/components/common/page-loader';
 
 const TYPE_CONFIG = {
     desktop: { label: 'Desktop', icon: Monitor, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
@@ -42,9 +43,11 @@ export function BannersContent() {
 
     const handleSave = (data: any) => {
         if (editBanner) {
-            updateBanner.mutate({ id: editBanner.id, data }, { onSuccess: () => setEditBanner(null) });
+            updateBanner.mutate({ id: editBanner.id, data });
+            setEditBanner(null);
         } else {
-            createBanner.mutate(data, { onSuccess: () => setCreateOpen(false) });
+            createBanner.mutate(data);
+            setCreateOpen(false);
         }
     };
 
@@ -110,6 +113,7 @@ export function BannersContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || createBanner.isPending || updateBanner.isPending || deleteBanner.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -155,8 +159,15 @@ export function BannersContent() {
 
             <DeleteDialog
                 open={!!deleteId}
-                onOpenChange={(open) => { if (!open) setDeleteId(null); }}
-                onConfirm={() => { if (deleteId) deleteBanner.mutate(deleteId, { onSuccess: () => setDeleteId(null) }); }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteBanner.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
                 isDeleting={deleteBanner.isPending}
                 title={t('ads.delete_banner', 'Delete Banner')}
                 description={t('ads.delete_banner_confirm', 'Are you sure? Ads using this banner will lose their dimension reference.')}

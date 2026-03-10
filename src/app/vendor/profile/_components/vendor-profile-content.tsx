@@ -21,13 +21,13 @@ import { Camera, Building2, User, Mail, Phone, CreditCard } from 'lucide-react';
 // ── Schemas ────────────────────────────────────────────────────────────────────
 
 const profileSchema = z.object({
-    name: z.string().min(2, 'Name must be at least 2 characters'),
-    contact: z.string().optional(),
-    address: z.string().optional(),
-    company_name: z.string().min(2, 'Company name is required'),
-    company_contact: z.string().optional(),
-    company_address: z.string().optional(),
-    company_email: z.string().email('Invalid email').optional().or(z.literal('')),
+    name: z.string().trim().min(2, 'Name must be at least 2 characters'),
+    contact: z.string().trim().optional(),
+    address: z.string().trim().optional(),
+    company_name: z.string().trim().min(2, 'Company name is required'),
+    company_contact: z.string().trim().optional(),
+    company_address: z.string().trim().optional(),
+    company_email: z.string().trim().email('Invalid email').optional().or(z.literal('')),
     website: z.string().optional(),
 });
 

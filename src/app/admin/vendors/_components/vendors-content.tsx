@@ -12,18 +12,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { resolveMediaUrl } from '@/lib/utils';
 import { Plus } from 'lucide-react';
+import { PageLoader } from '@/components/common/page-loader';
 
 const MEMBERSHIP_COLORS: Record<string, string> = {
-    basic:    'bg-gray-100 text-gray-700',
-    silver:   'bg-slate-200 text-slate-700',
-    gold:     'bg-yellow-100 text-yellow-700',
+    basic: 'bg-gray-100 text-gray-700',
+    silver: 'bg-slate-200 text-slate-700',
+    gold: 'bg-yellow-100 text-yellow-700',
     platinum: 'bg-purple-100 text-purple-700',
 };
 
 export function VendorsContent() {
     const router = useRouter();
-    const [page, setPage]         = useState(1);
-    const [limit]                 = useState(10);
+    const [page, setPage] = useState(1);
+    const [limit] = useState(10);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const { data: vendorsRes, isLoading } = useVendors({ page, limit });
@@ -96,6 +97,7 @@ export function VendorsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || deleteVendor.isPending || updateStatus.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -136,12 +138,17 @@ export function VendorsContent() {
 
             <DeleteDialog
                 open={!!deleteId}
-                onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+                onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
                 title="Delete Vendor"
                 description="Are you sure you want to delete this vendor? This action cannot be undone."
                 isDeleting={deleteVendor.isPending}
                 onConfirm={() => {
-                    if (deleteId) deleteVendor.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
+                    if (deleteId) {
+                        deleteVendor.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
                 }}
             />
         </div>

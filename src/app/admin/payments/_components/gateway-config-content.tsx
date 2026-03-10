@@ -239,7 +239,7 @@ export default function GatewayConfigContent({ slug }: { slug: string }) {
 
     return (
         <PermissionGuard permission="payments.view">
-            <PageLoader open={isLoading} />
+            <PageLoader open={isLoading || bulkUpdate.isPending} />
 
             <div className="space-y-6">
                 {/* ── Top Bar ── */}

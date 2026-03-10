@@ -39,7 +39,7 @@ export function CompaniesContent() {
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const { data, isLoading } = useCompanies({
+  const { data, isLoading, isFetching } = useCompanies({
     page,
     limit: 10,
     search: debouncedSearch,
@@ -48,10 +48,12 @@ export function CompaniesContent() {
   const deleteCompany = useDeleteCompany();
   const updateStatus = useUpdateCompanyStatus();
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (deleteId) {
-      await deleteCompany.mutateAsync(deleteId);
-      setDeleteId(null);
+      deleteCompany.mutate(deleteId, {
+        onSuccess: () => setDeleteId(null),
+        onError: () => setDeleteId(null),
+      });
     }
   };
 
@@ -139,7 +141,7 @@ export function CompaniesContent() {
       <div className="space-y-6">
 
         {/* Page Loader */}
-        <PageLoader open={isLoading} />
+        <PageLoader open={isLoading || isFetching || deleteCompany.isPending || updateStatus.isPending} />
 
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -271,7 +273,7 @@ export function CompaniesContent() {
 
         <DeleteDialog
           open={deleteId !== null}
-          onOpenChange={(open) => { if (!open) setDeleteId(null); }}
+          onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
           onConfirm={handleDelete}
           isDeleting={deleteCompany.isPending}
           title="Delete Company"

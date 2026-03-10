@@ -58,7 +58,7 @@ export default function StripeConfigPage() {
     return (
         <PermissionGuard permission="plugins.manage">
             <>
-                <PageLoader open={isLoading} />
+                <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
                 {!isLoading && (
                     <div className="space-y-6">
                         {/* Header */}
@@ -211,7 +211,7 @@ export default function StripeConfigPage() {
                             <div className="flex justify-end">
                                 <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                                     <Save className="mr-2 h-4 w-4" />
-                                    {bulkUpdateMutation.isPending ? "Saving..." : "Save Stripe Settings"}
+                                    Save Stripe Settings
                                 </Button>
                             </div>
                         </div>

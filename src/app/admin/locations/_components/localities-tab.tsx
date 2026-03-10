@@ -36,16 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   Select,
   SelectContent,
@@ -79,8 +70,8 @@ type LocalityWithNested = Locality & {
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const localitySchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  pincode: z.string().min(1, 'Pincode is required'),
+  name: z.string().trim().min(2, 'Name must be at least 2 characters'),
+  pincode: z.string().trim().min(1, 'Pincode is required'),
   city_id: z.number({ required_error: 'District is required' }),
   is_active: z.boolean().default(true),
   is_default: z.boolean().default(false),
@@ -361,7 +352,7 @@ export function LocalitiesTab() {
 
   return (
     <>
-      <PageLoader open={isLoading} />
+      <PageLoader open={isLoading || isPending || deleteLocality.isPending} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -699,40 +690,21 @@ export function LocalitiesTab() {
       </Dialog>
 
       {/* ── Delete Confirm ── */}
-      <AlertDialog
+      <DeleteDialog
         open={!!deleteId}
-        onOpenChange={(open) => {
-          if (!open) setDeleteId(null);
+        onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+        title={t('common.are_you_sure', 'Are you sure?')}
+        description={t('common.cannot_undo', 'This action cannot be undone.')}
+        isDeleting={deleteLocality.isPending}
+        onConfirm={() => {
+          if (deleteId) {
+            deleteLocality.mutate(deleteId, {
+              onSuccess: () => setDeleteId(null),
+              onError: () => setDeleteId(null)
+            });
+          }
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t('common.are_you_sure', 'Are you sure?')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('common.cannot_undo', 'This action cannot be undone.')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>
-              {t('common.cancel', 'Cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteId) {
-                  deleteLocality.mutate(deleteId, {
-                    onSuccess: () => setDeleteId(null),
-                  });
-                }
-              }}
-            >
-              {t('common.delete', 'Delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      />
     </>
   );
 }

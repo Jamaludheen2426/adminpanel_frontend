@@ -23,18 +23,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-    AlertDialogHeader, AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Badge } from '@/components/ui/badge';
+
+const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 
 const schema = z.object({
     faq_category_id: z.preprocess((val) => Number(val), z.number().min(1, 'Category is required')),
-    question: z.string().min(1, 'Question is required'),
-    answer: z.string().min(1, 'Answer is required'),
+    question: z.string().trim().min(1, 'Question is required'),
+    answer: z.string().refine((val) => stripHtml(val).length > 0, { message: 'Answer is required' }),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
     is_active: z.boolean().default(true),
 });
@@ -45,7 +43,7 @@ type FormData = z.infer<typeof schema>;
 function normalise(item: Faq): Faq & { created_at: string; is_active: boolean } {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: !!item.is_active,
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
 }
@@ -62,6 +60,17 @@ export function FaqsContent() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<Faq | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [sortColumn, setSortColumn] = useState<string>('sort_order');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+    const handleSort = (column: string) => {
+        if (sortColumn === column) {
+            setSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortColumn(column);
+            setSortDirection('asc');
+        }
+    };
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -106,15 +115,28 @@ export function FaqsContent() {
         }
     };
 
+    const sortedFaqs = useMemo(() => [...faqs].sort((a, b) => {
+        let aVal: any = a[sortColumn as keyof Faq];
+        let bVal: any = b[sortColumn as keyof Faq];
+        if (sortColumn === 'category.name') { aVal = a.category?.name ?? ''; bVal = b.category?.name ?? ''; }
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    }), [faqs, sortColumn, sortDirection]);
+
     const columns: CommonColumn<Faq>[] = [
         {
             key: 'sort_order',
             header: t('faq.sort_order', 'Sort Order'),
+            sortable: true,
             render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
             key: 'category.name',
             header: t('faq.category', 'Category'),
+            sortable: true,
             render: (row) => (
                 <Badge variant="secondary">
                     {row.category?.name || 'Unassigned'}
@@ -124,6 +146,7 @@ export function FaqsContent() {
         {
             key: 'question',
             header: t('faq.question', 'Question'),
+            sortable: true,
             render: (row) => <span className="font-medium block max-w-sm truncate">{row.question}</span>,
         },
     ];
@@ -132,6 +155,7 @@ export function FaqsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || isPending || deleteFaq.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -148,9 +172,12 @@ export function FaqsContent() {
                 <CardContent>
                     <CommonTable
                         columns={columns}
-                        data={faqs as any}
+                        data={sortedFaqs as any}
                         isLoading={isLoading}
                         emptyMessage={t('faq.no_faqs', 'No FAQs found.')}
+                        sortColumn={sortColumn}
+                        sortDirection={sortDirection}
+                        onSort={handleSort}
                         onStatusToggle={(row, val) =>
                             updateFaq.mutate({ id: row.id, data: { is_active: val } })
                         }
@@ -163,7 +190,7 @@ export function FaqsContent() {
                 </CardContent>
             </Card>
 
-            <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
+            <Dialog open={dialogOpen} onOpenChange={(open: boolean) => !open && closeDialog()}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>{editItem ? t('faq.edit_faq', 'Edit FAQ') : t('faq.create_faq', 'Create FAQ')}</DialogTitle>
@@ -214,7 +241,6 @@ export function FaqsContent() {
                                         onChange={field.onChange}
                                         placeholder="Provide a detailed answer..."
                                         variant="compact"
-                                        disableVisual={true} // Defaults to HTML source mode
                                     />
                                 )}
                             />
@@ -250,27 +276,21 @@ export function FaqsContent() {
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>{t('common.are_you_sure', 'Are you sure?')}</AlertDialogTitle>
-                        <AlertDialogDescription>{t('common.delete_confirm', 'This action cannot be undone.')}</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>{t('common.cancel', 'Cancel')}</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            onClick={() => {
-                                if (deleteId) {
-                                    deleteFaq.mutate(deleteId, { onSuccess: () => setDeleteId(null) });
-                                }
-                            }}
-                        >
-                            {t('common.delete', 'Delete')}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+                open={!!deleteId}
+                onOpenChange={(open) => !open && setDeleteId(null)}
+                title={t('common.are_you_sure', 'Are you sure?')}
+                description={t('common.delete_confirm', 'This action cannot be undone.')}
+                isDeleting={deleteFaq.isPending}
+                onConfirm={() => {
+                    if (deleteId) {
+                        deleteFaq.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
+                    }
+                }}
+            />
         </div>
     );
 }

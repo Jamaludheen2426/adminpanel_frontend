@@ -155,16 +155,7 @@ export function AdminAppearanceContent() {
   return (
     <PermissionGuard permission="settings.view">
       <>
-        <PageLoader open={isLoading} />
-
-        {/* Loading Overlay - Shows when saving */}
-        {bulkUpdateMutation.isPending && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-            <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-              <p className="text-sm font-medium">Saving color theme...</p>
-            </div>
-          </div>
-        )}
+        <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
 
         {!isLoading && (
           <div className="space-y-6">
@@ -437,7 +428,7 @@ export function AdminAppearanceContent() {
               </AlertDialog>
               <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                 <Save className="mr-2 h-4 w-4" />
-                {bulkUpdateMutation.isPending ? "Saving..." : "Save Color Theme"}
+                Save Color Theme
               </Button>
             </div>
           </div>

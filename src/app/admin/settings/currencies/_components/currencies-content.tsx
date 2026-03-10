@@ -21,16 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   useCurrencies,
   useDeleteCurrency,
@@ -92,10 +83,14 @@ export function CurrenciesContent() {
   const confirmDelete = () => {
     if (currencyToDelete) {
       deleteMutation.mutate(currencyToDelete, {
-        onSettled: () => {
+        onSuccess: () => {
           setDeleteDialogOpen(false);
           setCurrencyToDelete(null);
         },
+        onError: () => {
+          setDeleteDialogOpen(false);
+          setCurrencyToDelete(null);
+        }
       });
     }
   };
@@ -104,24 +99,15 @@ export function CurrenciesContent() {
     <PermissionGuard permission="currencies.view">
       <>
         {/* Page Loader */}
-        <PageLoader open={isFetching} />
-
-        {/* Mutation overlay (kept exactly same) */}
-        {(deleteMutation.isPending ||
+        <PageLoader open={
+          isLoading ||
+          isFetching ||
+          deleteMutation.isPending ||
           setDefaultMutation.isPending ||
-          toggleStatusMutation.isPending) && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-4 bg-card p-8 rounded-lg shadow-lg border">
-                <p className="text-sm font-medium">
-                  {deleteMutation.isPending && "Deleting currency..."}
-                  {setDefaultMutation.isPending &&
-                    "Setting default currency..."}
-                  {toggleStatusMutation.isPending &&
-                    "Updating currency status..."}
-                </p>
-              </div>
-            </div>
-          )}
+          toggleStatusMutation.isPending
+        } />
+
+
 
         {!isLoading && (
           <div className="space-y-6">
@@ -349,41 +335,14 @@ export function CurrenciesContent() {
           </DialogContent>
         </Dialog>
 
-        <AlertDialog
+        <DeleteDialog
           open={deleteDialogOpen}
           onOpenChange={setDeleteDialogOpen}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
-                Delete Currency
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this currency?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                disabled={deleteMutation.isPending}
-              >
-                Cancel
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDelete}
-                disabled={deleteMutation.isPending}
-              >
-                {deleteMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          title="Delete Currency"
+          description="Are you sure you want to delete this currency?"
+          onConfirm={confirmDelete}
+          isDeleting={deleteMutation.isPending}
+        />
       </>
     </PermissionGuard>
   );

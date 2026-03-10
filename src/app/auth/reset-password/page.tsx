@@ -93,57 +93,57 @@ function ResetPasswordForm() {
 
   return (
     <>
-    <PageLoader open={isLoading} text="Resetting password..." />
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Set New Password</h1>
-        <p className="text-gray-600">Enter your new password</p>
+      <PageLoader open={isLoading} text="Resetting password..." />
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Set New Password</h1>
+          <p className="text-gray-600">Enter your new password</p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label htmlFor="password">New Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              {...register('password')}
+              className="mt-2"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              {...register('confirmPassword')}
+              className="mt-2"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? 'Resetting...' : 'Reset Password'}
+          </Button>
+        </form>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="password">New Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            {...register('password')}
-            className="mt-2"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            {...register('confirmPassword')}
-            className="mt-2"
-          />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
-
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? 'Resetting...' : 'Reset Password'}
-        </Button>
-      </form>
-    </div>
     </>
   );
 }

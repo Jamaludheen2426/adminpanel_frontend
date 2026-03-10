@@ -8,12 +8,13 @@ import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { resolveMediaUrl } from '@/lib/utils';
-import Image from 'next/image';
 import { FileCode2, Plus } from 'lucide-react';
 import { ImageCropper } from '@/components/common/image-cropper';
 import { useTranslation } from '@/hooks/use-translation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function AdsContent() {
     const { t } = useTranslation();
@@ -29,8 +30,8 @@ export function AdsContent() {
         page,
         limit,
         search,
-        sortBy: sort?.column,
-        sortDesc: sort?.direction === 'desc',
+        sort_by: sort?.column,
+        sort_order: sort?.direction?.toUpperCase(),
     });
 
     const rawAds: Ad[] = adsResponse?.data || [];
@@ -50,20 +51,11 @@ export function AdsContent() {
 
     const handleSave = (data: any) => {
         if (editAd) {
-            updateAd.mutate(
-                { id: editAd.id, data },
-                {
-                    onSuccess: () => {
-                        setEditAd(null);
-                    },
-                }
-            );
+            updateAd.mutate({ id: editAd.id, data });
+            setEditAd(null);
         } else {
-            createAd.mutate(data, {
-                onSuccess: () => {
-                    setCreateOpen(false);
-                },
-            });
+            createAd.mutate(data);
+            setCreateOpen(false);
         }
     };
 
@@ -186,6 +178,7 @@ export function AdsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || createAd.isPending || updateAd.isPending || deleteAd.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -236,13 +229,14 @@ export function AdsContent() {
 
             <DeleteDialog
                 open={!!deleteId}
-                onOpenChange={(open) => {
+                onOpenChange={(open: boolean) => {
                     if (!open) setDeleteId(null);
                 }}
                 onConfirm={() => {
                     if (deleteId) {
                         deleteAd.mutate(deleteId, {
                             onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
                         });
                     }
                 }}

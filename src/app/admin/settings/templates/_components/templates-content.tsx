@@ -50,16 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   useEmailTemplates,
   useCreateEmailTemplate,
@@ -254,7 +245,7 @@ export function TemplatesContent() {
   return (
     <PermissionGuard permission="email_templates.read">
       <div className="space-y-6">
-        <PageLoader open={isLoading} />
+        <PageLoader open={isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending} />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/admin/settings/email">
@@ -683,11 +674,9 @@ export function TemplatesContent() {
                 onClick={handleSubmit}
                 disabled={createMutation.isPending || updateMutation.isPending}
               >
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : editingTemplate
-                    ? "Update Template"
-                    : "Create Template"}
+                {editingTemplate
+                  ? "Update Template"
+                  : "Create Template"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -739,27 +728,14 @@ export function TemplatesContent() {
           </DialogContent>
         </Dialog>
 
-        {/* Delete Confirmation */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Email Template</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete this email template? This action
-                cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {deleteMutation.isPending ? "Deleting..." : "Delete"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DeleteDialog
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          title="Delete Email Template"
+          description="Are you sure you want to delete this email template? This action cannot be undone."
+          onConfirm={handleDelete}
+          isDeleting={deleteMutation.isPending}
+        />
 
         {/* Send Test Email Dialog */}
         <Dialog open={sendTestDialogOpen} onOpenChange={setSendTestDialogOpen}>

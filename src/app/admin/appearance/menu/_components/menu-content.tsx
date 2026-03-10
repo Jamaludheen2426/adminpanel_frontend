@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useSettingsByGroup, useBulkUpdateSettings } from "@/hooks/use-settings";
 import { PermissionGuard } from "@/components/guards/permission-guard";
+import { PageLoader } from "@/components/common/page-loader";
 
 export function MenuContent() {
   const { data: settings } = useSettingsByGroup("menu");
@@ -56,125 +57,126 @@ export function MenuContent() {
 
   return (
     <PermissionGuard permission="settings.view">
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Menu</h1>
-        <p className="text-muted-foreground mt-1">
-          Configure sidebar menu appearance and behavior
-        </p>
+      <div className="space-y-6">
+        <PageLoader open={bulkUpdateMutation.isPending} />
+        <div>
+          <h1 className="text-3xl font-bold">Menu</h1>
+          <p className="text-muted-foreground mt-1">
+            Configure sidebar menu appearance and behavior
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sidebar Position</CardTitle>
+            <CardDescription>Choose where the sidebar appears</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select
+              value={options.sidebar_position}
+              onValueChange={(val) => setOptions({ ...options, sidebar_position: val })}
+            >
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">Left</SelectItem>
+                <SelectItem value="right">Right</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Collapsible Sidebar</CardTitle>
+            <CardDescription>Allow sidebar to be collapsed to icons only</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={options.collapsible_sidebar === "true"}
+                onCheckedChange={(checked) =>
+                  setOptions({ ...options, collapsible_sidebar: checked ? "true" : "false" })
+                }
+              />
+              <span className="text-sm text-muted-foreground">
+                {options.collapsible_sidebar === "true" ? "On" : "Off"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Menu Style</CardTitle>
+            <CardDescription>Choose between compact and normal menu style</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Select
+              value={options.menu_style}
+              onValueChange={(val) => setOptions({ ...options, menu_style: val })}
+            >
+              <SelectTrigger className="w-full max-w-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="compact">Compact</SelectItem>
+                <SelectItem value="normal">Normal</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Show Icons</CardTitle>
+            <CardDescription>Display icons next to menu labels</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={options.show_icons === "true"}
+                onCheckedChange={(checked) =>
+                  setOptions({ ...options, show_icons: checked ? "true" : "false" })
+                }
+              />
+              <span className="text-sm text-muted-foreground">
+                {options.show_icons === "true" ? "Yes" : "No"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Menu Color</CardTitle>
+            <CardDescription>Color used to highlight the active menu item</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 max-w-xs">
+              <Input
+                type="color"
+                value={options.active_menu_color}
+                onChange={(e) => setOptions({ ...options, active_menu_color: e.target.value })}
+                className="w-12 h-10 p-1 cursor-pointer"
+              />
+              <Input
+                value={options.active_menu_color}
+                onChange={(e) => setOptions({ ...options, active_menu_color: e.target.value })}
+                placeholder="#3b82f6"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
+            <Save className="mr-2 h-4 w-4" />
+            Save Menu Settings
+          </Button>
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Sidebar Position</CardTitle>
-          <CardDescription>Choose where the sidebar appears</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={options.sidebar_position}
-            onValueChange={(val) => setOptions({ ...options, sidebar_position: val })}
-          >
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="left">Left</SelectItem>
-              <SelectItem value="right">Right</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Collapsible Sidebar</CardTitle>
-          <CardDescription>Allow sidebar to be collapsed to icons only</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={options.collapsible_sidebar === "true"}
-              onCheckedChange={(checked) =>
-                setOptions({ ...options, collapsible_sidebar: checked ? "true" : "false" })
-              }
-            />
-            <span className="text-sm text-muted-foreground">
-              {options.collapsible_sidebar === "true" ? "On" : "Off"}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Menu Style</CardTitle>
-          <CardDescription>Choose between compact and normal menu style</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={options.menu_style}
-            onValueChange={(val) => setOptions({ ...options, menu_style: val })}
-          >
-            <SelectTrigger className="w-full max-w-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="compact">Compact</SelectItem>
-              <SelectItem value="normal">Normal</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Show Icons</CardTitle>
-          <CardDescription>Display icons next to menu labels</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-3">
-            <Switch
-              checked={options.show_icons === "true"}
-              onCheckedChange={(checked) =>
-                setOptions({ ...options, show_icons: checked ? "true" : "false" })
-              }
-            />
-            <span className="text-sm text-muted-foreground">
-              {options.show_icons === "true" ? "Yes" : "No"}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Menu Color</CardTitle>
-          <CardDescription>Color used to highlight the active menu item</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 max-w-xs">
-            <Input
-              type="color"
-              value={options.active_menu_color}
-              onChange={(e) => setOptions({ ...options, active_menu_color: e.target.value })}
-              className="w-12 h-10 p-1 cursor-pointer"
-            />
-            <Input
-              value={options.active_menu_color}
-              onChange={(e) => setOptions({ ...options, active_menu_color: e.target.value })}
-              placeholder="#3b82f6"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
-          <Save className="mr-2 h-4 w-4" />
-          {bulkUpdateMutation.isPending ? "Saving..." : "Save Menu Settings"}
-        </Button>
-      </div>
-    </div>
     </PermissionGuard>
   );
 }

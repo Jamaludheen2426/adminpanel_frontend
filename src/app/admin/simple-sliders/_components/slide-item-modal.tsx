@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,14 +22,14 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 
 const slideSchema = z.object({
     id: z.string().optional(),
-    title: z.string().min(1, 'Title is required'),
+    title: z.string().trim().min(1, 'Title is required'),
     subtitle: z.string().optional(),
     link: z.string().optional(),
     button_label: z.string().optional(),
     description: z.string().optional(),
-    image: z.string().min(1, 'Desktop image is required'),
-    tablet_image: z.string().optional(),
-    mobile_image: z.string().optional(),
+    image: z.string().trim().min(1, 'Desktop image is required'),
+    tablet_image: z.string().trim().optional(),
+    mobile_image: z.string().trim().optional(),
     bg_color: z.string().optional(),
     is_light_bg: z.boolean().default(false),
     sort_order: z.coerce.number().default(0),
@@ -172,13 +171,15 @@ export function SlideItemModal({ open, onClose, initialData, onSave }: SlideItem
                             <div className="space-y-1.5">
                                 <Label>Status</Label>
                                 <Controller control={form.control} name="is_active" render={({ field }) => (
-                                    <Select value={String(field.value)} onValueChange={(v) => field.onChange(Number(v))}>
-                                        <SelectTrigger><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="1">Active</SelectItem>
-                                            <SelectItem value="0">Inactive</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center justify-between rounded-lg border px-3 py-2 h-10">
+                                        <span className="text-sm text-muted-foreground">
+                                            {field.value === 1 ? 'Active' : 'Inactive'}
+                                        </span>
+                                        <Switch
+                                            checked={field.value === 1}
+                                            onCheckedChange={(checked) => field.onChange(checked ? 1 : 0)}
+                                        />
+                                    </div>
                                 )} />
                             </div>
                         </div>

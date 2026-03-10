@@ -51,7 +51,7 @@ export default function GoogleMapsConfigPage() {
     return (
         <PermissionGuard permission="plugins.manage">
             <>
-                <PageLoader open={isLoading} />
+                <PageLoader open={isLoading || bulkUpdateMutation.isPending} />
                 {!isLoading && (
                     <div className="space-y-6">
                         {/* Header */}
@@ -181,7 +181,7 @@ export default function GoogleMapsConfigPage() {
                             <div className="flex justify-end">
                                 <Button onClick={handleSave} disabled={bulkUpdateMutation.isPending}>
                                     <Save className="mr-2 h-4 w-4" />
-                                    {bulkUpdateMutation.isPending ? "Saving..." : "Save Google Maps Settings"}
+                                    Save Google Maps Settings
                                 </Button>
                             </div>
                         </div>

@@ -37,11 +37,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -53,8 +49,8 @@ import { toast } from "sonner";
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const citySchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  state_id: z.number().optional(),
+  name: z.string().trim().min(2, "Name must be at least 2 characters"),
+  state_id: z.number({ required_error: "State is required" }),
   country_id: z.number({ required_error: "Country is required" }),
   slug: z.string().optional(),
   sort_order: z.number().default(0),
@@ -296,6 +292,7 @@ export function CitiesTab() {
 
   return (
     <>
+      <PageLoader open={isLoading || isPending || deleteCity.isPending} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -409,7 +406,7 @@ export function CitiesTab() {
               <Label>{t("locations.country", "Country")} *</Label>
               <Controller control={form.control} name="country_id" render={({ field }) => (
                 <Select value={field.value?.toString() || selectedCountryId?.toString()}
-                  onValueChange={(v) => { const id = parseInt(v); field.onChange(id); setSelectedCountryId(id); form.setValue("state_id", undefined); }}>
+                  onValueChange={(v) => { const id = parseInt(v); field.onChange(id); setSelectedCountryId(id); form.setValue("state_id", undefined as unknown as number); }}>
                   <SelectTrigger><SelectValue placeholder={t("locations.select_country", "Select country...")} /></SelectTrigger>
                   <SelectContent>{countries.map((c) => <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
@@ -469,18 +466,21 @@ export function CitiesTab() {
       </Dialog>
 
       {/* Delete Confirm */}
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("common.are_you_sure", "Are you sure?")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("common.delete_confirm", "Are you sure you want to delete this?")} {t("common.cannot_undo", "This action cannot be undone.")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel", "Cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { if (deleteId) deleteCity.mutate(deleteId); setDeleteId(null); }}>{t("common.delete", "Delete")}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteDialog
+        open={!!deleteId}
+        onOpenChange={(open: boolean) => { if (!open) setDeleteId(null); }}
+        title={t("common.are_you_sure", "Are you sure?")}
+        description={`${t("common.delete_confirm", "Are you sure you want to delete this?")} ${t("common.cannot_undo", "This action cannot be undone.")}`}
+        isDeleting={deleteCity.isPending}
+        onConfirm={() => {
+          if (deleteId) {
+            deleteCity.mutate(deleteId, {
+              onSuccess: () => setDeleteId(null),
+              onError: () => setDeleteId(null),
+            });
+          }
+        }}
+      />
     </>
   );
 }

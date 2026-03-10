@@ -39,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/common/delete-dialog";
 import {
   useLanguages,
   useDeleteLanguage,
@@ -151,8 +152,8 @@ export function LanguagesContent() {
   return (
     <PermissionGuard permission="languages.view">
       <>
-        <PageLoader open={isLoading} />
         <PageLoader open={
+          isLoading ||
           isFetching ||
           deleteLanguageMutation.isPending ||
           setDefaultMutation.isPending ||
@@ -416,34 +417,17 @@ export function LanguagesContent() {
               </CardContent>
             </Card>
 
-            {/* Delete Confirmation Dialog */}
-            <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    {t("languages.delete_title", "Delete Language")}
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t(
-                      "languages.delete_confirm",
-                      "Are you sure you want to delete this language? This will also deactivate all translations for this language.",
-                    )}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={deleteLanguageMutation.isPending}>
-                    {t("common.cancel", "Cancel")}
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={confirmDelete}
-                    disabled={deleteLanguageMutation.isPending}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {t("common.delete", "Delete")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DeleteDialog
+              open={deleteDialogOpen}
+              onOpenChange={(open: boolean) => setDeleteDialogOpen(open)}
+              title={t("languages.delete_title", "Delete Language")}
+              description={t(
+                "languages.delete_confirm",
+                "Are you sure you want to delete this language? This will also deactivate all translations for this language."
+              )}
+              onConfirm={confirmDelete}
+              isDeleting={deleteLanguageMutation.isPending}
+            />
 
             {/* Translate All Confirmation Dialog */}
             <AlertDialog

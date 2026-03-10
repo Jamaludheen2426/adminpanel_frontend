@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { SlideItemModal } from './slide-item-modal';
 import { resolveMediaUrl } from '@/lib/utils';
@@ -27,8 +28,8 @@ import {
 import { PageLoader } from '@/components/common/page-loader';
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    key: z.string().min(1, 'Key is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    key: z.string().trim().min(1, 'Key is required'),
     description: z.string().optional().nullable(),
     is_active: z.union([z.literal(0), z.literal(1), z.literal(2)]).default(1), // 0=inactive, 1=active, 2=pending
     slider_items: z.array(z.any()).default([]),
@@ -121,9 +122,16 @@ export function SimpleSliderForm({ id }: { id: string }) {
             key: 'is_active',
             header: 'Status',
             render: (row) => {
-                const val = row.is_active;
-                if (val === 1) return <span className="px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-800">Active</span>;
-                return <span className="px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-800">Draft</span>;
+                const val = (row as any).is_active;
+                return (
+                    <Switch
+                        checked={val === 1}
+                        onCheckedChange={(checked) => {
+                            const idx = row.id as number;
+                            update(idx, { ...(sliderItems[idx] as any), is_active: checked ? 1 : 0 });
+                        }}
+                    />
+                );
             }
         },
     ];
@@ -131,7 +139,6 @@ export function SimpleSliderForm({ id }: { id: string }) {
     const mappedItems = sliderItems.map((item, idx) => ({
         ...item,
         id: idx, // CommonTable expects a numeric id
-        is_active: (item as any).is_active === 1,
         created_at: new Date().toISOString(),
     }));
 
@@ -142,20 +149,6 @@ export function SimpleSliderForm({ id }: { id: string }) {
 
     return (
         <div className="space-y-5 pb-10">
-            {/* Top Actions */}
-            <div className="flex items-center justify-end gap-2">
-                <Button type="button" variant="outline" size="sm" disabled={isSaving} onClick={onSave}>
-                    {isSaving ? (
-                        <Spinner className="h-3.5 w-3.5 mr-1.5" />
-                    ) : (
-                        <Save className="h-3.5 w-3.5 mr-1.5" />
-                    )}
-                    {isSaving ? 'Saving…' : 'Save'}
-                </Button>
-                <Button type="button" size="sm" disabled={isSaving} onClick={onSaveExit}>
-                    <LogOut className="h-3.5 w-3.5 mr-1.5" />Save & Exit
-                </Button>
-            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
                 {/* ── Left column ──────────────────────────────────────── */}

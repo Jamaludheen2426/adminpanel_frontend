@@ -149,71 +149,74 @@ function GatewayCard({
     };
 
     return (
-        <Card className={`transition-all duration-200 hover:shadow-md ${isEnabled ? "border-primary/30" : ""}`}>
-            <CardHeader className="pb-3">
-                <div className="flex items-start gap-4">
-                    {/* Logo area */}
-                    <div className="shrink-0 flex items-center justify-center w-28 h-12 rounded-lg border bg-muted/40 px-3">
-                        {gateway.logo}
-                    </div>
-
-                    {/* Name + description */}
-                    <div className="flex-1 min-w-0 pt-0.5">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <CardTitle className="text-base">{gateway.name}</CardTitle>
-                            {isDefault && (
-                                <Badge variant="secondary" className="text-[10px] gap-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400">
-                                    <Star className="w-2.5 h-2.5 fill-current" /> Default
-                                </Badge>
-                            )}
-                            {isConfigured ? (
-                                <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 border-emerald-300 dark:text-emerald-400">
-                                    <CheckCircle2 className="w-2.5 h-2.5" /> Configured
-                                </Badge>
-                            ) : (
-                                <Badge variant="outline" className="text-[10px] gap-1 text-amber-600 border-amber-300 dark:text-amber-400">
-                                    <AlertCircle className="w-2.5 h-2.5" /> Setup Required
-                                </Badge>
-                            )}
+        <div className="relative">
+            <PageLoader open={isLoading || bulkUpdate.isPending} />
+            <Card className={`transition-all duration-200 hover:shadow-md ${isEnabled ? "border-primary/30" : ""}`}>
+                <CardHeader className="pb-3">
+                    <div className="flex items-start gap-4">
+                        {/* Logo area */}
+                        <div className="shrink-0 flex items-center justify-center w-28 h-12 rounded-lg border bg-muted/40 px-3">
+                            {gateway.logo}
                         </div>
-                        <CardDescription className="text-xs mt-0.5">{gateway.tagline}</CardDescription>
-                    </div>
 
-                    {/* Controls */}
-                    <div className="flex items-center gap-2 shrink-0 pt-0.5">
-                        <button
-                            onClick={() => onToggleDefault(gateway.slug)}
-                            className={`p-1.5 rounded-md transition-colors hover:bg-muted ${isDefault ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
-                                }`}
-                            title={isDefault ? "Default gateway" : "Set as default"}
-                        >
-                            <Star className={`w-4 h-4 ${isDefault ? "fill-current" : ""}`} />
-                        </button>
-                        <Switch
-                            checked={isEnabled}
-                            onCheckedChange={toggle}
-                            disabled={isLoading || bulkUpdate.isPending}
-                        />
-                        <Link href={`/admin/payments/${gateway.slug}`}>
-                            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
-                                {isConfigured ? "Edit" : "Setup"}
-                                <ChevronRight className="w-3 h-3" />
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </CardHeader>
+                        {/* Name + description */}
+                        <div className="flex-1 min-w-0 pt-0.5">
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <CardTitle className="text-base">{gateway.name}</CardTitle>
+                                {isDefault && (
+                                    <Badge variant="secondary" className="text-[10px] gap-1 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400">
+                                        <Star className="w-2.5 h-2.5 fill-current" /> Default
+                                    </Badge>
+                                )}
+                                {isConfigured ? (
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-emerald-600 border-emerald-300 dark:text-emerald-400">
+                                        <CheckCircle2 className="w-2.5 h-2.5" /> Configured
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-amber-600 border-amber-300 dark:text-amber-400">
+                                        <AlertCircle className="w-2.5 h-2.5" /> Setup Required
+                                    </Badge>
+                                )}
+                            </div>
+                            <CardDescription className="text-xs mt-0.5">{gateway.tagline}</CardDescription>
+                        </div>
 
-            {/* Bottom info row */}
-            <Separator />
-            <CardContent className="pt-3 pb-3">
-                <p className="text-xs text-muted-foreground">
-                    {isConfigured
-                        ? `Use ${gateway.name} to process payments at checkout`
-                        : `Enter your ${gateway.name} API credentials to activate this gateway`}
-                </p>
-            </CardContent>
-        </Card>
+                        {/* Controls */}
+                        <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                            <button
+                                onClick={() => onToggleDefault(gateway.slug)}
+                                className={`p-1.5 rounded-md transition-colors hover:bg-muted ${isDefault ? "text-amber-500" : "text-muted-foreground hover:text-amber-500"
+                                    }`}
+                                title={isDefault ? "Default gateway" : "Set as default"}
+                            >
+                                <Star className={`w-4 h-4 ${isDefault ? "fill-current" : ""}`} />
+                            </button>
+                            <Switch
+                                checked={isEnabled}
+                                onCheckedChange={toggle}
+                                disabled={isLoading || bulkUpdate.isPending}
+                            />
+                            <Link href={`/admin/payments/${gateway.slug}`}>
+                                <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+                                    {isConfigured ? "Edit" : "Setup"}
+                                    <ChevronRight className="w-3 h-3" />
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </CardHeader>
+
+                {/* Bottom info row */}
+                <Separator />
+                <CardContent className="pt-3 pb-3">
+                    <p className="text-xs text-muted-foreground">
+                        {isConfigured
+                            ? `Use ${gateway.name} to process payments at checkout`
+                            : `Enter your ${gateway.name} API credentials to activate this gateway`}
+                    </p>
+                </CardContent>
+            </Card>
+        </div>
     );
 }
 

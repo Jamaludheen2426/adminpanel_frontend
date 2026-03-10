@@ -14,8 +14,8 @@ import { PageLoader } from '@/components/common/page-loader';
 
 const signUpSchema = z
   .object({
-    fullName: z.string().min(2, 'Full name required'),
-    email: z.string().email('Invalid email address'),
+    fullName: z.string().trim().min(2, 'Full name required'),
+    email: z.string().trim().email('Invalid email address'),
     password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string(),
   })
@@ -89,93 +89,93 @@ export default function SignUpPage() {
 
   return (
     <>
-    <PageLoader open={isLoading} text="Creating account..." />
-    <div className="space-y-6">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-        <p className="text-gray-600">Set up your admin account</p>
+      <PageLoader open={isLoading} text="Creating account..." />
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+          <p className="text-gray-600">Set up your admin account</p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>
+            <Label htmlFor="fullName">Full Name</Label>
+            <Input
+              id="fullName"
+              placeholder="John Doe"
+              {...register('fullName')}
+              className="mt-2"
+            />
+            {errors.fullName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.fullName.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="admin@example.com"
+              {...register('email')}
+              className="mt-2"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              {...register('password')}
+              className="mt-2"
+            />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              {...register('confirmPassword')}
+              className="mt-2"
+            />
+            {errors.confirmPassword && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.confirmPassword.message}
+              </p>
+            )}
+          </div>
+
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? 'Creating account...' : 'Create Account'}
+          </Button>
+        </form>
+
+        <p className="text-center text-gray-600">
+          Already have an account?{' '}
+          <Link href="/auth/login" className="text-blue-600 font-medium hover:text-blue-700">
+            Sign in
+          </Link>
+        </p>
       </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="fullName">Full Name</Label>
-          <Input
-            id="fullName"
-            placeholder="John Doe"
-            {...register('fullName')}
-            className="mt-2"
-          />
-          {errors.fullName && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.fullName.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="admin@example.com"
-            {...register('email')}
-            className="mt-2"
-          />
-          {errors.email && (
-            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="password">Password</Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="••••••••"
-            {...register('password')}
-            className="mt-2"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label htmlFor="confirmPassword">Confirm Password</Label>
-          <Input
-            id="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            {...register('confirmPassword')}
-            className="mt-2"
-          />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.confirmPassword.message}
-            </p>
-          )}
-        </div>
-
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? 'Creating account...' : 'Create Account'}
-        </Button>
-      </form>
-
-      <p className="text-center text-gray-600">
-        Already have an account?{' '}
-        <Link href="/auth/login" className="text-blue-600 font-medium hover:text-blue-700">
-          Sign in
-        </Link>
-      </p>
-    </div>
     </>
   );
 }

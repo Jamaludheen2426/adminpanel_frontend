@@ -20,8 +20,8 @@ import type { Announcement, CreateAnnouncementDto } from '@/hooks/use-announceme
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
 const schema = z.object({
-    name: z.string().min(1, 'Name is required'),
-    content: z.string().min(1, 'Content is required'),
+    name: z.string().trim().min(1, 'Name is required'),
+    content: z.string().trim().min(1, 'Content is required'),
     start_date: z.string().nullable().optional(),
     end_date: z.string().nullable().optional(),
     has_action: z.boolean().default(false),

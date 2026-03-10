@@ -10,6 +10,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
+import { PageLoader } from '@/components/common/page-loader';
 
 export function ContactsContent() {
     const { t } = useTranslation();
@@ -136,6 +137,7 @@ export function ContactsContent() {
 
     return (
         <div className="space-y-6">
+            <PageLoader open={isLoading || deleteContact.isPending} />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -191,13 +193,14 @@ export function ContactsContent() {
 
             <DeleteDialog
                 open={!!deleteId}
-                onOpenChange={(open) => {
+                onOpenChange={(open: boolean) => {
                     if (!open) setDeleteId(null);
                 }}
                 onConfirm={() => {
                     if (deleteId) {
                         deleteContact.mutate(deleteId, {
                             onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
                         });
                     }
                 }}

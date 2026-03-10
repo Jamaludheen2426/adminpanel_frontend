@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ─── Step 2: Database & Environment ──────────────────────────────────────────
 
 export const databaseStepSchema = z.object({
-  db_host: z.string().min(1, 'Database host is required'),
+  db_host: z.string().trim().min(1, 'Database host is required'),
   db_port: z
     .string()
     .regex(/^\d+$/, 'Port must be a number')
@@ -12,19 +12,20 @@ export const databaseStepSchema = z.object({
     }),
   db_name: z
     .string()
+    .trim()
     .min(1, 'Database name is required')
     .regex(/^[a-zA-Z0-9_]+$/, 'Only letters, numbers, and underscores allowed'),
-  db_user: z.string().min(1, 'Database user is required'),
+  db_user: z.string().trim().min(1, 'Database user is required'),
   db_password: z.string(), // can be empty (e.g. local root with no password)
   domain: z
     .string()
     .min(1, 'Domain / frontend URL is required')
     .url('Must be a valid URL (e.g. http://localhost:3000)'),
-  upload_path: z.string().min(1, 'Upload path is required'),
+  upload_path: z.string().trim().min(1, 'Upload path is required'),
   max_file_size: z
-  .string()
-  .regex(/^\d+(\.\d+)?$/, 'Must be a valid number')
-  .refine((v) => parseFloat(v) > 0, { message: 'Must be greater than 0' })
+    .string()
+    .regex(/^\d+(\.\d+)?$/, 'Must be a valid number')
+    .refine((v) => parseFloat(v) > 0, { message: 'Must be greater than 0' })
 });
 
 export type DatabaseStepData = z.infer<typeof databaseStepSchema>;
@@ -43,15 +44,16 @@ export const databaseStepDefaults: DatabaseStepData = {
 // ─── Step 3: Company ──────────────────────────────────────────────────────────
 
 export const companyStepSchema = z.object({
-  name: z.string().min(2, 'Company name must be at least 2 characters'),
+  name: z.string().trim().min(2, 'Company name must be at least 2 characters'),
   slug: z
     .string()
+    .trim()
     .min(2, 'Slug must be at least 2 characters')
     .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
-  copyright: z.string().min(1, 'Copyright name is required'),
-  timezone: z.string().min(1, 'Timezone is required'),
-  language: z.string().min(1, 'Default language is required'),
-  currency: z.string().min(1, 'Default currency is required'),
+  copyright: z.string().trim().min(1, 'Copyright name is required'),
+  timezone: z.string().trim().min(1, 'Timezone is required'),
+  language: z.string().trim().min(1, 'Default language is required'),
+  currency: z.string().trim().min(1, 'Default currency is required'),
   email: z
     .string()
     .optional()
@@ -81,8 +83,8 @@ export const companyStepDefaults: Omit<CompanyStepData, 'logo' | 'favicon'> = {
 
 export const adminStepSchema = z
   .object({
-    full_name: z.string().min(2, 'Full name must be at least 2 characters'),
-    email: z.string().email('Must be a valid email address'),
+    full_name: z.string().trim().min(2, 'Full name must be at least 2 characters'),
+    email: z.string().trim().email('Must be a valid email address'),
     password: z
       .string()
       .min(1, 'Password is required'),
