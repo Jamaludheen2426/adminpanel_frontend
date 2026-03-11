@@ -272,14 +272,6 @@ export function useSmartLogin() {
           document.cookie = `auth_pending=true; path=/; expires=${exp.toUTCString()}; SameSite=Lax`;
         }
         setTimeout(() => router.push('/admin'), 300);
-      } else {
-        toast.success('Welcome to Vendor Portal');
-        if (typeof window !== 'undefined') {
-          const exp = new Date();
-          exp.setSeconds(exp.getSeconds() + 15);
-          document.cookie = `vendor_auth_pending=true; path=/; expires=${exp.toUTCString()}; SameSite=Lax`;
-        }
-        setTimeout(() => router.push('/vendor/dashboard'), 300);
       }
     },
     onError: (error: any) => {

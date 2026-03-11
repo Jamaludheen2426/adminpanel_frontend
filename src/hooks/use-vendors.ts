@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 
@@ -44,49 +43,6 @@ export interface Vendor {
     company_id: number | null;
     created_at: string;
 }
-
-const VENDOR_ME_KEY = ['vendor-me'] as const;
-
-// Get current logged-in vendor profile
-export const useVendorMe = () => {
-    return useQuery({
-        queryKey: VENDOR_ME_KEY,
-        queryFn: async () => {
-            const res = await apiClient.get('/vendors/auth/me');
-            return res.data.data.vendor as Vendor;
-        },
-        retry: false,
-        staleTime: 5 * 60 * 1000,
-        refetchOnWindowFocus: false,
-    });
-};
-
-// Vendor logout
-export const useVendorLogout = () => {
-    const queryClient = useQueryClient();
-    const router = useRouter();
-
-    return useMutation({
-        mutationFn: async () => {
-            await apiClient.post('/vendors/auth/logout');
-        },
-        onSuccess: () => {
-            queryClient.clear();
-            if (typeof window !== 'undefined') {
-                document.cookie = 'vendor_auth_pending=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
-            }
-            toast.success('Logged out successfully');
-            router.push('/auth/login');
-        },
-        onError: () => {
-            queryClient.clear();
-            if (typeof window !== 'undefined') {
-                document.cookie = 'vendor_auth_pending=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC; SameSite=Lax';
-            }
-            router.push('/auth/login');
-        },
-    });
-};
 
 export const useVendors = (params?: any) => {
     return useQuery({
@@ -157,38 +113,6 @@ export const useUpdateVendorStatus = () => {
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || 'Failed to update status');
-        },
-    });
-};
-
-export const useUpdateVendorProfile = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async (data: Partial<Vendor>) => {
-            const res = await apiClient.put('/vendors/auth/profile', data);
-            return res.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: VENDOR_ME_KEY });
-            toast.success('Profile updated successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to update profile');
-        },
-    });
-};
-
-export const useChangeVendorPassword = () => {
-    return useMutation({
-        mutationFn: async (data: { current_password: string; new_password: string }) => {
-            const res = await apiClient.post('/vendors/auth/change-password', data);
-            return res.data;
-        },
-        onSuccess: () => {
-            toast.success('Password changed successfully');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to change password');
         },
     });
 };

@@ -238,12 +238,13 @@ export function MediaLibraryContent() {
         const uploadFiles = Array.from(e.target.files ?? []);
         if (!uploadFiles.length) return;
         for (const file of uploadFiles) {
-            await uploadMutation.mutateAsync({ file, folder }, {
-                onSuccess: () => {
-                    incrementUpdate();
-                },
-                onError: (e: any) => toast.error(e?.response?.data?.message || 'Upload failed'),
-            });
+            try {
+                await uploadMutation.mutateAsync({ file, folder }, {
+                    onSuccess: () => { incrementUpdate(); },
+                });
+            } catch {
+                // Error toast is handled by the mutation's onError
+            }
         }
         if (fileInputRef.current) fileInputRef.current.value = '';
     }, [folder, uploadMutation]);
@@ -267,7 +268,6 @@ export function MediaLibraryContent() {
         if (!deleteTarget) return;
         deleteMutation.mutate({ path: deleteTarget.path, folder }, {
             onSuccess: () => {
-                toast.success('Deleted successfully');
                 setDeleteTarget(null);
                 setSelectedPath(null);
                 incrementUpdate();
@@ -279,7 +279,6 @@ export function MediaLibraryContent() {
         if (!renameTarget || !renameName.trim() || renameName === renameTarget.name) return;
         renameMutation.mutate({ path: renameTarget.path, newName: renameName.trim(), folder }, {
             onSuccess: () => {
-                toast.success('Renamed successfully');
                 setRenameTarget(null);
                 setRenameName('');
                 incrementUpdate();
@@ -301,7 +300,6 @@ export function MediaLibraryContent() {
 
         moveMutation.mutate({ path: moveTarget.path, targetFolder: apiTarget, folder }, {
             onSuccess: () => {
-                toast.success('Moved successfully');
                 setMoveTarget(null);
                 setMoveTargetFolder('');
                 setSelectedPath(null);

@@ -317,26 +317,13 @@ export function BlogCategoriesContent() {
             <DeleteDialog
                 open={!!deleteId}
                 onOpenChange={(open) => !open && setDeleteId(null)}
-                isDeleting={updateCategory.isPending || deleteCategory.isPending}
+                isDeleting={deleteCategory.isPending}
                 onConfirm={() => {
                     if (deleteId) {
-                        const itemToDel = categories.find((c: any) => c.id === deleteId);
-                        const performDelete = () => {
-                            deleteCategory.mutate(deleteId, {
-                                onSuccess: () => setDeleteId(null),
-                                onError: () => setDeleteId(null)
-                            });
-                        };
-
-                        if (itemToDel && itemToDel.slug) {
-                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
-                            updateCategory.mutate({ id: deleteId, data: { slug: newSlug } }, {
-                                onSuccess: performDelete,
-                                onError: performDelete
-                            });
-                        } else {
-                            performDelete();
-                        }
+                        deleteCategory.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
                     }
                 }}
             />

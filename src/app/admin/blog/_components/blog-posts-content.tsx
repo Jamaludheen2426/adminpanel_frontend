@@ -189,26 +189,13 @@ export function BlogPostsContent() {
                 onOpenChange={(open) => {
                     if (!open) setDeleteId(null);
                 }}
-                isDeleting={updatePost.isPending || deletePost.isPending}
+                isDeleting={deletePost.isPending}
                 onConfirm={() => {
                     if (deleteId) {
-                        const itemToDel = posts.find((c: any) => c.id === deleteId);
-                        const performDelete = () => {
-                            deletePost.mutate(deleteId, {
-                                onSuccess: () => setDeleteId(null),
-                                onError: () => setDeleteId(null)
-                            });
-                        };
-
-                        if (itemToDel && itemToDel.slug) {
-                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
-                            updatePost.mutate({ id: deleteId, data: { slug: newSlug } }, {
-                                onSuccess: performDelete,
-                                onError: performDelete
-                            });
-                        } else {
-                            performDelete();
-                        }
+                        deletePost.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
                     }
                 }}
                 title={t('blog.delete_post', 'Delete Blog Post')}

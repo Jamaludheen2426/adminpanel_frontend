@@ -220,26 +220,13 @@ export function BlogTagsContent() {
                 onOpenChange={(open) => !open && setDeleteId(null)}
                 title={t('common.are_you_sure', 'Are you sure?')}
                 description={t('common.delete_confirm', 'This action cannot be undone.')}
-                isDeleting={updateTag.isPending || deleteTag.isPending}
+                isDeleting={deleteTag.isPending}
                 onConfirm={() => {
                     if (deleteId) {
-                        const itemToDel = tags.find((c: any) => c.id === deleteId);
-                        const performDelete = () => {
-                            deleteTag.mutate(deleteId, {
-                                onSuccess: () => setDeleteId(null),
-                                onError: () => setDeleteId(null)
-                            });
-                        };
-
-                        if (itemToDel && itemToDel.slug) {
-                            const newSlug = `${itemToDel.slug}-deleted-${Date.now()}`;
-                            updateTag.mutate({ id: deleteId, data: { slug: newSlug } }, {
-                                onSuccess: performDelete,
-                                onError: performDelete
-                            });
-                        } else {
-                            performDelete();
-                        }
+                        deleteTag.mutate(deleteId, {
+                            onSuccess: () => setDeleteId(null),
+                            onError: () => setDeleteId(null)
+                        });
                     }
                 }}
             />

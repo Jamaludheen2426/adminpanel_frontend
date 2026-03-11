@@ -164,8 +164,8 @@ queryKeys.settings.group('general')
 - **Soft delete:** Vendor model uses `paranoid: true` — table **must** have `deleted_at` column
 - **DB table:** `initial_setup.sql` has the full `CREATE TABLE vendors` at the bottom
 - **Permissions:** `vendors.view`, `vendors.create`, `vendors.edit`, `vendors.delete`
-- **Vendor portal:** `/vendor/dashboard` — separate portal for logged-in vendors using `useVendorMe()` / `useVendorLogout()`
-- **Vendor auth cookies:** `vendor_access_token`, `vendor_refresh_token`, `vendor_auth_pending`
+- **Vendor portal is SEPARATE** — lives at `D:\Jamal\vendor_portal` (standalone Next.js app). The adminpanel does NOT handle vendor login/session. `use-vendors.ts` in adminpanel only has admin CRUD hooks — no `useVendorMe`, `useVendorLogout`, `useUpdateVendorProfile`, `useChangeVendorPassword`.
+- **Middleware** — adminpanel middleware only handles admin session (`access_token`, `refresh_token`, `auth_pending`). No vendor cookie logic.
 
 ## Contact Module Design
 - **Flow:** User submits public contact form → Admin reads → Admin sends ONE reply email → Done

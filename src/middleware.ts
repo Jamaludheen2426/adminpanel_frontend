@@ -47,7 +47,6 @@ export async function middleware(request: NextRequest) {
 
   const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const isAdminRoute  = adminRoutes.some((route) => pathname.startsWith(route));
-  const isVendorRoute = pathname.startsWith('/vendor');
 
   // Admin session cookies
   const accessToken     = request.cookies.get('access_token')?.value;
@@ -55,16 +54,9 @@ export async function middleware(request: NextRequest) {
   const authPending     = request.cookies.get('auth_pending')?.value === 'true';
   const isAdminLoggedIn = !!(accessToken || refreshToken || authPending);
 
-  // Vendor session cookies
-  const vendorAccessToken  = request.cookies.get('vendor_access_token')?.value;
-  const vendorRefreshToken = request.cookies.get('vendor_refresh_token')?.value;
-  const vendorAuthPending  = request.cookies.get('vendor_auth_pending')?.value === 'true';
-  const isVendorLoggedIn   = !!(vendorAccessToken || vendorRefreshToken || vendorAuthPending);
-
-  // Redirect root based on who is logged in
+  // Redirect root to admin or login
   if (pathname === '/') {
-    if (isAdminLoggedIn)  return NextResponse.redirect(new URL('/admin', request.url));
-    if (isVendorLoggedIn) return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
+    if (isAdminLoggedIn) return NextResponse.redirect(new URL('/admin', request.url));
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
@@ -73,19 +65,11 @@ export async function middleware(request: NextRequest) {
     if (isAdminLoggedIn && pathname.startsWith('/auth')) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
-    if (isVendorLoggedIn && !isAdminLoggedIn && pathname.startsWith('/auth')) {
-      return NextResponse.redirect(new URL('/vendor/dashboard', request.url));
-    }
     return NextResponse.next();
   }
 
   // Admin routes require admin session
   if (isAdminRoute && !isAdminLoggedIn) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
-
-  // Vendor routes require vendor session
-  if (isVendorRoute && !isVendorLoggedIn) {
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
