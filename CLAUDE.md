@@ -154,12 +154,39 @@ queryKeys.settings.group('general')
 | Email | `/admin/settings/email` | `use-email-configs.ts` |
 | Contact | `/admin/contacts` | `use-contacts.ts` |
 | Vendors | `/admin/vendors` | `use-vendors.ts` |
+| Menus | `/admin/menus` | `use-menus.ts` |
+| Subscriptions | `/admin/subscriptions` | `use-subscriptions.ts` |
+
+## CommonTable Sort Behavior
+- **Internal mode (default):** When no `onSort` prop is passed, `CommonTable` manages its own sort state (`internalSortColumn`, `internalSortDirection`) and sorts `data` client-side via `React.useMemo`. All new pages get free client-side sort just by setting `sortable: true` on columns.
+- **Controlled mode:** When `onSort` prop is passed, CommonTable delegates to the parent for server-side sort (existing pages using `onSort` are unaffected).
+- **Date display:** `formatDate` returns `"—"` for empty/invalid dates. Models without `createdAt: 'created_at'` override (e.g. Vendor) return `createdAt` camelCase — normalize in the list component: `created_at: item.created_at || item.createdAt || ''`.
+
+## Menus Module Design
+- **Routes:** `/admin/menus` (list only — inline create/edit via dialog)
+- **Hook:** `src/hooks/use-menus.ts` — `useMenus`, `useCreateMenu`, `useUpdateMenu`, `useUpdateMenuStatus`, `useDeleteMenu`
+- **Fields:** name, icon (PascalCase for lucide e.g. `ArrowRight`, or `prefix:name` for iconify e.g. `mdi:star`), icon_fill_color_light, icon_fill_color_dark, sort_order, is_active, display_status
+- **Permissions:** `menus.view`, `menus.create`, `menus.edit`, `menus.delete`
+- **Linked to:** Subscriptions module uses `menu_ids` (multi-select) referencing menu IDs
+
+## Subscriptions Module Design
+- **Routes:** `/admin/subscriptions` (list only — inline create/edit via dialog)
+- **Hook:** `src/hooks/use-subscriptions.ts` — `useSubscriptions`, `useCreateSubscription`, `useUpdateSubscription`, `useUpdateSubscriptionStatus`, `useDeleteSubscription`
+- **Fields:** name, description (Textarea), menu_ids (custom multi-select dropdown, links to Menus module), price (DECIMAL), validity (INT days, 0 = no expiry), features (RichEditor rich text), sort_order, is_active
+- **Menu multi-select:** Custom dropdown built with Controller + `menuDropdownOpen` state, shows badges for selected menus, no external library
+- **Features field:** Uses `RichEditor` via `dynamic(() => import('@/components/common/rich-editor'), { ssr: false })`
+- **DB:** `menu_ids` stored as JSON array in DB column. `features` stored as LONGTEXT.
+- **Sidebar:** Standalone top-level item (NOT a child of events), uses `Repeat` icon, `nav.subscriptions` translation key
+- **Permissions:** `subscriptions.view`, `subscriptions.create`, `subscriptions.edit`, `subscriptions.delete`
+- **Approval:** Uses `isApprovalRequired` check in create, update, delete mutations
 
 ## Vendor Module Design
 - **Routes:** `/admin/vendors` (list) → `/admin/vendors/new` (create) → `/admin/vendors/[id]/edit` (edit)
 - **Hook:** `src/hooks/use-vendors.ts` — `useVendors`, `useVendor`, `useCreateVendor`, `useUpdateVendor`, `useUpdateVendorStatus`, `useDeleteVendor`
-- **Form:** `src/app/admin/vendors/_components/vendor-form.tsx` uses `CommonForm` with 3 sections: Company Info, Vendor Info (includes profile image + password), Bank Info
-- **List page:** `vendors-content.tsx` uses `CommonTable` with `showCreated={true}`, `showStatus={false}` (status is a custom Switch column), `showActions={true}` (onEdit/onDelete)
+- **Form:** `src/app/admin/vendors/_components/vendor-form.tsx` uses `CommonForm` with 3 sections: Company Info (includes `company_logo` + `location`), Vendor Info (includes profile image + password), Bank Info
+- **Fields added:** `company_logo` (VARCHAR 500, image upload, 300×100px preview), `location` (VARCHAR 255, text field)
+- **List page:** `vendors-content.tsx` uses `CommonTable` with `showCreated={true}`, `showStatus={false}` (status is a custom Switch column), `showActions={true}` (onEdit/onDelete). Company column shows logo img + company_name + location.
+- **Date normalization:** Vendor model uses `timestamps: true` without `createdAt: 'created_at'` override → API returns `createdAt` (camelCase). Normalize: `created_at: v.created_at || v.createdAt || ''`
 - **Status toggle:** `PATCH /vendors/:id/status` — does NOT go through approval workflow
 - **Soft delete:** Vendor model uses `paranoid: true` — table **must** have `deleted_at` column
 - **DB table:** `initial_setup.sql` has the full `CREATE TABLE vendors` at the bottom

@@ -31,7 +31,10 @@ export function VendorsContent() {
     const deleteVendor = useDeleteVendor();
     const updateStatus = useUpdateVendorStatus();
 
-    const vendors: Vendor[] = vendorsRes?.data || [];
+    const vendors: Vendor[] = (vendorsRes?.data || []).map((v: any) => ({
+        ...v,
+        created_at: v.created_at || v.createdAt || '',
+    }));
 
     const columns = [
         {
@@ -56,11 +59,26 @@ export function VendorsContent() {
             key: 'company_name',
             header: 'Company',
             render: (row: Vendor) => (
-                <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{row.company_name}</p>
-                    {row.company_email && (
-                        <p className="text-xs text-muted-foreground truncate">{row.company_email}</p>
+                <div className="flex items-center gap-3">
+                    {row.company_logo ? (
+                        <img
+                            src={resolveMediaUrl(row.company_logo)}
+                            alt={row.company_name}
+                            className="h-8 w-16 object-contain rounded border border-border shrink-0 bg-muted/30"
+                        />
+                    ) : (
+                        <div className="h-8 w-16 rounded border border-border bg-muted/30 flex items-center justify-center shrink-0">
+                            <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide">Logo</span>
+                        </div>
                     )}
+                    <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{row.company_name}</p>
+                        {row.location ? (
+                            <p className="text-xs text-muted-foreground truncate">{row.location}</p>
+                        ) : row.company_email ? (
+                            <p className="text-xs text-muted-foreground truncate">{row.company_email}</p>
+                        ) : null}
+                    </div>
                 </div>
             ),
         },

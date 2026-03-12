@@ -14,6 +14,8 @@ export interface Vendor {
     id: number;
     // Company Info
     company_name: string;
+    company_logo: string | null;
+    location: string | null;
     reg_no: string | null;
     gst_no: string | null;
     company_address: string | null;

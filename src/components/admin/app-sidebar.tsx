@@ -34,6 +34,8 @@ import {
   Tag,
   FolderOpen,
   Store,
+  LayoutList,
+  Repeat,
 } from "lucide-react";
 import {
   Sidebar,
@@ -124,6 +126,20 @@ const menuItems: MenuItem[] = [
     href: "/admin/testimonials",
     icon: Star,
     permission: "testimonials.view",
+  },
+  {
+    labelKey: "nav.events",
+    icon: LayoutList,
+    permission: "menus.view",
+    children: [
+      { labelKey: "nav.menus", href: "/admin/menus", icon: LayoutList, permission: "menus.view" },
+    ],
+  },
+  {
+    labelKey: "nav.subscriptions",
+    href: "/admin/subscriptions",
+    icon: Repeat,
+    permission: "subscriptions.view",
   },
   {
     labelKey: "nav.ads",

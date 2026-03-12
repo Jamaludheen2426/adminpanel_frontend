@@ -10,6 +10,8 @@ import { Building2, User, Landmark } from 'lucide-react';
 
 const baseSchema = z.object({
     company_name: z.string().trim().min(1, 'Company name is required'),
+    company_logo: z.string().optional(),
+    location: z.string().trim().optional(),
     reg_no: z.string().trim().optional(),
     gst_no: z.string().trim().optional(),
     company_address: z.string().trim().optional(),
@@ -49,7 +51,13 @@ const sections = (isEdit: boolean): CommonFormSection[] => [
         title: 'Company Information',
         icon: Building2,
         fields: [
+            {
+                name: 'company_logo', label: 'Company Logo', type: 'image', colSpan: 2,
+                imageTitle: 'Company Logo', imageDescription: 'Upload company logo (recommended: 300×100px)',
+                targetWidth: 300, targetHeight: 100, imageFolder: 'vendors',
+            },
             { name: 'company_name', label: 'Company Name', type: 'text', placeholder: 'Acme Pvt Ltd', required: true },
+            { name: 'location', label: 'Location', type: 'text', placeholder: 'e.g. Mumbai, India' },
             { name: 'reg_no', label: 'Registration No.', type: 'text', placeholder: 'REG123456' },
             { name: 'gst_no', label: 'GST No.', type: 'text', placeholder: '22AAAAA0000A1Z5' },
             { name: 'company_contact', label: 'Company Contact', type: 'text', placeholder: '+91 9000000000' },
@@ -127,7 +135,8 @@ export function VendorForm({ vendor }: Props) {
     const update = useUpdateVendor();
 
     const defaultValues = vendor ? {
-        company_name: vendor.company_name, reg_no: vendor.reg_no || '',
+        company_name: vendor.company_name, company_logo: vendor.company_logo || '',
+        location: vendor.location || '', reg_no: vendor.reg_no || '',
         gst_no: vendor.gst_no || '', company_address: vendor.company_address || '',
         company_contact: vendor.company_contact || '', landline: vendor.landline || '',
         company_email: vendor.company_email || '', website: vendor.website || '',
