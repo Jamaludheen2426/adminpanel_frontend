@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { resolveMediaUrl } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { PageLoader } from '@/components/common/page-loader';
@@ -21,11 +23,107 @@ const MEMBERSHIP_COLORS: Record<string, string> = {
     platinum: 'bg-purple-100 text-purple-700',
 };
 
+function VendorDetailPane({ vendor, open, onClose }: { vendor: Vendor | null; open: boolean; onClose: () => void }) {
+    const router = useRouter();
+    if (!vendor) return null;
+
+    const row = (label: string, value: string | null | undefined) =>
+        value ? (
+            <div className="flex flex-col gap-0.5">
+                <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium">{label}</span>
+                <span className="text-sm">{value}</span>
+            </div>
+        ) : null;
+
+    return (
+        <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+            <SheetContent side="right" className="w-full sm:max-w-[400px] flex flex-col p-0 overflow-y-auto">
+                {/* Top — name + location */}
+                <SheetHeader className="px-5 pt-6 pb-4">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 border shrink-0">
+                            <AvatarImage src={resolveMediaUrl(vendor.profile || '')} />
+                            <AvatarFallback className="text-base bg-primary/10 text-primary">
+                                {vendor.name.charAt(0)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                            <SheetTitle className="text-base font-semibold leading-tight">{vendor.name}</SheetTitle>
+                            {vendor.company_address && (
+                                <p className="text-sm text-muted-foreground mt-0.5">{vendor.company_address}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Membership badge */}
+                    <Badge className={`w-fit mt-2 border-0 capitalize text-xs ${MEMBERSHIP_COLORS[vendor.membership] || ''}`}>
+                        {vendor.membership}
+                    </Badge>
+                </SheetHeader>
+
+                <Separator />
+
+                {/* Company info */}
+                <div className="px-5 py-4 flex flex-col gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Company</p>
+                    {vendor.company_logo && (
+                        <img
+                            src={resolveMediaUrl(vendor.company_logo)}
+                            alt={vendor.company_name}
+                            className="h-10 w-28 object-contain rounded border border-border bg-muted/30"
+                        />
+                    )}
+                    {row('Company Name', vendor.company_name)}
+                    {row('Registration No.', vendor.reg_no)}
+                    {row('GST No.', vendor.gst_no)}
+                    {row('Company Email', vendor.company_email)}
+                    {row('Company Contact', vendor.company_contact)}
+                    {row('Landline', vendor.landline)}
+                    {row('Address', vendor.company_address)}
+                    {row('Website', vendor.website)}
+                </div>
+
+                <Separator />
+
+                {/* Vendor info */}
+                <div className="px-5 py-4 flex flex-col gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vendor</p>
+                    {row('Email', vendor.email)}
+                    {row('Contact', vendor.contact)}
+                    {row('Address', vendor.address)}
+                </div>
+
+                <Separator />
+
+                {/* Bank info */}
+                <div className="px-5 py-4 flex flex-col gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Bank</p>
+                    {row('Bank Name', vendor.bank_name)}
+                    {row('Account No.', vendor.acc_no)}
+                    {row('IFSC Code', vendor.ifsc_code)}
+                    {row('Account Type', vendor.acc_type)}
+                    {row('Branch', vendor.branch)}
+                </div>
+
+                <Separator />
+
+                <div className="px-5 py-4 flex gap-2">
+                    <Button size="sm" onClick={() => { onClose(); router.push(`/admin/vendors/${vendor.id}/edit`); }}>
+                        Edit Vendor
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={onClose}>Close</Button>
+                </div>
+            </SheetContent>
+        </Sheet>
+    );
+}
+
 export function VendorsContent() {
     const router = useRouter();
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
     const { data: vendorsRes, isLoading } = useVendors({ page, limit });
     const deleteVendor = useDeleteVendor();
@@ -73,9 +171,7 @@ export function VendorsContent() {
                     )}
                     <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{row.company_name}</p>
-                        {row.location ? (
-                            <p className="text-xs text-muted-foreground truncate">{row.location}</p>
-                        ) : row.company_email ? (
+                        {row.company_email ? (
                             <p className="text-xs text-muted-foreground truncate">{row.company_email}</p>
                         ) : null}
                     </div>
@@ -116,6 +212,11 @@ export function VendorsContent() {
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || deleteVendor.isPending || updateStatus.isPending} />
+            <VendorDetailPane
+                vendor={selectedVendor}
+                open={!!selectedVendor}
+                onClose={() => setSelectedVendor(null)}
+            />
             <Card>
                 <CardHeader>
                     <div className="flex items-center justify-between">
@@ -136,6 +237,7 @@ export function VendorsContent() {
                         showStatus={false}
                         showCreated={true}
                         showActions={true}
+                        onRowClick={(row) => setSelectedVendor(row as Vendor)}
                         onEdit={(row) => router.push(`/admin/vendors/${row.id}/edit`)}
                         onDelete={(row) => setDeleteId(row.id)}
                         emptyMessage="No vendors found. Add your first vendor."

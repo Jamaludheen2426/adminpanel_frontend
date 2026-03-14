@@ -7,6 +7,7 @@ import { ImageIcon, CodeXml, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
+import { MAX_FILE_SIZE } from "@/hooks/use-media";
 
 // Dynamically import ReactQuill to prevent SSR issues
 const ReactQuill = dynamic(() => import('react-quill-new'), {
@@ -137,6 +138,11 @@ export const RichTextEditor = React.forwardRef<RichTextEditorRef, RichTextEditor
             const file = input.files?.[0];
             if (!file) return;
 
+            if (file.size > MAX_FILE_SIZE) {
+                toast.error('File size exceeds the 10MB limit.');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file', file);
             formData.append('folder', 'editor');
@@ -224,10 +230,11 @@ export const RichTextEditor = React.forwardRef<RichTextEditorRef, RichTextEditor
                     )}
                     {isUploading ? "Uploading..." : "Add media"}
                 </Button>
+                <span className="text-[11px] text-muted-foreground">Max 10MB</span>
                 {customButtons}
             </div>
 
-            <div className={isSourceMode ? "hidden" : "block"}>
+            {!isSourceMode && (
                 <ReactQuill
                     ref={quillRef}
                     theme="snow"
@@ -237,7 +244,7 @@ export const RichTextEditor = React.forwardRef<RichTextEditorRef, RichTextEditor
                     formats={formats}
                     placeholder={placeholder}
                 />
-            </div>
+            )}
 
             {isSourceMode && (
                 <textarea

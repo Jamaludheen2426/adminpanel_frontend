@@ -23,7 +23,7 @@ import { ImageCropper } from '@/components/common/image-cropper';
 export interface CommonFormField {
     name: string;
     label: string;
-    type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'switch' | 'image';
+    type: 'text' | 'email' | 'password' | 'number' | 'textarea' | 'select' | 'switch' | 'image' | 'custom';
     placeholder?: string;
     required?: boolean;
     disabled?: boolean;
@@ -40,6 +40,8 @@ export interface CommonFormField {
     targetHeight?: number;
     rounded?: boolean;
     imageFolder?: string;
+    // custom — render arbitrary JSX, receives form watch/setValue
+    render?: (opts: { watch: any; setValue: any }) => React.ReactNode;
 }
 
 export interface CommonFormSection {
@@ -138,7 +140,7 @@ export function CommonForm({
         return typeof e.message === 'string' ? e.message : undefined;
     };
 
-    const renderField = (field: CommonFormField, sectionColumns: number) => {
+    const renderField = (field: CommonFormField, _sectionColumns: number) => {
         const err = errMsg(field.name);
         const spanClass = field.colSpan ? colSpanClass[field.colSpan] ?? '' : '';
 
@@ -162,6 +164,14 @@ export function CommonForm({
                     {uploadingField === field.name && (
                         <p className="text-xs text-muted-foreground mt-1">Uploading...</p>
                     )}
+                </div>
+            );
+        }
+
+        if (field.type === 'custom' && field.render) {
+            return (
+                <div key={field.name} className={spanClass}>
+                    {field.render({ watch, setValue })}
                 </div>
             );
         }

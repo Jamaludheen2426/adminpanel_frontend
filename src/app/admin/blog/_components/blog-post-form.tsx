@@ -144,7 +144,7 @@ const schema = z.object({
     title: z.string().trim().min(1, 'Title is required'),
     slug: z.string().trim().min(1, 'Slug is required'),
     description: z.string().optional().nullable(),
-    content: z.string().optional().nullable(),
+    content: z.string().refine(val => (val ?? '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim().length > 0, 'Content is required'),
     image: z.string().optional().nullable(),
     seo_title: z.string().optional().nullable(),
     seo_description: z.string().optional().nullable(),
@@ -286,7 +286,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
 
             {/* Content */}
             <div className="space-y-2">
-                <Label>{t('blog.content', 'Content')}</Label>
+                <Label>{t('blog.content', 'Content')} <span className="text-destructive">*</span></Label>
                 <Controller
                     control={control}
                     name="content"
@@ -298,6 +298,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
                         />
                     )}
                 />
+                {errors.content && <p className="text-sm text-destructive">{errors.content.message}</p>}
             </div>
 
             {/* Featured Image */}

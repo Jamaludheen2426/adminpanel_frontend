@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { useRoles } from "@/hooks/use-roles";
 import { useAuth } from "@/hooks/use-auth";
-import { useCountries, useStates, useCities, usePincodes } from "@/hooks/use-locations";
+import { useCountries, useStates, useCities, useLocalities } from "@/hooks/use-locations";
 import { getUserRoleLevel } from "@/lib/auth-utils";
 import type { User } from "@/types";
 
@@ -41,7 +41,6 @@ const employeeSchema = z.object({
   state_id: z.number().optional(),
   city_id: z.number().optional(),
   pincode_id: z.number().optional(),
-  pincode: z.string().optional(),
   address: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
@@ -155,7 +154,6 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
       state_id: user?.state_id || undefined,
       city_id: user?.city_id || undefined,
       pincode_id: user?.pincode_id || undefined,
-      pincode: user?.pincode || "",
       address: user?.address || "",
       department: user?.department || "",
       designation: user?.designation || "",
@@ -174,8 +172,8 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   // Location API hooks
   const { data: countries = [] } = useCountries();
   const { data: states = [] } = useStates(selectedCountryId || 0);
-  const { data: cities = [] } = useCities(selectedStateId || 0);
-  const { data: pincodes = [] } = usePincodes(selectedCityId || 0);
+  const { data: districts = [] } = useCities(selectedStateId || 0);
+  const { data: cityOptions = [] } = useLocalities(selectedCityId || 0);
 
   const onSubmit = (data: EmployeeFormData) => {
     const { confirm_password, ...rest } = data;
@@ -309,45 +307,38 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>City</Label>
+            <Label>District</Label>
             <Select
               value={selectedCityId?.toString() || ""}
               onValueChange={(v) => {
                 setValue("city_id", parseInt(v));
                 setValue("pincode_id", undefined);
               }}
-              disabled={!selectedStateId || cities.length === 0}
+              disabled={!selectedStateId || districts.length === 0}
             >
-              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
               <SelectContent>
-                {cities.map((city) => (
-                  <SelectItem key={city.id} value={city.id.toString()}>{city.name}</SelectItem>
+                {districts.map((d) => (
+                  <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Locality / Area</Label>
+            <Label>City</Label>
             <Select
               value={watch("pincode_id")?.toString() || ""}
               onValueChange={(v) => setValue("pincode_id", parseInt(v))}
-              disabled={!selectedCityId || pincodes.length === 0}
+              disabled={!selectedCityId || cityOptions.length === 0}
             >
-              <SelectTrigger><SelectValue placeholder="Select area" /></SelectTrigger>
+              <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
               <SelectContent>
-                {pincodes.map((p) => (
-                  <SelectItem key={p.id} value={p.id.toString()}>
-                    {p.area_name || p.pincode}
-                  </SelectItem>
+                {cityOptions.map((c) => (
+                  <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="pincode">Pincode</Label>
-            <Input id="pincode" placeholder="Enter pincode" {...register("pincode")} />
           </div>
 
           <div className="space-y-2 md:col-span-2">

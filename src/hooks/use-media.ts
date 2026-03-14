@@ -2,6 +2,8 @@ import { useMutation } from '@tanstack/react-query';
 import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 export interface MediaUploadResult {
   url: string;
   path: string;
@@ -14,6 +16,9 @@ export interface MediaUploadResult {
 // API functions
 const mediaApi = {
   upload: async (file: File, folder?: string): Promise<MediaUploadResult> => {
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('File size exceeds the 10MB limit.');
+    }
     const formData = new FormData();
     formData.append('file', file);
     if (folder) {
@@ -26,6 +31,10 @@ const mediaApi = {
   },
 
   uploadMultiple: async (files: File[], folder?: string): Promise<MediaUploadResult[]> => {
+    const oversized = files.find((f) => f.size > MAX_FILE_SIZE);
+    if (oversized) {
+      throw new Error(`File "${oversized.name}" exceeds the 10MB limit.`);
+    }
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
@@ -51,7 +60,7 @@ export function useUploadMedia() {
       mediaApi.upload(file, folder),
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to upload file');
+      toast.error(error.message || error.response?.data?.message || 'Failed to upload file');
     },
   });
 }
@@ -63,7 +72,7 @@ export function useUploadMultipleMedia() {
       mediaApi.uploadMultiple(files, folder),
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       if (isApprovalRequired(error)) return;
-      toast.error(error.response?.data?.message || 'Failed to upload files');
+      toast.error(error.message || error.response?.data?.message || 'Failed to upload files');
     },
   });
 }

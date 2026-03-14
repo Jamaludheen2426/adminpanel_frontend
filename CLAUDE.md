@@ -184,7 +184,7 @@ queryKeys.settings.group('general')
 - **Routes:** `/admin/vendors` (list) → `/admin/vendors/new` (create) → `/admin/vendors/[id]/edit` (edit)
 - **Hook:** `src/hooks/use-vendors.ts` — `useVendors`, `useVendor`, `useCreateVendor`, `useUpdateVendor`, `useUpdateVendorStatus`, `useDeleteVendor`
 - **Form:** `src/app/admin/vendors/_components/vendor-form.tsx` uses `CommonForm` with 3 sections: Company Info (includes `company_logo` + `location`), Vendor Info (includes profile image + password), Bank Info
-- **Fields added:** `company_logo` (VARCHAR 500, image upload, 300×100px preview), `location` (VARCHAR 255, text field)
+- **Fields added:** `company_logo` (VARCHAR 500, image upload, 300×100px preview), `location` (VARCHAR 255, text field), `latitude` (DECIMAL(10,7)), `longitude` (DECIMAL(10,7))
 - **List page:** `vendors-content.tsx` uses `CommonTable` with `showCreated={true}`, `showStatus={false}` (status is a custom Switch column), `showActions={true}` (onEdit/onDelete). Company column shows logo img + company_name + location.
 - **Date normalization:** Vendor model uses `timestamps: true` without `createdAt: 'created_at'` override → API returns `createdAt` (camelCase). Normalize: `created_at: v.created_at || v.createdAt || ''`
 - **Status toggle:** `PATCH /vendors/:id/status` — does NOT go through approval workflow
@@ -256,8 +256,41 @@ queryKeys.settings.group('general')
 - Tailwind dark mode: `dark:` prefix
 - Colors defined as CSS variables in `tailwind.config.ts`
 
+## Announcements Module Design
+- **Routes:** `/admin/announcements` (list + inline dialog) → `/admin/announcements/create` → `/admin/announcements/[id]` (edit)
+- **Two forms:** `announcements-content.tsx` (dialog, inline list page) and `announcement-form.tsx` (full page create/edit)
+- **Content validation:** MUST use `z.string().refine(val => val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim().length > 0, 'Content is required')` — NOT `min(1)`. Quill's empty state is `<p><br></p>` which has length > 0 and would bypass `min(1)`.
+- **Fields:** name, content (RichTextEditor), start_date, end_date, has_action, action_label, action_url, open_in_new_tab, bg_color, text_color, is_active
+- **Dialog form:** uses `DateTimePicker` (Shadcn Calendar + AM/PM selects), `RichTextEditor` (visual mode, no `disableVisual`)
+- **Full-page form:** uses `RichTextEditor` with `disableVisual={true}` (source/HTML mode by default)
+
+## Currency Module Notes
+- **`code` column:** `VARCHAR(3)` — ISO 4217 standard (USD, EUR, etc.)
+- **Frontend validation:** `z.string().trim().length(3, 'Currency code must be exactly 3 characters (e.g. USD)')` — NOT `min(3).max(5)`
+- **Form:** `src/components/admin/currencies/currency-form.tsx`
+
+## RichTextEditor Known Behavior
+- **File:** `src/components/common/rich-text-editor.tsx`
+- **Quill conditional render:** ReactQuill is conditionally rendered (`{!isSourceMode && <ReactQuill />}`) — NOT CSS-hidden. This prevents the hidden Quill instance from firing spurious `onChange` calls that could interfere with form validation.
+- **Empty validation:** Always use HTML-stripping refine for content fields using `RichTextEditor`, never `min(1)`. Quill's empty state is `<p><br></p>`.
+
+## Backend: base.service.js Soft-Delete Unique Field Stamping
+- **File:** `D:\Jamal\AdminPanel-Backend\src\services\base.service.js`
+- **Pattern:** On soft-delete, unique fields (slug, key, name etc.) get a deleted stamp appended to free up the unique constraint.
+- **Long columns (≥15 chars):** uses timestamp suffix `-d{timestamp}` (preserves prefix)
+- **Short columns (<15 chars):** uses record ID in base36 `d{id.toString(36)}` — compact and guaranteed unique per record. Avoids truncation collisions in VARCHAR(3) columns (e.g. currency `code`).
+- **simpleSlider.service.js:** `deleteById` passes `uniqueFields: ['key', 'name']`; `create`/`update` check BOTH key AND name simultaneously via `Promise.all` and throw combined error.
+
+## Media Library
+- **File size limit:** 10 MB per file — enforced in `handleUpload` in `media-library-content.tsx`. Files over limit show toast error and are skipped.
+- **Hint:** "Max 10 MB per file" displayed next to Upload button.
+
+## Blog Post Form
+- **Content field:** Required — uses HTML-stripping refine (same pattern as announcements). Error message shown below editor.
+
 ## Common Issues & Patterns
 - **CORS/Cookie issues:** All API calls must go through `/api/proxy/` — never call backend directly from browser
 - **Company isolation:** Always pass `X-Company-Id` (handled automatically by `api-client.ts`)
 - **Permission check before render:** Wrap restricted UI with `<Can permission="...">` or check `hasPermission(user, '...')`
 - **Approval-aware mutations:** Catch `ApprovalRequiredError` and show appropriate feedback
+- **Rich text empty validation:** NEVER use `z.string().min(1)` for RichTextEditor fields — always use HTML-stripping refine: `z.string().refine(val => val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim().length > 0, 'Field is required')`

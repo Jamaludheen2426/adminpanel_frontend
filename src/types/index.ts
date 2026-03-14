@@ -71,7 +71,6 @@ export interface User extends Omit<BaseEntity, 'is_active'> {
   state_id: number | null;
   city_id: number | null;
   pincode_id: number | null;
-  pincode: string | null;
   address: string | null;
   department: string | null;
   designation: string | null;
@@ -91,7 +90,7 @@ export interface User extends Omit<BaseEntity, 'is_active'> {
   country?: Country | null;
   state?: State | null;
   city?: City | null;
-  pincodeRef?: Pincode | null;
+  cityRef?: { name: string; pincode: string } | null;
 }
 
 export interface CreateUserDto {

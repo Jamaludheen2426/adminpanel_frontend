@@ -234,10 +234,17 @@ export function MediaLibraryContent() {
 
     const incrementUpdate = () => setGlobalRefreshKey(Date.now());
 
+    const MAX_FILE_SIZE_MB = 10;
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
     const handleUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const uploadFiles = Array.from(e.target.files ?? []);
         if (!uploadFiles.length) return;
         for (const file of uploadFiles) {
+            if (file.size > MAX_FILE_SIZE_BYTES) {
+                toast.error(`"${file.name}" exceeds the ${MAX_FILE_SIZE_MB} MB size limit.`);
+                continue;
+            }
             try {
                 await uploadMutation.mutateAsync({ file, folder }, {
                     onSuccess: () => { incrementUpdate(); },
@@ -344,10 +351,13 @@ export function MediaLibraryContent() {
                             onChange={handleUpload}
                             accept="image/*,video/*,audio/*,application/pdf"
                         />
-                        <Button onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
-                            <Upload className="mr-2 h-4 w-4" />
-                            {uploadMutation.isPending ? t('media.uploading', 'Uploading...') : t('media.upload', 'Upload')}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={() => fileInputRef.current?.click()} disabled={uploadMutation.isPending}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                {uploadMutation.isPending ? t('media.uploading', 'Uploading...') : t('media.upload', 'Upload')}
+                            </Button>
+                            <span className="text-xs text-muted-foreground">{t('media.size_limit', 'Max 10 MB per file')}</span>
+                        </div>
 
                         {/* New folder */}
                         <Button variant="outline" onClick={() => setNewFolderOpen(true)}>

@@ -33,7 +33,7 @@ import type { Announcement } from '@/hooks/use-announcements';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
-    content: z.string().trim().min(1, 'Content is required'),
+    content: z.string().refine(val => val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim().length > 0, 'Content is required'),
     start_date: z.date().nullable().optional(),
     end_date: z.date().nullable().optional(),
     has_action: z.boolean().default(false),

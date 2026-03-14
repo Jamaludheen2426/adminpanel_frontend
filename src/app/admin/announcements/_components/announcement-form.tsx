@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { Save, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
 import { useTranslation } from '@/hooks/use-translation';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
@@ -91,7 +92,7 @@ export function AnnouncementForm({ defaultValues, onSave, isPending }: Announcem
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, () => toast.error(t('common.validation_error', 'Please fill in all required fields')))}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* ── Main content (2/3) ── */}

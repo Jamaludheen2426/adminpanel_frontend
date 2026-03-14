@@ -104,6 +104,13 @@ export function SubscriptionsContent() {
     };
 
     const onSubmit = (data: FormData) => {
+        const isDuplicate = subscriptions.some(
+            (s) => s.sort_order === data.sort_order && s.id !== editItem?.id
+        );
+        if (isDuplicate) {
+            form.setError('sort_order', { message: `Sort order ${data.sort_order} is already in use` });
+            return;
+        }
         closeDialog();
         const payload = { ...data, validity: data.validity || undefined };
         if (editItem) {
@@ -320,7 +327,11 @@ export function SubscriptionsContent() {
                         <div className="space-y-2">
                             <Label htmlFor="sort_order">Sort Order</Label>
                             <Input id="sort_order" type="number" min={0} {...form.register('sort_order')} placeholder="0" className="w-32" />
-                            <p className="text-[11px] text-muted-foreground">Lower number = higher in list</p>
+                            {form.formState.errors.sort_order ? (
+                                <p className="text-xs text-destructive">{form.formState.errors.sort_order.message}</p>
+                            ) : (
+                                <p className="text-[11px] text-muted-foreground">Lower number = higher in list</p>
+                            )}
                         </div>
 
                         {/* Active */}

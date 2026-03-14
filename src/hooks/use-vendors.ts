@@ -15,7 +15,10 @@ export interface Vendor {
     // Company Info
     company_name: string;
     company_logo: string | null;
-    location: string | null;
+    country_id: number | null;
+    state_id: number | null;
+    city_id: number | null;
+    pincode_id: number | null;
     reg_no: string | null;
     gst_no: string | null;
     company_address: string | null;
@@ -40,6 +43,9 @@ export interface Vendor {
     acc_type: 'savings' | 'current' | 'overdraft' | null;
     branch: string | null;
     bank_logo: string | null;
+    // Location
+    latitude: number | null;
+    longitude: number | null;
     // Meta
     status: 'active' | 'inactive';
     company_id: number | null;
@@ -51,7 +57,16 @@ export const useVendors = (params?: any) => {
         queryKey: VENDOR_KEYS.list(params ?? {}),
         queryFn: async () => {
             const res = await apiClient.get('/vendors', { params });
-            return res.data.data;
+            // MySQL DECIMAL returns as string — parse to number
+            const raw = res.data.data;
+            if (raw?.data) {
+                raw.data = raw.data.map((v: any) => ({
+                    ...v,
+                    latitude:  v.latitude  != null ? parseFloat(v.latitude)  : null,
+                    longitude: v.longitude != null ? parseFloat(v.longitude) : null,
+                }));
+            }
+            return raw;
         },
     });
 };
@@ -61,7 +76,13 @@ export const useVendor = (id: number) => {
         queryKey: VENDOR_KEYS.detail(id),
         queryFn: async () => {
             const res = await apiClient.get(`/vendors/${id}`);
-            return res.data.data as Vendor;
+            const raw = res.data.data as Vendor;
+            // MySQL DECIMAL returns as string — parse to number so MapPicker receives numbers
+            return {
+                ...raw,
+                latitude:  raw.latitude  != null ? parseFloat(raw.latitude as any)  : null,
+                longitude: raw.longitude != null ? parseFloat(raw.longitude as any) : null,
+            } as Vendor;
         },
         enabled: !!id,
     });

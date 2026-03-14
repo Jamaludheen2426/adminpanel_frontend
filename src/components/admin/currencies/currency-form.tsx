@@ -31,7 +31,7 @@ const detectFormat = (decimal: string, thousand: string) =>
 
 const currencySchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters"),
-  code: z.string().trim().min(3).max(5),
+  code: z.string().trim().length(3, 'Currency code must be exactly 3 characters (e.g. USD)'),
   symbol: z.string().trim().min(1),
   exchange_rate: z.coerce.number().min(0),
   decimal_places: z.coerce.number().int().min(0).max(8).default(2),
