@@ -39,6 +39,8 @@ interface CommonTableProps<
   onEdit?: (row: any) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onDelete?: (row: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onRowClick?: (row: any) => void;
   showStatus?: boolean;
   showCreated?: boolean;
   showActions?: boolean;
@@ -77,6 +79,7 @@ export function CommonTable<
   onStatusToggle,
   onEdit,
   onDelete,
+  onRowClick,
   showStatus = true,
   showCreated = true,
   showActions = true,
@@ -220,7 +223,10 @@ export function CommonTable<
                 sortedData.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-all duration-200 ease-in-out group"
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    className={`border-b border-border/40 last:border-0 hover:bg-muted/20 transition-all duration-200 ease-in-out group ${
+                      onRowClick ? "cursor-pointer" : ""
+                    }`}
                   >
                     {columns.map((col, colIndex) => (
                       <TableCell
