@@ -16,6 +16,10 @@ const config: Config = {
   		}
   	},
   	extend: {
+  		fontFamily: {
+  			sans: ['var(--font-poppins)', 'Arial', 'sans-serif'],
+  			serif: ['var(--font-lora)', 'Georgia', 'serif'],
+  		},
   		colors: {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',

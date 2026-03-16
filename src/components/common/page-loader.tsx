@@ -1,35 +1,19 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Loader2 } from "lucide-react";
-
 interface PageLoaderProps {
   open: boolean;
   text?: string;
 }
 
-export function PageLoader({
-  open,
-  text = "Loading...",
-}: PageLoaderProps) {
+export function PageLoader({ open, text = "Loading..." }: PageLoaderProps) {
+  if (!open) return null;
+
   return (
-    <Dialog open={open}>
-      <DialogContent
-        className="z-[1000] max-w-sm flex flex-col items-center justify-center gap-4 py-10 [&>button]:hidden"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <VisuallyHidden><DialogTitle>Loading</DialogTitle></VisuallyHidden>
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm font-medium text-center">
-          {text}
-        </p>
-      </DialogContent>
-    </Dialog>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <p className="text-sm text-muted-foreground">{text}</p>
+      </div>
+    </div>
   );
 }

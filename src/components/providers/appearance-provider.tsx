@@ -115,7 +115,13 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
       if (hsl) {
         root.style.setProperty("--secondary", hsl);
         root.style.setProperty("--secondary-foreground", getForegroundForColor(secondaryColor));
-        root.style.setProperty("--muted-foreground", hsl);
+        // Derive muted-foreground from secondary hue but force readable lightness
+        // (secondary is a surface color — using it directly as text produces unreadable grey)
+        const [h, s] = hsl.split(" ");
+        const mutedFg = isDark
+          ? `${h} ${s} 78%`
+          : `${h} ${s} 40%`;
+        root.style.setProperty("--muted-foreground", mutedFg);
       }
     }
 

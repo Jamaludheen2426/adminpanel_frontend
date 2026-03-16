@@ -33,3 +33,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude / ai tools
+.claude/skills/
+.claude/settings.local.json
+.agent/
+.agents/
+.windsurf/
+skills-lock.json
+
+# temp test scripts
+test_*.py
