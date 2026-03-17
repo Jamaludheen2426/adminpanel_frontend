@@ -11,11 +11,28 @@ export type CityRecord = Locality; // old Locality type reused for City
 
 // ─── API layer ────────────────────────────────────────────────────────────────
 
+export interface LocationPage<T> {
+  data: T[];
+  pagination: { page: number; limit: number; totalItems: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean };
+}
+
+export interface LocationListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  country_id?: number;
+  state_id?: number;
+}
+
 const locationsApi = {
   // Countries
   getCountries: async (): Promise<Country[]> => {
     const response = await apiClient.get('/locations/countries', { params: { limit: 1000 } });
     return response.data.data || [];
+  },
+  getCountriesPaginated: async (params: LocationListParams): Promise<LocationPage<Country>> => {
+    const response = await apiClient.get('/locations/countries', { params });
+    return { data: response.data.data || [], pagination: response.data.pagination };
   },
   createCountry: async (data: Partial<Country>): Promise<Country> => {
     const response = await apiClient.post('/locations/countries', data);
@@ -35,6 +52,10 @@ const locationsApi = {
     const response = await apiClient.get(url, { params: { limit: 1000 } });
     return response.data.data || [];
   },
+  getStatesPaginated: async (params: LocationListParams): Promise<LocationPage<State>> => {
+    const response = await apiClient.get('/locations/states', { params });
+    return { data: response.data.data || [], pagination: response.data.pagination };
+  },
   createState: async (data: Partial<State>): Promise<State> => {
     const response = await apiClient.post('/locations/states', data);
     return response.data.data?.state || response.data.state;
@@ -52,6 +73,10 @@ const locationsApi = {
     const url = stateId ? `/locations/districts/${stateId}` : '/locations/districts';
     const response = await apiClient.get(url, { params: { limit: 1000 } });
     return response.data.data || [];
+  },
+  getDistrictsPaginated: async (params: LocationListParams): Promise<LocationPage<City>> => {
+    const response = await apiClient.get('/locations/districts', { params });
+    return { data: response.data.data || [], pagination: response.data.pagination };
   },
   createDistrict: async (data: Partial<City>): Promise<City> => {
     const response = await apiClient.post('/locations/districts', data);
@@ -88,6 +113,10 @@ const locationsApi = {
     const url = districtId ? `/locations/cities/${districtId}` : '/locations/cities';
     const response = await apiClient.get(url, { params: { limit: 1000 } });
     return response.data.data || [];
+  },
+  getCitiesPaginated: async (params: LocationListParams): Promise<LocationPage<Locality>> => {
+    const response = await apiClient.get('/locations/cities', { params });
+    return { data: response.data.data || [], pagination: response.data.pagination };
   },
   createCity: async (data: Partial<Locality>): Promise<Locality> => {
     const response = await apiClient.post('/locations/cities', data);
@@ -158,6 +187,15 @@ export function useDeleteCountry() {
   });
 }
 
+export function useCountriesPaginated(params: LocationListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.locations.countries(), params],
+    queryFn: () => locationsApi.getCountriesPaginated(params),
+    placeholderData: (prev) => prev,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 // ─── State hooks ──────────────────────────────────────────────────────────────
 
 export function useStates(countryId?: number) {
@@ -214,6 +252,15 @@ export function useDeleteState() {
   });
 }
 
+export function useStatesPaginated(params: LocationListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.locations.states(), params],
+    queryFn: () => locationsApi.getStatesPaginated(params),
+    placeholderData: (prev) => prev,
+    staleTime: 2 * 60 * 1000,
+  });
+}
+
 // ─── District hooks (was City hooks, now call /districts) ────────────────────
 
 /** Load all districts or filter by stateId */
@@ -223,6 +270,15 @@ export function useCities(stateId?: number) {
     queryFn: () => locationsApi.getDistricts(stateId || undefined),
     retry: 1,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useDistrictsPaginated(params: LocationListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.locations.cities(), params],
+    queryFn: () => locationsApi.getDistrictsPaginated(params),
+    placeholderData: (prev) => prev,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
@@ -325,6 +381,15 @@ export function useDeletePincode() {
       if (isApprovalRequired(error)) return;
       toast.error(error.response?.data?.message || 'Failed to delete pincode');
     },
+  });
+}
+
+export function useLocalitiesPaginated(params: LocationListParams) {
+  return useQuery({
+    queryKey: [...queryKeys.locations.localities(0), params],
+    queryFn: () => locationsApi.getCitiesPaginated(params),
+    placeholderData: (prev) => prev,
+    staleTime: 2 * 60 * 1000,
   });
 }
 

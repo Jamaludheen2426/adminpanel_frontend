@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useState, useMemo, useRef } from "react";
+import { LocationCombobox } from './location-combobox';
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,7 +17,7 @@ import {
   Download,
 } from "lucide-react";
 import {
-  useStates,
+  useStatesPaginated,
   useCreateState,
   useUpdateState,
   useDeleteState,
@@ -24,6 +25,7 @@ import {
 } from "@/hooks/use-locations";
 import { apiClient, isApprovalRequired } from "@/lib/api-client";
 import { queryClient, queryKeys } from "@/lib/query-client";
+import { parseCSV, chunkArray } from "./csv-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,29 +93,11 @@ function downloadSampleCSV() {
   a.click();
 }
 
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text
-    .trim()
-    .split("\n")
-    .map((l) => l.replace(/\r/g, ""));
-  const headers = lines[0].split(",").map((h) => h.trim());
-  return lines
-    .slice(1)
-    .filter((line) => line.trim() !== "")
-    .map((line) => {
-      const vals = line.split(",").map((v) => v.trim());
-      const obj: Record<string, string> = {};
-      headers.forEach((h, i) => {
-        obj[h] = vals[i] ?? "";
-      });
-      return obj;
-    });
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function StatesTab() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
   const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -125,8 +109,16 @@ export function StatesTab() {
   const [csvImporting, setCsvImporting] = useState(false);
   const csvRef = useRef<HTMLInputElement>(null);
 
-  const { data: states = [], isLoading } = useStates();
-  const { data: countries = [] } = useCountries();
+  const PAGE_SIZE = 20;
+  const { data: pageData, isLoading } = useStatesPaginated({
+    page, limit: PAGE_SIZE, search: search || undefined,
+    ...(filterCountryId !== "all" ? { country_id: Number(filterCountryId) } : {}),
+    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+  } as any);
+  const states = pageData?.data ?? [];
+  const pagination = pageData?.pagination;
+  const { data: countriesRaw = [] } = useCountries();
+  const countries = useMemo(() => countriesRaw.filter((c) => Boolean(c.is_active)), [countriesRaw]);
   const createState = useCreateState();
   const updateState = useUpdateState();
   const deleteState = useDeleteState();
@@ -151,23 +143,7 @@ export function StatesTab() {
     country_name: item.country?.name ?? "",
   });
 
-  const processedStates = useMemo(() => {
-    let items = states.map(normalise);
-    if (search || filterCountryId !== "all") {
-      const q = search.toLowerCase();
-      items = items.filter((s) => {
-        const matchSearch =
-          !q ||
-          s.name.toLowerCase().includes(q) ||
-          (s.code ?? "").toLowerCase().includes(q) ||
-          (s.country_name ?? "").toLowerCase().includes(q);
-        const matchCountry =
-          filterCountryId === "all" || s.country_id === Number(filterCountryId);
-        return matchSearch && matchCountry;
-      });
-    }
-    return items;
-  }, [states, search, filterCountryId]);
+  const processedStates = useMemo(() => states.map(normalise), [states]);
 
   const handleSort = (column: string) => {
     setSort((prev) => {
@@ -175,6 +151,7 @@ export function StatesTab() {
       if (prev.direction === "asc") return { column, direction: "desc" };
       return null;
     });
+    setPage(1);
   };
 
   const columns: CommonColumn<any>[] = [
@@ -291,67 +268,27 @@ export function StatesTab() {
   const executeImport = async () => {
     if (!csvPreview) return;
     setCsvImporting(true);
-    let success = 0,
-      pending = 0;
-    const errors: string[] = [];
-    for (const [index, row] of csvPreview.entries()) {
-      if (!row.name) {
-        errors.push(`Row ${index + 1}: name is required`);
-        continue;
+    toast.info(`Importing ${csvPreview.length} states...`, { duration: 3000 });
+
+    const valid = csvPreview.filter((r) => r.name && (r.country_code || r.country_id));
+    const invalidCount = csvPreview.length - valid.length;
+
+    try {
+      const BATCH = 500;
+      const chunks = chunkArray(valid, BATCH);
+      let imported = 0, skipped = 0;
+      for (const chunk of chunks) {
+        const res = await apiClient.post("/locations/states/bulk", { rows: chunk });
+        imported += res.data?.data?.imported ?? 0;
+        skipped += res.data?.data?.skipped ?? 0;
       }
-      let countryId: number;
-      if (row.country_code) {
-        const found = countries.find(
-          (c) => c.code.toLowerCase() === row.country_code.toLowerCase(),
-        );
-        if (!found) {
-          errors.push(
-            `Row ${index + 1}: country_code "${row.country_code}" not found`,
-          );
-          continue;
-        }
-        countryId = found.id;
-      } else {
-        countryId = parseInt(row.country_id);
-        if (isNaN(countryId) || !countryId) {
-          errors.push(`Row ${index + 1}: country_id or country_code required`);
-          continue;
-        }
-      }
-      try {
-        await apiClient.post("/locations/states", {
-          name: row.name,
-          code: row.code || undefined,
-          slug: row.slug || undefined,
-          country_id: countryId,
-          sort_order: parseInt(row.sort_order) || 0,
-          is_active: row.is_active !== "0",
-          is_default: row.is_default === "1",
-        });
-        success++;
-      } catch (error: unknown) {
-        const err = error as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
-        if (isApprovalRequired(error)) {
-          pending++;
-        } else {
-          errors.push(
-            `Row ${index + 1}: ${err.response?.data?.message || err.message}`,
-          );
-        }
-      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
+      toast.success(`Imported ${imported} states`);
+      if (skipped + invalidCount > 0) toast.warning(`${skipped + invalidCount} rows skipped`);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || "Bulk import failed");
     }
-    queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
-    if (success > 0)
-      toast.success(`Imported ${success} of ${csvPreview.length} states`);
-    if (pending > 0) toast.info(`${pending} states pending approval`);
-    if (errors.length > 0)
-      toast.error(`Failed: ${errors.length} states`, {
-        description: errors.slice(0, 5).join("\n"),
-        duration: 8000,
-      });
     setCsvImporting(false);
     setCsvPreview(null);
   };
@@ -399,23 +336,17 @@ export function StatesTab() {
               <Input
                 placeholder="Search by name, code or country..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-8"
               />
             </div>
-            <Select value={filterCountryId} onValueChange={setFilterCountryId}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="All Countries" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Countries</SelectItem>
-                {countries.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <LocationCombobox
+              items={countries}
+              value={filterCountryId}
+              onValueChange={(v) => { setFilterCountryId(v); setPage(1); }}
+              allLabel="All Countries"
+              placeholder="Search country..."
+            />
           </div>
 
           <CommonTable
@@ -432,6 +363,13 @@ export function StatesTab() {
             showStatus
             showCreated
             showActions
+            pagination={pagination ? {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalItems: pagination.totalItems,
+              pageSize: PAGE_SIZE,
+              onPageChange: setPage,
+            } : undefined}
           />
         </CardContent>
       </Card>

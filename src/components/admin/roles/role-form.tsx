@@ -97,7 +97,6 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
         "translations",
         "languages",
         "pages",
-        "ui_blocks",
         "blog",
         "testimonials",
         "ads",
@@ -116,7 +115,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
     const assignedModules = [
       "settings",
       "employees", "roles", "permissions", "modules", "approvals", "companies",
-      "media", "translations", "languages", "pages", "ui_blocks", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
+      "media", "translations", "languages", "pages", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
       "locations", "currencies",
       "appearance"
     ];

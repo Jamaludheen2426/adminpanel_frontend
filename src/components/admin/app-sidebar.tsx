@@ -36,7 +36,6 @@ import {
   Store,
   LayoutList,
   Repeat,
-  Blocks,
 } from "lucide-react";
 import {
   Sidebar,
@@ -114,12 +113,6 @@ const menuItems: MenuItem[] = [
     icon: FileText,
     permission: "pages.view",
     pluginSlug: "pages",
-  },
-  {
-    labelKey: "nav.ui_blocks",
-    href: "/admin/ui-blocks",
-    icon: Blocks,
-    permission: "ui_blocks.view",
   },
   {
     labelKey: "nav.blog",

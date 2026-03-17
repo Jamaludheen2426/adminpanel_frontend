@@ -16,13 +16,14 @@ import {
   Download,
 } from "lucide-react";
 import {
-  useCountries,
+  useCountriesPaginated,
   useCreateCountry,
   useUpdateCountry,
   useDeleteCountry,
 } from "@/hooks/use-locations";
 import { apiClient, isApprovalRequired } from "@/lib/api-client";
 import { queryClient, queryKeys } from "@/lib/query-client";
+import { parseCSV, chunkArray } from "./csv-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,40 +87,26 @@ function downloadSampleCSV() {
   a.click();
 }
 
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text
-    .trim()
-    .split("\n")
-    .map((l) => l.replace(/\r/g, ""));
-  const headers = lines[0].split(",").map((h) => h.trim());
-  return lines
-    .slice(1)
-    .filter((line) => line.trim() !== "")
-    .map((line) => {
-      const vals = line.split(",").map((v) => v.trim());
-      const obj: Record<string, string> = {};
-      headers.forEach((h, i) => {
-        obj[h] = vals[i] ?? "";
-      });
-      return obj;
-    });
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CountriesTab() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<Country | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(
-    null,
-  );
+  const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(null);
   const [csvImporting, setCsvImporting] = useState(false);
   const csvRef = useRef<HTMLInputElement>(null);
 
-  const { data: countries = [], isLoading } = useCountries();
+  const PAGE_SIZE = 20;
+  const { data: pageData, isLoading } = useCountriesPaginated({
+    page, limit: PAGE_SIZE, search: search || undefined,
+    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+  } as any);
+  const countries = pageData?.data ?? [];
+  const pagination = pageData?.pagination;
   const createCountry = useCreateCountry();
   const updateCountry = useUpdateCountry();
   const deleteCountry = useDeleteCountry();
@@ -136,26 +123,13 @@ export function CountriesTab() {
     },
   });
 
-  // ── normalise function for CommonTable ──
   const normalise = (item: Country) => ({
     ...item,
     is_active: Boolean(item.is_active),
     created_at: (item as any).createdAt ?? item.created_at ?? "",
   });
 
-  const processedCountries = useMemo(() => {
-    let items = countries.map(normalise);
-    if (search) {
-      const q = search.toLowerCase();
-      items = items.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.code.toLowerCase().includes(q) ||
-          (c.nationality ?? "").toLowerCase().includes(q),
-      );
-    }
-    return items;
-  }, [countries, search]);
+  const processedCountries = useMemo(() => countries.map(normalise), [countries]);
 
   const handleSort = (column: string) => {
     setSort((prev) => {
@@ -163,6 +137,7 @@ export function CountriesTab() {
       if (prev.direction === "asc") return { column, direction: "desc" };
       return null;
     });
+    setPage(1);
   };
 
   const columns: CommonColumn<Country>[] = [
@@ -278,52 +253,26 @@ export function CountriesTab() {
   const executeImport = async () => {
     if (!csvPreview) return;
     setCsvImporting(true);
-    toast.info(`Processing ${csvPreview.length} rows...`, { duration: 2000 });
-    let success = 0,
-      pending = 0;
-    const errors: string[] = [];
-    for (const [index, row] of csvPreview.entries()) {
-      if (!row.name || !row.code) {
-        errors.push(
-          `Row ${index + 1} (${row.name || "?"}): name and code required`,
-        );
-        continue;
+    toast.info(`Importing ${csvPreview.length} countries...`, { duration: 3000 });
+
+    const valid = csvPreview.filter((r) => r.name && r.code);
+    const invalidCount = csvPreview.length - valid.length;
+
+    try {
+      const BATCH = 500;
+      const chunks = chunkArray(valid, BATCH);
+      let imported = 0;
+      for (const chunk of chunks) {
+        const res = await apiClient.post("/locations/countries/bulk", { rows: chunk });
+        imported += res.data?.data?.imported ?? chunk.length;
       }
-      try {
-        await apiClient.post("/locations/countries", {
-          name: row.name,
-          code: row.code,
-          nationality: row.nationality || undefined,
-          sort_order: parseInt(row.sort_order) || 0,
-          is_active: row.is_active !== "0",
-          is_default: row.is_default === "1",
-        });
-        success++;
-      } catch (error: unknown) {
-        const err = error as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
-        if (isApprovalRequired(error)) {
-          pending++;
-        } else {
-          errors.push(
-            `Row ${index + 1} (${row.name}): ${err.response?.data?.message || err.message}`,
-          );
-        }
-      }
+      await queryClient.refetchQueries({ queryKey: queryKeys.locations.countries() });
+      toast.success(`Imported ${imported} countries`);
+      if (invalidCount > 0) toast.warning(`${invalidCount} rows skipped (missing name or code)`);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || "Bulk import failed");
     }
-    await queryClient.refetchQueries({
-      queryKey: queryKeys.locations.countries(),
-    });
-    if (success > 0)
-      toast.success(`Imported ${success} of ${csvPreview.length} countries`);
-    if (pending > 0) toast.info(`${pending} countries pending approval`);
-    if (errors.length > 0)
-      toast.error(`Failed: ${errors.length} countries`, {
-        description: errors.join("\n"),
-        duration: 8000,
-      });
     setCsvImporting(false);
     setCsvPreview(null);
   };
@@ -370,7 +319,7 @@ export function CountriesTab() {
             <Input
               placeholder="Search by name, code or nationality..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-8"
             />
           </div>
@@ -389,6 +338,13 @@ export function CountriesTab() {
             showStatus
             showCreated
             showActions
+            pagination={pagination ? {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalItems: pagination.totalItems,
+              pageSize: PAGE_SIZE,
+              onPageChange: setPage,
+            } : undefined}
           />
         </CardContent>
       </Card>

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { LocationCombobox } from './location-combobox';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Upload, Download } from 'lucide-react';
 import {
-  useLocalities,
+  useLocalitiesPaginated,
   useCreateLocality,
   useUpdateLocality,
   useDeleteLocality,
@@ -14,6 +15,18 @@ import {
   useStates,
   useCities,
 } from '@/hooks/use-locations';
+import { apiClient } from '@/lib/api-client';
+import { queryClient, queryKeys } from '@/lib/query-client';
+import { readCSVPreview, parseCSVFileInChunks } from './csv-utils';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,6 +61,7 @@ import { PageLoader } from '@/components/common/page-loader';
 import { useTranslation } from '@/hooks/use-translation';
 import type { Locality } from '@/types';
 import { isApprovalRequired } from '@/lib/api-client';
+import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +116,7 @@ export function LocalitiesTab() {
   const { t } = useTranslation();
 
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [filterCountryId, setFilterCountryId] = useState<string>('all');
   const [filterStateId, setFilterStateId] = useState<string>('all');
   const [filterDistrictId, setFilterDistrictId] = useState<string>('all');
@@ -114,14 +129,42 @@ export function LocalitiesTab() {
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
 
-  // Always fetch ALL cities (districtId=0 → no filter)
-  const activeCityId = filterDistrictId !== 'all' ? Number(filterDistrictId) : 0;
-  const { data: rawLocalities = [], isLoading } = useLocalities(activeCityId);
-  const localities = rawLocalities as LocalityWithNested[];
+  const [csvPreview, setCsvPreview] = useState<Record<string, string>[] | null>(null);
+  const [csvTotalRows, setCsvTotalRows] = useState(0);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvProgress, setCsvProgress] = useState(0);
+  const csvRef = useRef<HTMLInputElement>(null);
 
-  const { data: countries = [] } = useCountries();
-  const { data: allStates = [] } = useStates();
-  const { data: allDistricts = [] } = useCities(); // districts list
+  const PAGE_SIZE = 20;
+  const { data: pageData, isLoading } = useLocalitiesPaginated({
+    page, limit: PAGE_SIZE, search: search || undefined,
+    ...(filterDistrictId !== 'all'
+      ? { city_id: Number(filterDistrictId) }
+      : filterStateId !== 'all'
+        ? { state_id: Number(filterStateId) }
+        : filterCountryId !== 'all'
+          ? { country_id: Number(filterCountryId) }
+          : {}),
+    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+  } as any);
+  const localities = (pageData?.data ?? []) as LocalityWithNested[];
+  const pagination = pageData?.pagination;
+
+  const { data: countriesRaw = [] } = useCountries();
+  const { data: allStatesRaw = [] } = useStates();
+  const { data: allDistrictsRaw = [] } = useCities();
+
+  const countries = useMemo(() => countriesRaw.filter((c) => Boolean(c.is_active)), [countriesRaw]);
+  const allStates = useMemo(() => {
+    const activeCountryIds = new Set(countries.map((c) => c.id));
+    return allStatesRaw.filter((s) => Boolean(s.is_active) && activeCountryIds.has(s.country_id));
+  }, [allStatesRaw, countries]);
+  const allDistricts = useMemo(() => {
+    const activeStateIds = new Set(allStates.map((s) => s.id));
+    return allDistrictsRaw.filter((d) => Boolean(d.is_active) && activeStateIds.has(d.state_id));
+  }, [allDistrictsRaw, allStates]);
 
   const createLocality = useCreateLocality();
   const updateLocality = useUpdateLocality();
@@ -186,43 +229,9 @@ export function LocalitiesTab() {
     [allDistricts, allStates, selectedCountryId, selectedStateId]
   );
 
-  // ── Filtered + processed list ───────────────────────────────────────────────────
+  // ── Processed list ──────────────────────────────────────────────────────────
 
-  const processedLocalities = useMemo(() => {
-    const q = search.toLowerCase();
-
-    let items = localities.map(normalise).filter((loc) => {
-      // Text search across all processed columns
-      const matchSearch =
-        loc.name.toLowerCase().includes(q) ||
-        loc.pincode.toLowerCase().includes(q) ||
-        loc.district_name.toLowerCase().includes(q) ||
-        loc.state_name.toLowerCase().includes(q) ||
-        loc.country_name.toLowerCase().includes(q);
-
-      // Country filter
-      const matchCountry =
-        filterCountryId === 'all' || getCountryId(loc) === Number(filterCountryId);
-
-      // State filter
-      const matchState =
-        filterStateId === 'all' || getStateId(loc) === Number(filterStateId);
-
-      // District filter
-      const matchDistrict =
-        filterDistrictId === 'all' || loc.city_id === Number(filterDistrictId);
-
-      return matchSearch && matchCountry && matchState && matchDistrict;
-    });
-
-    return items;
-  }, [
-    localities,
-    search,
-    filterCountryId,
-    filterStateId,
-    filterDistrictId,
-  ]);
+  const processedLocalities = useMemo(() => localities.map(normalise), [localities]);
 
   const handleSort = (column: string) => {
     setSort((prev) => {
@@ -230,6 +239,7 @@ export function LocalitiesTab() {
       if (prev.direction === 'asc') return { column, direction: 'desc' };
       return null;
     });
+    setPage(1);
   };
 
   const columns: CommonColumn<any>[] = [
@@ -350,9 +360,91 @@ export function LocalitiesTab() {
 
   const isPending = createLocality.isPending || updateLocality.isPending;
 
+  // ── CSV helpers ──────────────────────────────────────────────────────────────
+
+  function downloadSampleCSV() {
+    const a = document.createElement('a');
+    a.href = '/samples/sample_localities.csv';
+    a.download = 'sample_localities.csv';
+    a.click();
+  }
+
+  const handleCSVFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setCsvLoading(true);
+    try {
+      const { headers, rows, totalEstimate } = await readCSVPreview(file, 50);
+      if (rows.length === 0 || !headers.length) {
+        toast.error('No valid rows found in CSV');
+        return;
+      }
+      setCsvFile(file);
+      setCsvPreview(rows);
+      setCsvTotalRows(totalEstimate);
+      setCsvProgress(0);
+    } catch {
+      toast.error('Failed to read CSV file');
+    } finally {
+      setCsvLoading(false);
+    }
+  };
+
+  const executeImport = async () => {
+    if (!csvFile) return;
+    setCsvImporting(true);
+    setCsvProgress(0);
+
+    const BATCH_SIZE = 3000;
+    const CONCURRENCY = 5;
+    let imported = 0, skipped = 0, invalidCount = 0;
+
+    try {
+      // Step 1: collect all valid rows (non-blocking)
+      const allValid: Record<string, string>[] = [];
+      await parseCSVFileInChunks(csvFile, async (batch) => {
+        const valid = batch.filter((r) => r.name && r.pincode && (r.district_name || r.district_id));
+        invalidCount += batch.length - valid.length;
+        allValid.push(...valid);
+      }, 20000);
+
+      // Step 2: split into batches
+      const batches: Record<string, string>[][] = [];
+      for (let i = 0; i < allValid.length; i += BATCH_SIZE) {
+        batches.push(allValid.slice(i, i + BATCH_SIZE));
+      }
+
+      // Step 3: fire CONCURRENCY requests at a time
+      for (let i = 0; i < batches.length; i += CONCURRENCY) {
+        const group = batches.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(
+          group.map((b) => apiClient.post('/locations/cities/bulk', { rows: b })),
+        );
+        results.forEach((res) => {
+          imported += res.data?.data?.imported ?? 0;
+          skipped += res.data?.data?.skipped ?? 0;
+        });
+        setCsvProgress(Math.round(((i + group.length) / batches.length) * 100));
+      }
+
+      setCsvProgress(100);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.locations.all });
+      toast.success(`Imported ${imported} cities`);
+      if (skipped + invalidCount > 0) toast.warning(`${skipped + invalidCount} rows skipped`);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || 'Bulk import failed');
+    }
+    setCsvImporting(false);
+    setCsvPreview(null);
+    setCsvFile(null);
+    setCsvProgress(0);
+  };
+
   return (
     <>
-      <PageLoader open={isLoading || isPending || deleteLocality.isPending} />
+      <PageLoader open={isLoading || isPending || deleteLocality.isPending || csvLoading || csvImporting} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -365,10 +457,19 @@ export function LocalitiesTab() {
                 )}
               </CardDescription>
             </div>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="mr-2 h-4 w-4" />{' '}
-              {t('locations.add_city', 'Add City')}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <input ref={csvRef} type="file" accept=".csv" className="hidden" onChange={handleCSVFile} />
+              <Button size="sm" variant="outline" onClick={downloadSampleCSV}>
+                <Download className="mr-2 h-4 w-4" /> Sample CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => csvRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" /> Import CSV
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="mr-2 h-4 w-4" />{' '}
+                {t('locations.add_city', 'Add City')}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -383,83 +484,39 @@ export function LocalitiesTab() {
                   'Search city, district, state or country...'
                 )}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pl-8"
               />
             </div>
 
             {/* Country filter */}
-            <Select
+            <LocationCombobox
+              items={countries}
               value={filterCountryId}
-              onValueChange={(v) => {
-                setFilterCountryId(v);
-                setFilterStateId('all');
-                setFilterDistrictId('all');
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue
-                  placeholder={t('locations.all_countries', 'All Countries')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('locations.all_countries', 'All Countries')}
-                </SelectItem>
-                {countries.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => { setFilterCountryId(v); setFilterStateId('all'); setFilterDistrictId('all'); setPage(1); }}
+              allLabel={t('locations.all_countries', 'All Countries')}
+              placeholder="Search country..."
+            />
 
             {/* State filter */}
-            <Select
+            <LocationCombobox
+              items={filterStates}
               value={filterStateId}
-              onValueChange={(v) => {
-                setFilterStateId(v);
-                setFilterDistrictId('all');
-              }}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue
-                  placeholder={t('locations.all_states', 'All States')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('locations.all_states', 'All States')}
-                </SelectItem>
-                {filterStates.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => { setFilterStateId(v); setFilterDistrictId('all'); setPage(1); }}
+              allLabel={t('locations.all_states', 'All States')}
+              placeholder="Search state..."
+              disabled={filterCountryId === 'all'}
+            />
 
             {/* District filter */}
-            <Select
+            <LocationCombobox
+              items={filterDistricts}
               value={filterDistrictId}
-              onValueChange={setFilterDistrictId}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue
-                  placeholder={t('locations.all_districts', 'All Districts')}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t('locations.all_districts', 'All Districts')}
-                </SelectItem>
-                {filterDistricts.map((d) => (
-                  <SelectItem key={d.id} value={String(d.id)}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => { setFilterDistrictId(v); setPage(1); }}
+              allLabel={t('locations.all_districts', 'All Districts')}
+              placeholder="Search district..."
+              disabled={filterStateId === 'all'}
+            />
           </div>
 
           <CommonTable
@@ -478,16 +535,83 @@ export function LocalitiesTab() {
             showStatus
             showCreated
             showActions
+            pagination={pagination ? {
+              page: pagination.page,
+              totalPages: pagination.totalPages,
+              totalItems: pagination.totalItems,
+              pageSize: PAGE_SIZE,
+              onPageChange: setPage,
+            } : undefined}
           />
-
-          {!isLoading && (
-            <p className="text-sm text-muted-foreground mt-2">
-              {processedLocalities.length} {t('common.of', 'of')}{' '}
-              {localities.length} {t('locations.cities', 'cities')}
-            </p>
-          )}
         </CardContent>
       </Card>
+
+      {/* ── CSV Preview Dialog ── */}
+      {csvPreview && (
+        <Dialog open={!!csvPreview} onOpenChange={(open) => { if (!open && !csvImporting) { setCsvPreview(null); setCsvFile(null); setCsvProgress(0); } }}>
+          <DialogContent className="max-w-4xl flex flex-col" style={{ maxHeight: '85vh' }}>
+            <DialogHeader>
+              <DialogTitle>Preview Import — ~{csvTotalRows.toLocaleString()} cities</DialogTitle>
+              <DialogDescription>
+                Showing first {csvPreview.length} rows.{csvTotalRows > csvPreview.length ? ` File contains ~${csvTotalRows.toLocaleString()} total rows.` : ''}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="overflow-auto flex-1 border rounded-md">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10 text-muted-foreground">#</TableHead>
+                    {Object.keys(csvPreview[0] || {}).map((col) => (
+                      <TableHead key={col} className="whitespace-nowrap font-medium">{col}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {csvPreview.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-muted-foreground text-xs tabular-nums">{i + 1}</TableCell>
+                      {Object.entries(row).map(([col, val], j) => (
+                        <TableCell key={j} className="whitespace-nowrap text-sm">
+                          {col === 'is_active' ? (
+                            <Badge className={val === '1' ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-green-100' : 'bg-muted text-muted-foreground border'}>
+                              {val === '1' ? 'Active' : 'Inactive'}
+                            </Badge>
+                          ) : col === 'pincode' ? (
+                            <span className="tabular-nums font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{val}</span>
+                          ) : val || <span className="text-muted-foreground">–</span>}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {csvImporting && (
+              <div className="space-y-1 pt-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Importing…</span>
+                  <span>{csvProgress}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${csvProgress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center justify-between pt-2 border-t">
+              <p className="text-sm text-muted-foreground">~{csvTotalRows.toLocaleString()} total rows to import</p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setCsvPreview(null); setCsvFile(null); }} disabled={csvImporting}>Cancel</Button>
+                <Button onClick={executeImport} disabled={csvImporting}>
+                  {csvImporting ? `Importing… ${csvProgress}%` : `Import ~${csvTotalRows.toLocaleString()} rows`}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* ── Add / Edit Dialog ── */}
       <Dialog

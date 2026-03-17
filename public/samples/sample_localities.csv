@@ -1,0 +1,11 @@
+name,pincode,district_name,state_code,is_active,is_default
+Anna Nagar,600040,Chennai,TN,1,0
+T Nagar,600017,Chennai,TN,1,0
+Adyar,600020,Chennai,TN,1,0
+Andheri West,400058,Mumbai,MH,1,0
+Bandra West,400050,Mumbai,MH,1,0
+Koramangala,560034,Bengaluru,KA,1,0
+Indiranagar,560038,Bengaluru,KA,1,0
+Connaught Place,110001,Delhi,DL,1,1
+Karol Bagh,110005,Delhi,DL,1,0
+Salt Lake,700064,Kolkata,WB,1,0
