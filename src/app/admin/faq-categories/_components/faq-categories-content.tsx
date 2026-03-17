@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -44,7 +45,11 @@ function normalise(item: FaqCategory): FaqCategory & { created_at: string; is_ac
 
 export function FaqCategoriesContent() {
     const { t } = useTranslation();
-    const { data: rawCategories = [], isLoading } = useFaqCategories();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: response, isLoading } = useFaqCategories({ page, limit });
+    const rawCategories: FaqCategory[] = response?.data ?? [];
+    const pagination = response?.pagination;
     const categories = useMemo(() => rawCategories.map(normalise), [rawCategories]);
     const createCategory = useCreateFaqCategory();
     const updateCategory = useUpdateFaqCategory();
@@ -150,6 +155,13 @@ export function FaqCategoriesContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && (
+                        <TablePagination
+                            pagination={{ ...pagination, limit }}
+                            onPageChange={setPage}
+                            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+                        />
+                    )}
                 </CardContent>
             </Card>
 

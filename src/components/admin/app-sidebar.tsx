@@ -36,6 +36,7 @@ import {
   Store,
   LayoutList,
   Repeat,
+  Blocks,
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { usePendingCount } from "@/hooks/use-approvals";
 import { useUnreadContactsCount } from "@/hooks/use-contacts";
 import { usePermissionCheck } from "@/hooks";
+import { usePlugins } from "@/hooks/use-plugins";
 import { Badge } from "@/components/ui/badge";
 import { PageLoader } from "@/components/common/page-loader";
 
@@ -73,6 +75,7 @@ interface MenuItem {
   permission?: string;
   minLevel?: number;
   developerOnly?: boolean;
+  pluginSlug?: string; // if set, item is hidden when plugin is inactive
 }
 
 const menuItems: MenuItem[] = [
@@ -110,11 +113,19 @@ const menuItems: MenuItem[] = [
     href: "/admin/pages",
     icon: FileText,
     permission: "pages.view",
+    pluginSlug: "pages",
+  },
+  {
+    labelKey: "nav.ui_blocks",
+    href: "/admin/ui-blocks",
+    icon: Blocks,
+    permission: "ui_blocks.view",
   },
   {
     labelKey: "nav.blog",
     icon: BookOpen,
     permission: "blog_posts.view",
+    pluginSlug: "blog",
     children: [
       { labelKey: "nav.blog_posts", href: "/admin/blog", icon: BookOpen, permission: "blog_posts.view" },
       { labelKey: "nav.blog_categories", href: "/admin/blog-categories", icon: FolderOpen, permission: "blog_categories.view" },
@@ -126,6 +137,7 @@ const menuItems: MenuItem[] = [
     href: "/admin/testimonials",
     icon: Star,
     permission: "testimonials.view",
+    pluginSlug: "testimonials",
   },
   {
     labelKey: "nav.events",
@@ -145,6 +157,7 @@ const menuItems: MenuItem[] = [
     labelKey: "nav.ads",
     icon: Megaphone,
     permission: "ads.view",
+    pluginSlug: "ads",
     children: [
       { labelKey: "nav.ads", href: "/admin/ads", icon: Megaphone, permission: "ads.view" },
       { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "banners.view" },
@@ -155,17 +168,20 @@ const menuItems: MenuItem[] = [
     href: "/admin/simple-sliders",
     icon: Image,
     permission: "simpleSliders.view",
+    pluginSlug: "simple-slider",
   },
   {
     labelKey: "nav.announcements",
     href: "/admin/announcements",
     icon: BellRing,
     permission: "announcements.view",
+    pluginSlug: "announcements",
   },
   {
     labelKey: "nav.faqs",
     icon: HelpCircle,
     permission: "faqs.view",
+    pluginSlug: "faq",
     children: [
       { labelKey: "nav.faq_list", href: "/admin/faqs", icon: HelpCircle, permission: "faqs.view" },
       { labelKey: "nav.faq_categories", href: "/admin/faqs/categories", icon: HelpCircle, permission: "faqs.view" },
@@ -176,18 +192,21 @@ const menuItems: MenuItem[] = [
     href: "/admin/locations",
     icon: MapPin,
     permission: "locations.view",
+    pluginSlug: "locations",
   },
   {
     labelKey: "nav.newsletters",
     href: "/admin/newsletters",
     icon: Newspaper,
     permission: "newsletters.view",
+    pluginSlug: "newsletter",
   },
   {
     labelKey: "nav.contact",
     href: "/admin/contacts",
     icon: Phone,
     permission: "contacts.view",
+    pluginSlug: "contact-form",
   },
   {
     labelKey: "nav.media",
@@ -294,7 +313,13 @@ export function AppSidebar() {
   const { hasPermission, isDeveloper, hasMinLevel } = usePermissionCheck();
   const isLoading = !user;
 
-  // Filter menu items based on permissions
+  // Plugin active state
+  const { data: pluginsData } = usePlugins();
+  const activePluginSlugs = new Set(
+    (pluginsData?.plugins ?? []).filter((p) => p.is_active === 1).map((p) => p.slug)
+  );
+
+  // Filter menu items based on permissions + plugin state
   const filterMenuItem = (item: MenuItem): boolean => {
     // Developer-only items
     if (item.developerOnly && !isDeveloper()) {
@@ -308,6 +333,11 @@ export function AppSidebar() {
 
     // Permission check
     if (!hasPermission(item.permission)) {
+      return false;
+    }
+
+    // Plugin check — only hide if plugins are loaded AND plugin is explicitly inactive
+    if (item.pluginSlug && pluginsData && !activePluginSlugs.has(item.pluginSlug)) {
       return false;
     }
 

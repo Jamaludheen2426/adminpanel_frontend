@@ -72,6 +72,7 @@ import { useRoles } from "@/hooks/use-roles";
 import type { EmailCampaign, CreateEmailCampaignDto } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from "@/components/common/table-pagination";
 
 const campaignTypes = [
   { value: "holiday", label: "Holiday Campaign" },
@@ -113,7 +114,9 @@ const defaultForm: CreateEmailCampaignDto = {
 };
 
 export function EmailCampaignsContent() {
-  const { data: campaignsData, isLoading } = useEmailCampaigns();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: campaignsData, isLoading } = useEmailCampaigns({ page, limit });
   const { data: templatesData } = useEmailTemplates();
   const { data: configsData } = useEmailConfigs();
   const { data: holidays } = useHolidays();
@@ -304,6 +307,7 @@ export function EmailCampaignsContent() {
               </CardHeader>
               <CardContent>
                 {campaigns.length > 0 ? (
+                  <>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -429,6 +433,8 @@ export function EmailCampaignsContent() {
                       ))}
                     </TableBody>
                   </Table>
+                  {campaignsData?.pagination && <TablePagination pagination={{ ...campaignsData.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
+                  </>
                 ) : (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

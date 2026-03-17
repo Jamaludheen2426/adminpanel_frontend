@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Search, ChevronDown, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -19,14 +18,16 @@ import { useTranslation } from "@/hooks/use-translation";
 import React from "react";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from "@/components/common/page-loader";
+import { TablePagination } from "@/components/common/table-pagination";
 
 export function ModulesContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
 
-  const { data, isLoading } = useModules({ page, limit: 50, search });
+  const { data, isLoading } = useModules({ page, limit, search });
 
   const toggleExpand = (moduleId: number) => {
     setExpandedModules((prev) => {
@@ -189,31 +190,7 @@ export function ModulesContent() {
                   </TableBody>
                 </Table>
 
-                {data?.pagination && data.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                      Page {data.pagination.page} / {data.pagination.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={!data.pagination.hasPrevPage}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!data.pagination.hasNextPage}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                {data?.pagination && <TablePagination pagination={{ ...data.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
               </>
             )}
 

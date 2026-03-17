@@ -16,12 +16,15 @@ import { RichTextEditor } from "@/components/common/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ImageCropper } from "@/components/common/image-cropper";
 import { apiClient } from '@/lib/api-client';
 import { resolveMediaUrl } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -47,8 +50,13 @@ function normalise(item: Testimonial): Testimonial & { created_at: string; is_ac
 }
 
 export function TestimonialsContent() {
+    const isActive = useIsPluginActive('testimonials');
     const { t } = useTranslation();
-    const { data: rawTestimonials = [], isLoading } = useTestimonials();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: testimonialsResponse, isLoading } = useTestimonials({ page, limit });
+    const rawTestimonials = testimonialsResponse?.data || [];
+    const pagination = testimonialsResponse?.pagination;
     const testimonials = useMemo(() => rawTestimonials.map(normalise), [rawTestimonials]);
     const createTestimonial = useCreateTestimonial();
     const updateTestimonial = useUpdateTestimonial();
@@ -177,6 +185,8 @@ export function TestimonialsContent() {
 
     const isPending = createTestimonial.isPending || updateTestimonial.isPending || isUploading;
 
+    if (!isActive) return <PluginDisabledState pluginName="Testimonials" pluginSlug="testimonials" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || isPending || deleteTestimonial.isPending} />
@@ -208,6 +218,7 @@ export function TestimonialsContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

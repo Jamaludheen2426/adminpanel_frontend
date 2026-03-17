@@ -24,8 +24,11 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Badge } from '@/components/ui/badge';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 
@@ -40,19 +43,25 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: Faq): Faq & { created_at: string; is_active: boolean } {
+function normalise(item: Faq): Faq & { created_at: string; is_active: boolean | number } {
     return {
         ...item,
-        is_active: !!item.is_active,
+        is_active: item.is_active as boolean | number,
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
 }
 
 export function FaqsContent() {
+    const isActive = useIsPluginActive('faq');
     const { t } = useTranslation();
-    const { data: rawFaqs = [], isLoading } = useFaqs();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: faqsResponse, isLoading } = useFaqs({ page, limit });
+    const rawFaqs = faqsResponse?.data || [];
+    const pagination = faqsResponse?.pagination;
     const faqs = useMemo(() => rawFaqs.map(normalise), [rawFaqs]);
-    const { data: categories = [] } = useFaqCategories();
+    const { data: categoriesResponse } = useFaqCategories();
+    const categories = categoriesResponse?.data || [];
     const createFaq = useCreateFaq();
     const updateFaq = useUpdateFaq();
     const deleteFaq = useDeleteFaq();
@@ -153,6 +162,8 @@ export function FaqsContent() {
 
     const isPending = createFaq.isPending || updateFaq.isPending;
 
+    if (!isActive) return <PluginDisabledState pluginName="FAQ" pluginSlug="faq" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || isPending || deleteFaq.isPending} />
@@ -187,6 +198,7 @@ export function FaqsContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

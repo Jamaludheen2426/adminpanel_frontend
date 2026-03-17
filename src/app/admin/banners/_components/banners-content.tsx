@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Monitor, Tablet, Smartphone, LayoutTemplate, Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 const TYPE_CONFIG = {
     desktop: { label: 'Desktop', icon: Monitor, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
@@ -20,6 +23,7 @@ const TYPE_CONFIG = {
 };
 
 export function BannersContent() {
+    const isActive = useIsPluginActive('ads');
     const { t } = useTranslation();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
@@ -31,9 +35,10 @@ export function BannersContent() {
 
     const { data: response, isLoading } = useAdBanners({ page, limit, search, sortBy: sort?.column, sortDesc: sort?.direction === 'desc' });
     const rawBanners: AdBanner[] = response?.data || [];
+    const pagination = response?.pagination;
     const banners = rawBanners.map(banner => ({
         ...banner,
-        is_active: banner.is_active === 1,
+        is_active: banner.is_active as boolean | number,
         created_at: banner.created_at || new Date().toISOString()
     }));
 
@@ -111,6 +116,8 @@ export function BannersContent() {
 
     const isFormOpen = createOpen || !!editBanner;
 
+    if (!isActive) return <PluginDisabledState pluginName="Ads & Banners" pluginSlug="ads" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || createBanner.isPending || updateBanner.isPending || deleteBanner.isPending} />
@@ -118,7 +125,7 @@ export function BannersContent() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>{t('nav.ad_banners', 'Ad Banners')}</CardTitle>
+                            <CardTitle>{t('nav.ad_banners', 'Create Banner')}</CardTitle>
                             <CardDescription>{t('ads.banners_desc', 'Define banner dimension templates that are used to enforce image sizes in ads.')}</CardDescription>
                         </div>
                         <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -144,6 +151,7 @@ export function BannersContent() {
                         showActions
                         emptyMessage={t('ads.no_banners', 'No banners found. Create your first banner template.')}
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

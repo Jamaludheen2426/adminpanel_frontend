@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useState } from "react";
 import { useActivityLogs } from "@/hooks";
 import { CommonTable, type CommonColumn } from "@/components/common/common-table";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,12 +9,16 @@ import { format } from "date-fns";
 import { useTranslation } from "@/hooks/use-translation";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from "@/components/common/page-loader";
+import { TablePagination } from "@/components/common/table-pagination";
 
 export function ActivityLogsContent() {
   const { t } = useTranslation();
-  const { data: logsData, isLoading } = useActivityLogs();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const { data: logsData, isLoading } = useActivityLogs({ page, limit });
 
   const logs = logsData?.data || [];
+  const pagination = logsData?.pagination;
 
   const columns: CommonColumn<ActivityLog>[] = [
     {
@@ -81,6 +86,7 @@ export function ActivityLogsContent() {
               showActions={false}
               emptyMessage={t("activity.no_activity")}
             />
+            {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
           </CardContent>
         </Card>
       </div>

@@ -66,6 +66,7 @@ import type { EmailTemplate, CreateEmailTemplateDto } from "@/types";
 import { HtmlEditor } from "@/components/common/html-editor";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from "@/components/common/table-pagination";
 
 const defaultForm: CreateEmailTemplateDto = {
   name: "",
@@ -79,10 +80,11 @@ const defaultForm: CreateEmailTemplateDto = {
 export function TemplatesContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const { data: templatesData, isLoading } = useEmailTemplates({
     page,
-    limit: 10,
+    limit,
     search,
   });
   const { data: configsData } = useEmailConfigs();
@@ -426,34 +428,7 @@ export function TemplatesContent() {
                     </TableBody>
                   </Table>
 
-                  {templatesData?.pagination &&
-                    templatesData.pagination.totalPages > 1 && (
-                      <div className="flex items-center justify-between mt-4">
-                        <p className="text-sm text-muted-foreground">
-                          Page {templatesData.pagination.page} of{" "}
-                          {templatesData.pagination.totalPages} (
-                          {templatesData.pagination.totalItems} templates)
-                        </p>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            disabled={!templatesData.pagination.hasPrevPage}
-                          >
-                            Previous
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setPage((p) => p + 1)}
-                            disabled={!templatesData.pagination.hasNextPage}
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    )}
+                  {templatesData?.pagination && <TablePagination pagination={{ ...templatesData.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </>
               ) : (
                 <div className="text-center py-8">

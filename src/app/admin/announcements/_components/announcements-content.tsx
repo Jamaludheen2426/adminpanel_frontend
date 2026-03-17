@@ -27,7 +27,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import type { Announcement } from '@/hooks/use-announcements';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -145,9 +148,14 @@ function normalise(item: Announcement): NormalizedAnnouncement {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function AnnouncementsContent() {
+    const isActive = useIsPluginActive('announcements');
     const { t } = useTranslation();
 
-    const { data: rawAnnouncements = [], isLoading } = useAnnouncements();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: announcementsResponse, isLoading } = useAnnouncements({ page, limit });
+    const rawAnnouncements = announcementsResponse?.data || [];
+    const pagination = announcementsResponse?.pagination;
     const announcements = useMemo(() => rawAnnouncements.map(normalise), [rawAnnouncements]);
 
     const createAnnouncement = useCreateAnnouncement();
@@ -253,6 +261,8 @@ export function AnnouncementsContent() {
         },
     ];
 
+    if (!isActive) return <PluginDisabledState pluginName="Announcements" pluginSlug="announcements" />;
+
     return (
         <>
             <PageLoader open={isLoading || isPending || deleteAnnouncement.isPending} />
@@ -290,6 +300,7 @@ export function AnnouncementsContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

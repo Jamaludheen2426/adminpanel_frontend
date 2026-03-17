@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
     Puzzle, Search, CheckCircle, XCircle, Compass,
     Lock, BarChart2, Cloud, CreditCard, MapPin, Shield, MessageSquare, SlidersHorizontal,
-    AlertCircle,
+    AlertCircle, BookOpen, Megaphone,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +12,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageLoader } from "@/components/common/page-loader";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PluginCard } from "./plugin-card";
+import { PluginConfigSheet } from "./plugin-config-sheet";
 import { usePlugins, useTogglePlugin } from "@/hooks/use-plugins";
 import type { Plugin, PluginCategory } from "@/types";
 
 // ─── Category meta ────────────────────────────────────────────────────────────
 
 const CATEGORIES: Record<PluginCategory, { label: string; icon: React.ReactNode; color: string }> = {
+    content: { label: "Content", icon: <BookOpen className="w-4 h-4" />, color: "text-teal-500" },
+    marketing: { label: "Marketing", icon: <Megaphone className="w-4 h-4" />, color: "text-yellow-500" },
     authentication: { label: "Authentication", icon: <Lock className="w-4 h-4" />, color: "text-blue-500" },
     analytics: { label: "Analytics", icon: <BarChart2 className="w-4 h-4" />, color: "text-orange-500" },
     storage: { label: "Storage", icon: <Cloud className="w-4 h-4" />, color: "text-sky-500" },
@@ -29,7 +32,7 @@ const CATEGORIES: Record<PluginCategory, { label: string; icon: React.ReactNode;
 };
 
 const CATEGORY_ORDER: PluginCategory[] = [
-    "authentication", "analytics", "storage", "payment", "maps", "security", "communication", "general",
+    "content", "marketing", "authentication", "analytics", "storage", "payment", "maps", "security", "communication", "general",
 ];
 
 // ─── Grouped card grid ────────────────────────────────────────────────────────
@@ -39,11 +42,12 @@ interface PluginGridProps {
     search: string;
     onToggle: (slug: string) => Promise<void>;
     togglingSlug: string | null;
+    onConfigure: (plugin: Plugin) => void;
     emptyMessage: string;
     emptyIcon: React.ReactNode;
 }
 
-function PluginGrid({ plugins, search, onToggle, togglingSlug, emptyMessage, emptyIcon }: PluginGridProps) {
+function PluginGrid({ plugins, search, onToggle, togglingSlug, onConfigure, emptyMessage, emptyIcon }: PluginGridProps) {
     const filtered = plugins.filter((p) =>
         !search ||
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -87,6 +91,7 @@ function PluginGrid({ plugins, search, onToggle, togglingSlug, emptyMessage, emp
                                     plugin={plugin}
                                     onToggle={onToggle}
                                     isToggling={togglingSlug === plugin.slug}
+                                    onConfigure={onConfigure}
                                 />
                             ))}
                         </div>
@@ -104,6 +109,7 @@ export function PluginsContent() {
     const toggleMutation = useTogglePlugin();
     const [search, setSearch] = useState("");
     const [togglingSlug, setTogglingSlug] = useState<string | null>(null);
+    const [configPlugin, setConfigPlugin] = useState<Plugin | null>(null);
 
     const handleToggle = async (slug: string) => {
         setTogglingSlug(slug);
@@ -210,6 +216,7 @@ export function PluginsContent() {
                                 search={search}
                                 onToggle={handleToggle}
                                 togglingSlug={togglingSlug}
+                                onConfigure={setConfigPlugin}
                                 emptyMessage="No active plugins"
                                 emptyIcon={<CheckCircle className="w-12 h-12 text-muted-foreground" />}
                             />
@@ -222,6 +229,7 @@ export function PluginsContent() {
                                 search={search}
                                 onToggle={handleToggle}
                                 togglingSlug={togglingSlug}
+                                onConfigure={setConfigPlugin}
                                 emptyMessage="No plugins found"
                                 emptyIcon={<Puzzle className="w-12 h-12 text-muted-foreground" />}
                             />
@@ -229,6 +237,12 @@ export function PluginsContent() {
                     </Tabs>
                 )}
             </div>
+
+            <PluginConfigSheet
+                plugin={configPlugin}
+                open={!!configPlugin}
+                onClose={() => setConfigPlugin(null)}
+            />
         </PermissionGuard>
     );
 }

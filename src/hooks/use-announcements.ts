@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export interface Announcement {
@@ -24,9 +24,9 @@ export type CreateAnnouncementDto = Omit<Announcement, 'id' | 'company_id' | 'cr
 export type UpdateAnnouncementDto = Partial<CreateAnnouncementDto>;
 
 const announcementsApi = {
-    getAll: async (): Promise<Announcement[]> => {
-        const response = await apiClient.get('/announcements', { params: { limit: 200 } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: Announcement[]; pagination: any }> => {
+        const response = await apiClient.get('/announcements', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number): Promise<Announcement> => {
         const response = await apiClient.get(`/announcements/${id}`);
@@ -47,10 +47,10 @@ const announcementsApi = {
 
 const QUERY_KEY = ['announcements'];
 
-export function useAnnouncements() {
+export function useAnnouncements(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: announcementsApi.getAll,
+        queryKey: [...QUERY_KEY, params ?? {}],
+        queryFn: () => announcementsApi.getAll(params),
         staleTime: 2 * 60 * 1000,
     });
 }
@@ -73,6 +73,10 @@ export function useCreateAnnouncement() {
             toast.success('Announcement created successfully');
         },
         onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create announcement');
         },
     });
@@ -88,6 +92,10 @@ export function useUpdateAnnouncement() {
             toast.success('Announcement updated successfully');
         },
         onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update announcement');
         },
     });
@@ -102,6 +110,10 @@ export function useDeleteAnnouncement() {
             toast.success('Announcement deleted successfully');
         },
         onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete announcement');
         },
     });

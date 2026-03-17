@@ -20,9 +20,9 @@ export type CreateTestimonialDto = Omit<Testimonial, 'id' | 'company_id' | 'crea
 export type UpdateTestimonialDto = Partial<CreateTestimonialDto>;
 
 const testimonialsApi = {
-    getAll: async (): Promise<Testimonial[]> => {
-        const response = await apiClient.get('/testimonials', { params: { limit: 200 } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: Testimonial[]; pagination: any }> => {
+        const response = await apiClient.get('/testimonials', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number | string): Promise<Testimonial> => {
         const response = await apiClient.get(`/testimonials/${id}`);
@@ -43,10 +43,10 @@ const testimonialsApi = {
 
 const QUERY_KEY = queryKeys.testimonials.all;
 
-export function useTestimonials() {
+export function useTestimonials(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: testimonialsApi.getAll,
+        queryKey: [...QUERY_KEY, params ?? {}],
+        queryFn: () => testimonialsApi.getAll(params),
     });
 }
 
@@ -67,7 +67,10 @@ export function useCreateTestimonial() {
             toast.success('Testimonial created successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create testimonial');
         },
     });
@@ -83,7 +86,10 @@ export function useUpdateTestimonial() {
             toast.success('Testimonial updated successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update testimonial');
         },
     });
@@ -98,7 +104,10 @@ export function useDeleteTestimonial() {
             toast.success('Testimonial deleted successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete testimonial');
         },
     });

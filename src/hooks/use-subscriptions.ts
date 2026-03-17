@@ -32,9 +32,9 @@ export type UpdateSubscriptionDto = Partial<CreateSubscriptionDto>;
 const QUERY_KEY = ['subscriptions'];
 
 const subscriptionsApi = {
-    getAll: async (): Promise<Subscription[]> => {
-        const response = await apiClient.get('/subscriptions', { params: { limit: 200 } });
-        return Array.isArray(response.data.data) ? response.data.data : [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: Subscription[]; pagination: any }> => {
+        const response = await apiClient.get('/subscriptions', { params: { page: 1, limit: 10, ...params } });
+        return { data: Array.isArray(response.data.data) ? response.data.data : [], pagination: response.data.pagination };
     },
     getById: async (id: number | string): Promise<Subscription> => {
         const response = await apiClient.get(`/subscriptions/${id}`);
@@ -57,10 +57,10 @@ const subscriptionsApi = {
     },
 };
 
-export function useSubscriptions() {
+export function useSubscriptions(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: subscriptionsApi.getAll,
+        queryKey: [...QUERY_KEY, params ?? {}],
+        queryFn: () => subscriptionsApi.getAll(params),
     });
 }
 
@@ -73,7 +73,10 @@ export function useCreateSubscription() {
             toast.success('Subscription created successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create subscription');
         },
     });
@@ -89,7 +92,10 @@ export function useUpdateSubscription() {
             toast.success('Subscription updated successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update subscription');
         },
     });
@@ -117,7 +123,10 @@ export function useDeleteSubscription() {
             toast.success('Subscription deleted successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete subscription');
         },
     });

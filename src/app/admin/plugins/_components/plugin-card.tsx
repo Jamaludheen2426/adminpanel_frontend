@@ -1,9 +1,10 @@
 "use client";
 
-import { Settings, CheckCircle, XCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Settings, CheckCircle, XCircle, SlidersHorizontal } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { Plugin } from "@/types";
 
 // ─── Brand SVG logos by plugin slug ──────────────────────────────────────────
@@ -182,9 +183,10 @@ interface PluginCardProps {
   plugin: Plugin;
   onToggle: (slug: string) => void;
   isToggling: boolean;
+  onConfigure?: (plugin: Plugin) => void;
 }
 
-export function PluginCard({ plugin, onToggle, isToggling }: PluginCardProps) {
+export function PluginCard({ plugin, onToggle, isToggling, onConfigure }: PluginCardProps) {
   const isEnabled = plugin.is_active === 1;
   const logo = PLUGIN_LOGOS[plugin.slug] ?? <FallbackIcon />;
 
@@ -231,7 +233,19 @@ export function PluginCard({ plugin, onToggle, isToggling }: PluginCardProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0" />
+      {onConfigure && (plugin.config_group || plugin.config_route) && (
+        <CardFooter className="pt-0 pb-3 px-4">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full gap-2"
+            onClick={() => onConfigure(plugin)}
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Configure
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }

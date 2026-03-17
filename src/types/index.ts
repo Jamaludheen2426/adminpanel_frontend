@@ -717,6 +717,8 @@ export interface BulkImportResult {
 
 // Plugin types
 export type PluginCategory =
+  | 'content'
+  | 'marketing'
   | 'authentication'
   | 'analytics'
   | 'storage'

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
@@ -20,9 +20,9 @@ export type CreateBlogCategoryDto = Omit<BlogCategory, 'id' | 'company_id' | 'cr
 export type UpdateBlogCategoryDto = Partial<CreateBlogCategoryDto>;
 
 const blogCategoriesApi = {
-    getAll: async (): Promise<BlogCategory[]> => {
-        const response = await apiClient.get('/blog-categories', { params: { limit: 500 } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: BlogCategory[]; pagination: any }> => {
+        const response = await apiClient.get('/blog-categories', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number): Promise<BlogCategory> => {
         const response = await apiClient.get(`/blog-categories/${id}`);
@@ -36,15 +36,19 @@ const blogCategoriesApi = {
         const response = await apiClient.put(`/blog-categories/${id}`, data);
         return response.data.data?.blogCategory || response.data.blogCategory;
     },
+    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<BlogCategory> => {
+        const response = await apiClient.patch(`/blog-categories/${id}/status`, { is_active });
+        return response.data.data?.blogCategory || response.data.blogCategory;
+    },
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/blog-categories/${id}`);
     },
 };
 
-export function useBlogCategories() {
+export function useBlogCategories(params?: Record<string, any>) {
     return useQuery({
-        queryKey: queryKeys.blogCategories.list({}),
-        queryFn: blogCategoriesApi.getAll,
+        queryKey: queryKeys.blogCategories.list(params ?? {}),
+        queryFn: () => blogCategoriesApi.getAll(params),
         staleTime: 2 * 60 * 1000,
     });
 }
@@ -66,6 +70,10 @@ export function useCreateBlogCategory() {
             toast.success('Blog category created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create blog category');
         },
     });
@@ -81,7 +89,24 @@ export function useUpdateBlogCategory() {
             toast.success('Blog category updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update blog category');
+        },
+    });
+}
+
+export function useUpdateBlogCategoryStatus() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: blogCategoriesApi.updateStatus,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to update status');
         },
     });
 }
@@ -95,6 +120,10 @@ export function useDeleteBlogCategory() {
             toast.success('Blog category deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete blog category');
         },
     });

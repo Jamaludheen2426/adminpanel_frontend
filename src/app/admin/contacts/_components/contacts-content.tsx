@@ -11,12 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useRouter } from 'next/navigation';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 export function ContactsContent() {
+    const isActive = useIsPluginActive('contact-form');
     const { t } = useTranslation();
     const router = useRouter();
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [search] = useState('');
     const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -135,6 +139,8 @@ export function ContactsContent() {
         { label: t('contacts.read', 'Read'), value: 'read' },
     ];
 
+    if (!isActive) return <PluginDisabledState pluginName="Contact Form" pluginSlug="contact-form" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || deleteContact.isPending} />
@@ -176,17 +182,12 @@ export function ContactsContent() {
                         emptyMessage={t('contacts.no_contacts', 'No contact messages found')}
                     />
 
-                    {/* Pagination - manual handles since we are server side filtering */}
-                    {contactsResponse?.pagination && contactsResponse.pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                            <div>
-                                {t('common.showing', 'Showing')} {((page - 1) * limit) + 1} {t('common.to', 'to')} {Math.min(page * limit, contactsResponse.pagination.totalItems)} {t('common.of', 'of')} {contactsResponse.pagination.totalItems}
-                            </div>
-                            <div className="flex gap-1">
-                                <Button size="sm" variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>{t('common.previous', 'Previous')}</Button>
-                                <Button size="sm" variant="outline" disabled={!contactsResponse.pagination.hasNextPage} onClick={() => setPage(page + 1)}>{t('common.next', 'Next')}</Button>
-                            </div>
-                        </div>
+                    {contactsResponse?.pagination && (
+                        <TablePagination
+                            pagination={{ ...contactsResponse.pagination, limit }}
+                            onPageChange={setPage}
+                            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+                        />
                     )}
                 </CardContent>
             </Card>

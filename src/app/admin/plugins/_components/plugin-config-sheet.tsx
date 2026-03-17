@@ -511,6 +511,248 @@ function TwilioForm() {
     );
 }
 
+function PayPalForm() {
+    const { data: settings, isLoading } = useSettingsByGroup("paypal");
+    const bulkUpdate = useBulkUpdateSettings();
+    const [showSecret, setShowSecret] = useState(false);
+    const [v, setV] = useState({ paypal_enabled: false, paypal_client_id: "", paypal_client_secret: "", paypal_live_mode: false });
+
+    useEffect(() => {
+        if (settings) {
+            const m: Record<string, string> = {};
+            settings.forEach((s) => { m[s.key] = s.value || ""; });
+            setV({ paypal_enabled: m.paypal_enabled === "true", paypal_client_id: m.paypal_client_id || "", paypal_client_secret: m.paypal_client_secret || "", paypal_live_mode: m.paypal_live_mode === "true" });
+        }
+    }, [settings]);
+
+    if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Label htmlFor="pp_en" className="font-medium">Enable PayPal</Label>
+                <Switch id="pp_en" checked={v.paypal_enabled} onCheckedChange={(val) => setV({ ...v, paypal_enabled: val })} />
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex items-center gap-2">
+                    <Label htmlFor="pp_live" className="font-medium">Live Mode</Label>
+                    {!v.paypal_live_mode && <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950">Sandbox</Badge>}
+                </div>
+                <Switch id="pp_live" checked={v.paypal_live_mode} onCheckedChange={(val) => setV({ ...v, paypal_live_mode: val })} />
+            </div>
+            <Separator />
+            <div className="space-y-1.5">
+                <Label htmlFor="pp_cid">Client ID</Label>
+                <Input id="pp_cid" placeholder="AXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value={v.paypal_client_id} onChange={(e) => setV({ ...v, paypal_client_id: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="pp_sec">Client Secret</Label>
+                <div className="relative">
+                    <Input id="pp_sec" type={showSecret ? "text" : "password"} placeholder="EFxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" value={v.paypal_client_secret} onChange={(e) => setV({ ...v, paypal_client_secret: e.target.value })} className="pr-10" />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" onClick={() => setShowSecret(!showSecret)}>
+                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
+            <a href="https://developer.paypal.com/dashboard/applications" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 flex items-center gap-1">PayPal Developer Dashboard <ExternalLink className="h-3 w-3" /></a>
+            <Button className="w-full" onClick={() => bulkUpdate.mutate({ group: "paypal", ...v, paypal_enabled: v.paypal_enabled.toString(), paypal_live_mode: v.paypal_live_mode.toString() })} disabled={bulkUpdate.isPending}>
+                <Save className="mr-2 h-4 w-4" />{bulkUpdate.isPending ? "Saving..." : "Save PayPal Settings"}
+            </Button>
+        </div>
+    );
+}
+
+function MollieForm() {
+    const { data: settings, isLoading } = useSettingsByGroup("mollie");
+    const bulkUpdate = useBulkUpdateSettings();
+    const [v, setV] = useState({ mollie_enabled: false, mollie_api_key: "", mollie_webhook_secret: "" });
+
+    useEffect(() => {
+        if (settings) {
+            const m: Record<string, string> = {};
+            settings.forEach((s) => { m[s.key] = s.value || ""; });
+            setV({ mollie_enabled: m.mollie_enabled === "true", mollie_api_key: m.mollie_api_key || "", mollie_webhook_secret: m.mollie_webhook_secret || "" });
+        }
+    }, [settings]);
+
+    if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Label htmlFor="mol_en" className="font-medium">Enable Mollie</Label>
+                <Switch id="mol_en" checked={v.mollie_enabled} onCheckedChange={(val) => setV({ ...v, mollie_enabled: val })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="mol_key">API Key</Label>
+                <Input id="mol_key" type="password" placeholder="live_••••••••••••••••••••••••••••••" value={v.mollie_api_key} onChange={(e) => setV({ ...v, mollie_api_key: e.target.value })} />
+                <p className="text-xs text-muted-foreground">Use <code className="font-mono">live_</code> for production or <code className="font-mono">test_</code> for sandbox.</p>
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="mol_wh">Webhook Secret <span className="font-normal text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="mol_wh" type="password" placeholder="••••••••••••••••••••" value={v.mollie_webhook_secret} onChange={(e) => setV({ ...v, mollie_webhook_secret: e.target.value })} />
+            </div>
+            <a href="https://my.mollie.com/dashboard/developers/api-keys" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 flex items-center gap-1">Mollie Dashboard <ExternalLink className="h-3 w-3" /></a>
+            <Button className="w-full" onClick={() => bulkUpdate.mutate({ group: "mollie", ...v, mollie_enabled: v.mollie_enabled.toString() })} disabled={bulkUpdate.isPending}>
+                <Save className="mr-2 h-4 w-4" />{bulkUpdate.isPending ? "Saving..." : "Save Mollie Settings"}
+            </Button>
+        </div>
+    );
+}
+
+function PaystackForm() {
+    const { data: settings, isLoading } = useSettingsByGroup("paystack");
+    const bulkUpdate = useBulkUpdateSettings();
+    const [showSecret, setShowSecret] = useState(false);
+    const [v, setV] = useState({ paystack_enabled: false, paystack_public_key: "", paystack_secret_key: "" });
+
+    useEffect(() => {
+        if (settings) {
+            const m: Record<string, string> = {};
+            settings.forEach((s) => { m[s.key] = s.value || ""; });
+            setV({ paystack_enabled: m.paystack_enabled === "true", paystack_public_key: m.paystack_public_key || "", paystack_secret_key: m.paystack_secret_key || "" });
+        }
+    }, [settings]);
+
+    if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Label htmlFor="ps_en" className="font-medium">Enable Paystack</Label>
+                <Switch id="ps_en" checked={v.paystack_enabled} onCheckedChange={(val) => setV({ ...v, paystack_enabled: val })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="ps_pk">Public Key</Label>
+                <Input id="ps_pk" placeholder="pk_live_••••••••••••••••••••••••••••••••••••••••" value={v.paystack_public_key} onChange={(e) => setV({ ...v, paystack_public_key: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="ps_sk">Secret Key</Label>
+                <div className="relative">
+                    <Input id="ps_sk" type={showSecret ? "text" : "password"} placeholder="sk_live_••••••••••••••••••••••••••••••••••••••••" value={v.paystack_secret_key} onChange={(e) => setV({ ...v, paystack_secret_key: e.target.value })} className="pr-10" />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" onClick={() => setShowSecret(!showSecret)}>
+                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
+            <a href="https://dashboard.paystack.com/#/settings/developers" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 flex items-center gap-1">Paystack Dashboard <ExternalLink className="h-3 w-3" /></a>
+            <Button className="w-full" onClick={() => bulkUpdate.mutate({ group: "paystack", ...v, paystack_enabled: v.paystack_enabled.toString() })} disabled={bulkUpdate.isPending}>
+                <Save className="mr-2 h-4 w-4" />{bulkUpdate.isPending ? "Saving..." : "Save Paystack Settings"}
+            </Button>
+        </div>
+    );
+}
+
+function RazorpayForm() {
+    const { data: settings, isLoading } = useSettingsByGroup("razorpay");
+    const bulkUpdate = useBulkUpdateSettings();
+    const [showSecret, setShowSecret] = useState(false);
+    const [v, setV] = useState({ razorpay_enabled: false, razorpay_key_id: "", razorpay_key_secret: "", razorpay_payment_type: "hosted_checkout", razorpay_webhook_secret: "" });
+
+    useEffect(() => {
+        if (settings) {
+            const m: Record<string, string> = {};
+            settings.forEach((s) => { m[s.key] = s.value || ""; });
+            setV({ razorpay_enabled: m.razorpay_enabled === "true", razorpay_key_id: m.razorpay_key_id || "", razorpay_key_secret: m.razorpay_key_secret || "", razorpay_payment_type: m.razorpay_payment_type || "hosted_checkout", razorpay_webhook_secret: m.razorpay_webhook_secret || "" });
+        }
+    }, [settings]);
+
+    if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Label htmlFor="rz_en" className="font-medium">Enable Razorpay</Label>
+                <Switch id="rz_en" checked={v.razorpay_enabled} onCheckedChange={(val) => setV({ ...v, razorpay_enabled: val })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="rz_kid">Key ID</Label>
+                <Input id="rz_kid" placeholder="rzp_live_••••••••••••••••" value={v.razorpay_key_id} onChange={(e) => setV({ ...v, razorpay_key_id: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="rz_ksec">Key Secret</Label>
+                <div className="relative">
+                    <Input id="rz_ksec" type={showSecret ? "text" : "password"} placeholder="••••••••••••••••••••••••" value={v.razorpay_key_secret} onChange={(e) => setV({ ...v, razorpay_key_secret: e.target.value })} className="pr-10" />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" onClick={() => setShowSecret(!showSecret)}>
+                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="rz_type">Payment Type</Label>
+                <Select value={v.razorpay_payment_type} onValueChange={(val) => setV({ ...v, razorpay_payment_type: val })}>
+                    <SelectTrigger id="rz_type"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="hosted_checkout">Hosted Checkout</SelectItem>
+                        <SelectItem value="website_embedded">Website Embedded</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="rz_wh">Webhook Secret <span className="font-normal text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="rz_wh" type="password" placeholder="••••••••••••••••••••" value={v.razorpay_webhook_secret} onChange={(e) => setV({ ...v, razorpay_webhook_secret: e.target.value })} />
+            </div>
+            <a href="https://dashboard.razorpay.com/app/keys" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 flex items-center gap-1">Razorpay Dashboard <ExternalLink className="h-3 w-3" /></a>
+            <Button className="w-full" onClick={() => bulkUpdate.mutate({ group: "razorpay", ...v, razorpay_enabled: v.razorpay_enabled.toString() })} disabled={bulkUpdate.isPending}>
+                <Save className="mr-2 h-4 w-4" />{bulkUpdate.isPending ? "Saving..." : "Save Razorpay Settings"}
+            </Button>
+        </div>
+    );
+}
+
+function FlutterwaveForm() {
+    const { data: settings, isLoading } = useSettingsByGroup("flutterwave");
+    const bulkUpdate = useBulkUpdateSettings();
+    const [show, setShow] = useState({ secret: false, encrypt: false });
+    const [v, setV] = useState({ flutterwave_enabled: false, flutterwave_public_key: "", flutterwave_secret_key: "", flutterwave_encryption_key: "" });
+
+    useEffect(() => {
+        if (settings) {
+            const m: Record<string, string> = {};
+            settings.forEach((s) => { m[s.key] = s.value || ""; });
+            setV({ flutterwave_enabled: m.flutterwave_enabled === "true", flutterwave_public_key: m.flutterwave_public_key || "", flutterwave_secret_key: m.flutterwave_secret_key || "", flutterwave_encryption_key: m.flutterwave_encryption_key || "" });
+        }
+    }, [settings]);
+
+    if (isLoading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+    return (
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                <Label htmlFor="fw_en" className="font-medium">Enable Flutterwave</Label>
+                <Switch id="fw_en" checked={v.flutterwave_enabled} onCheckedChange={(val) => setV({ ...v, flutterwave_enabled: val })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="fw_pk">Public Key</Label>
+                <Input id="fw_pk" placeholder="FLWPUBK_TEST-••••••••••••••••••••••••••••••••-X" value={v.flutterwave_public_key} onChange={(e) => setV({ ...v, flutterwave_public_key: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="fw_sk">Secret Key</Label>
+                <div className="relative">
+                    <Input id="fw_sk" type={show.secret ? "text" : "password"} placeholder="FLWSECK_TEST-••••••••••••••••••••••••••••••••-X" value={v.flutterwave_secret_key} onChange={(e) => setV({ ...v, flutterwave_secret_key: e.target.value })} className="pr-10" />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" onClick={() => setShow({ ...show, secret: !show.secret })}>
+                        {show.secret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                </div>
+            </div>
+            <div className="space-y-1.5">
+                <Label htmlFor="fw_enc">Encryption Key</Label>
+                <div className="relative">
+                    <Input id="fw_enc" type={show.encrypt ? "text" : "password"} placeholder="••••••••••••••••••••••••" value={v.flutterwave_encryption_key} onChange={(e) => setV({ ...v, flutterwave_encryption_key: e.target.value })} className="pr-10" />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full" onClick={() => setShow({ ...show, encrypt: !show.encrypt })}>
+                        {show.encrypt ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Required for standard (redirect) payments.</p>
+            </div>
+            <a href="https://dashboard.flutterwave.com/dashboard/settings/apis" target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 flex items-center gap-1">Flutterwave Dashboard <ExternalLink className="h-3 w-3" /></a>
+            <Button className="w-full" onClick={() => bulkUpdate.mutate({ group: "flutterwave", ...v, flutterwave_enabled: v.flutterwave_enabled.toString() })} disabled={bulkUpdate.isPending}>
+                <Save className="mr-2 h-4 w-4" />{bulkUpdate.isPending ? "Saving..." : "Save Flutterwave Settings"}
+            </Button>
+        </div>
+    );
+}
+
 // ─── Slug → Form mapping ──────────────────────────────────────────────────────
 
 function ConfigForm({ plugin }: { plugin: Plugin }) {
@@ -521,6 +763,11 @@ function ConfigForm({ plugin }: { plugin: Plugin }) {
     if (["amazon-s3", "cloudflare-r2", "digitalocean-spaces", "wasabi"].includes(slug)) return <StorageForm slug={slug} />;
     if (slug === "google-maps") return <GoogleMapsForm />;
     if (slug === "stripe") return <StripeForm />;
+    if (slug === "paypal") return <PayPalForm />;
+    if (slug === "mollie") return <MollieForm />;
+    if (slug === "paystack") return <PaystackForm />;
+    if (slug === "razorpay") return <RazorpayForm />;
+    if (slug === "flutterwave") return <FlutterwaveForm />;
     if (slug === "recaptcha") return <RecaptchaForm />;
     if (slug === "twilio") return <TwilioForm />;
     return (

@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 
 const schema = z.object({
@@ -83,7 +84,11 @@ function normalise(item: Menu): Menu & { created_at: string; is_active: boolean;
 
 export function MenusContent() {
     const { t } = useTranslation();
-    const { data: raw = [], isLoading } = useMenus();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: menusResponse, isLoading } = useMenus({ page, limit });
+    const raw: Menu[] = menusResponse?.data ?? [];
+    const pagination = menusResponse?.pagination;
     const menus = useMemo(() => raw.map(normalise), [raw]);
     const createMenu = useCreateMenu();
     const updateMenu = useUpdateMenu();
@@ -248,6 +253,7 @@ export function MenusContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

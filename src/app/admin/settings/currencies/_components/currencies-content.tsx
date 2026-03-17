@@ -33,12 +33,14 @@ import { PermissionGuard } from "@/components/guards/permission-guard";
 import { isApprovalRequired } from "@/lib/api-client";
 import type { Currency } from "@/types";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { useServerSort } from "@/hooks/use-server-sort";
 import { SortHead } from "@/components/ui/sort-head";
 
 export function CurrenciesContent() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] =
     useState<Currency | null>(null);
@@ -50,7 +52,7 @@ export function CurrenciesContent() {
 
   const { data, isLoading, isFetching } = useCurrencies({
     page,
-    limit: 10,
+    limit,
     search,
     sort_by,
     sort_order,
@@ -275,35 +277,9 @@ export function CurrenciesContent() {
                   </TableBody>
                 </Table>
 
-                {data?.pagination &&
-                  data.pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-4">
-                      <p className="text-sm text-muted-foreground">
-                        Page {data.pagination.page} /{" "}
-                        {data.pagination.totalPages}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setPage((p) => Math.max(1, p - 1))
-                          }
-                          disabled={!data.pagination.hasPrevPage}
-                        >
-                          Previous
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPage((p) => p + 1)}
-                          disabled={!data.pagination.hasNextPage}
-                        >
-                          Next
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                {data?.pagination && (
+                  <TablePagination pagination={{ ...data.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />
+                )}
               </CardContent>
             </Card>
           </div>

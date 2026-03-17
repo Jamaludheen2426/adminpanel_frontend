@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { isApprovalRequired } from "@/lib/api-client";
 import Link from "next/link";
-import { Plus, Search, RefreshCw, Check, AlertCircle, Minus, Pencil, Trash2, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, RefreshCw, Check, AlertCircle, Minus, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -52,11 +52,13 @@ import { useTranslation } from "@/hooks/use-translation";
 import type { TranslationKey, Language } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from "@/components/common/table-pagination";
 
 export function TranslationsContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [groupFilter, setGroupFilter] = useState<string>("all");
   const [selectedLanguageId, setSelectedLanguageId] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all"); // all, missing, auto, reviewed
@@ -84,7 +86,7 @@ export function TranslationsContent() {
   const { data: missingCount } = useMissingTranslationKeysCount();
   const { data, isLoading } = useTranslationKeys({
     page,
-    limit: 20,
+    limit,
     search,
     group: groupFilter !== "all" ? groupFilter : undefined,
   });
@@ -545,31 +547,9 @@ export function TranslationsContent() {
                   </Table>
                 </div>
 
-                {data?.pagination && data.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between p-4 border-t">
-                    <p className="text-sm text-muted-foreground">
-                      {t('common.page', 'Page')} {data.pagination.page} / {data.pagination.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={!data.pagination.hasPrevPage}
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        {t('common.previous', 'Previous')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!data.pagination.hasNextPage}
-                      >
-                        {t('common.next', 'Next')}
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
+                {data?.pagination && (
+                  <div className="px-4 pb-4">
+                    <TablePagination pagination={{ ...data.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />
                   </div>
                 )}
               </CardContent>

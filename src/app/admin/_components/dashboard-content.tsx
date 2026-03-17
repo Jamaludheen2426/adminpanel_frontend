@@ -380,6 +380,7 @@ function CompanyDashboard() {
                     <TableHead>{t('common.user')}</TableHead>
                     <TableHead>{t('common.action')}</TableHead>
                     <TableHead>{t('common.description')}</TableHead>
+                    <TableHead>{t('activity.ip_address', 'IP Address')}</TableHead>
                     <TableHead>{t('common.date')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -387,13 +388,23 @@ function CompanyDashboard() {
                   {activities.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell className="font-medium">
-                        {log.user?.full_name}
+                        <div className="flex flex-col">
+                          <span>{(log as any).user?.full_name || (log as any).user?.email || '-'}</span>
+                          {(log as any).user?.email && (log as any).user?.full_name && (
+                            <span className="text-xs text-muted-foreground">{(log as any).user.email}</span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">{log.action}</Badge>
                       </TableCell>
                       <TableCell className="max-w-xs truncate text-muted-foreground">
                         {log.description || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {log.ip_address ? (
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{log.ip_address}</code>
+                        ) : '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {log.createdAt ? format(new Date(log.createdAt), "MMM dd, HH:mm") : "-"}

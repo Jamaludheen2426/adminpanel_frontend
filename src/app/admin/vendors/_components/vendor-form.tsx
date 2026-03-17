@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useCreateVendor, useUpdateVendor, Vendor } from '@/hooks/use-vendors';
 import { CommonForm, CommonFormSection } from '@/components/common/common-form';
-import { Building2, User, Landmark } from 'lucide-react';
+import { Building2, User, Landmark, Share2, Globe, Youtube, Facebook, Instagram, Twitter, Linkedin, MessageCircle, Music, Send, Bookmark } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useCountries, useStates, useCities, useLocalities } from '@/hooks/use-locations';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,6 +37,12 @@ const baseSchema = z.object({
     youtube: z.string().trim().optional(),
     facebook: z.string().trim().optional(),
     instagram: z.string().trim().optional(),
+    twitter: z.string().trim().optional(),
+    linkedin: z.string().trim().optional(),
+    whatsapp: z.string().trim().optional(),
+    tiktok: z.string().trim().optional(),
+    telegram: z.string().trim().optional(),
+    pinterest: z.string().trim().optional(),
     name: z.string().trim().min(1, 'Vendor name is required'),
     address: z.string().trim().optional(),
     contact: z.string().trim().optional(),
@@ -248,10 +255,6 @@ export function VendorForm({ vendor }: Props) {
                         />
                     ),
                 },
-                { name: 'website', label: 'Website', type: 'text', placeholder: 'https://company.com' },
-                { name: 'youtube', label: 'YouTube', type: 'text', placeholder: 'https://youtube.com/channel/...' },
-                { name: 'facebook', label: 'Facebook', type: 'text', placeholder: 'https://facebook.com/...' },
-                { name: 'instagram', label: 'Instagram', type: 'text', placeholder: 'https://instagram.com/...' },
             ],
         },
         {
@@ -306,6 +309,122 @@ export function VendorForm({ vendor }: Props) {
                 { name: 'branch', label: 'Branch', type: 'text', placeholder: 'MG Road Branch' },
             ],
         },
+        {
+            title: 'Social Media',
+            icon: Share2,
+            fields: [
+                {
+                    name: 'website', label: 'Website', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Globe className="h-4 w-4 text-gray-500" /> Website
+                            </Label>
+                            <Input value={watch('website') || ''} onChange={e => setValue('website', e.target.value)} placeholder="https://company.com" />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'youtube', label: 'YouTube', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Youtube className="h-4 w-4 text-red-500" /> YouTube
+                            </Label>
+                            <Input value={watch('youtube') || ''} onChange={e => setValue('youtube', e.target.value)} placeholder="https://youtube.com/channel/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'facebook', label: 'Facebook', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Facebook className="h-4 w-4 text-blue-600" /> Facebook
+                            </Label>
+                            <Input value={watch('facebook') || ''} onChange={e => setValue('facebook', e.target.value)} placeholder="https://facebook.com/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'instagram', label: 'Instagram', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Instagram className="h-4 w-4 text-pink-500" /> Instagram
+                            </Label>
+                            <Input value={watch('instagram') || ''} onChange={e => setValue('instagram', e.target.value)} placeholder="https://instagram.com/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'twitter', label: 'Twitter / X', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Twitter className="h-4 w-4 text-sky-500" /> Twitter / X
+                            </Label>
+                            <Input value={watch('twitter') || ''} onChange={e => setValue('twitter', e.target.value)} placeholder="https://x.com/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'linkedin', label: 'LinkedIn', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Linkedin className="h-4 w-4 text-blue-700" /> LinkedIn
+                            </Label>
+                            <Input value={watch('linkedin') || ''} onChange={e => setValue('linkedin', e.target.value)} placeholder="https://linkedin.com/company/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'whatsapp', label: 'WhatsApp', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <MessageCircle className="h-4 w-4 text-green-500" /> WhatsApp
+                            </Label>
+                            <Input value={watch('whatsapp') || ''} onChange={e => setValue('whatsapp', e.target.value)} placeholder="+91 9000000000 or wa.me link" />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'tiktok', label: 'TikTok', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Music className="h-4 w-4 text-black dark:text-white" /> TikTok
+                            </Label>
+                            <Input value={watch('tiktok') || ''} onChange={e => setValue('tiktok', e.target.value)} placeholder="https://tiktok.com/@..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'telegram', label: 'Telegram', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Send className="h-4 w-4 text-sky-400" /> Telegram
+                            </Label>
+                            <Input value={watch('telegram') || ''} onChange={e => setValue('telegram', e.target.value)} placeholder="https://t.me/..." />
+                        </div>
+                    ),
+                },
+                {
+                    name: 'pinterest', label: 'Pinterest', type: 'custom',
+                    render: ({ watch, setValue }) => (
+                        <div className="space-y-1.5">
+                            <Label className="flex items-center gap-2 text-sm font-medium">
+                                <Bookmark className="h-4 w-4 text-red-600" /> Pinterest
+                            </Label>
+                            <Input value={watch('pinterest') || ''} onChange={e => setValue('pinterest', e.target.value)} placeholder="https://pinterest.com/..." />
+                        </div>
+                    ),
+                },
+            ],
+        },
     ];
 
     const defaultValues = vendor ? {
@@ -321,7 +440,10 @@ export function VendorForm({ vendor }: Props) {
         company_contact: vendor.company_contact || '', landline: vendor.landline || '',
         company_email: vendor.company_email || '', website: vendor.website || '',
         youtube: vendor.youtube || '', facebook: vendor.facebook || '',
-        instagram: vendor.instagram || '', name: vendor.name,
+        instagram: vendor.instagram || '', twitter: (vendor as any).twitter || '',
+        linkedin: (vendor as any).linkedin || '', whatsapp: (vendor as any).whatsapp || '',
+        tiktok: (vendor as any).tiktok || '', telegram: (vendor as any).telegram || '',
+        pinterest: (vendor as any).pinterest || '', name: vendor.name,
         address: vendor.address || '', contact: vendor.contact || '',
         email: vendor.email, membership: vendor.membership,
         profile: vendor.profile || '', bank_logo: vendor.bank_logo || '',

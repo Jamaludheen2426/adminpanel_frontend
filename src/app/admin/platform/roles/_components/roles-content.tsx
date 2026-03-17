@@ -17,6 +17,7 @@ import { useRoles, useDeleteRole, useToggleRoleStatus } from "@/hooks/use-roles"
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
+import { TablePagination } from "@/components/common/table-pagination";
 import type { Role } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { useMemo } from "react";
@@ -26,6 +27,7 @@ export function RolesContent() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const debouncedSearch = useDebounce(search, 300);
   const [sort, setSort] = useState<{ column: string; direction: "ASC" | "DESC" } | null>({
     column: "name",
@@ -36,7 +38,7 @@ export function RolesContent() {
 
   const { data, isLoading, isFetching } = useRoles({
     page,
-    limit: 10,
+    limit,
     search: debouncedSearch,
     sort_by: sort?.column,
     sort_order: sort?.direction,
@@ -140,32 +142,12 @@ export function RolesContent() {
               showActions
             />
 
-            {data?.pagination && data.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-                <p>
-                  {t("common.page", "Page")} {data.pagination.page} / {data.pagination.totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[10px]"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={!data.pagination.hasPrevPage}
-                  >
-                    {t("common.previous", "Previous")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[10px]"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={!data.pagination.hasNextPage}
-                  >
-                    {t("common.next", "Next")}
-                  </Button>
-                </div>
-              </div>
+            {data?.pagination && (
+              <TablePagination
+                pagination={{ ...data.pagination, limit }}
+                onPageChange={setPage}
+                onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              />
             )}
           </CardContent>
         </Card>

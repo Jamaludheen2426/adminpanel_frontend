@@ -19,6 +19,7 @@ import {
   useAssignPermissions,
 } from "@/hooks/use-roles";
 import { usePermissions } from "@/hooks/use-permissions";
+import { usePlugins } from "@/hooks/use-plugins";
 import { cn } from "@/lib/utils";
 import type { Role, Permission } from "@/types";
 
@@ -96,6 +97,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
         "translations",
         "languages",
         "pages",
+        "ui_blocks",
         "blog",
         "testimonials",
         "ads",
@@ -114,7 +116,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
     const assignedModules = [
       "settings",
       "employees", "roles", "permissions", "modules", "approvals", "companies",
-      "media", "translations", "languages", "pages", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
+      "media", "translations", "languages", "pages", "ui_blocks", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
       "locations", "currencies",
       "appearance"
     ];
@@ -184,6 +186,39 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
   const assignPermissionsMutation = useAssignPermissions();
   const { data: permissionsData, isLoading: permissionsLoading } =
     usePermissions({ limit: 500 });
+  const { data: pluginsData } = usePlugins();
+
+  // Module → plugin slug mapping (only plugin-gated modules)
+  const MODULE_PLUGIN_MAP: Record<string, string> = {
+    blog: "blog",
+    blog_categories: "blog",
+    blog_tags: "blog",
+    faqs: "faq",
+    faq_categories: "faq",
+    announcements: "announcements",
+    testimonials: "testimonials",
+    pages: "pages",
+    ads: "ads",
+    banners: "ads",
+    newsletters: "newsletter",
+    contact: "contact-form",
+    simple_sliders: "simple-slider",
+    locations: "locations",
+  };
+
+  // Build active plugin set. While pluginsData is loading, show everything (no flash)
+  const activePluginSlugs = new Set(
+    (pluginsData?.plugins ?? []).filter((p) => p.is_active === 1).map((p) => p.slug)
+  );
+
+  // Filter: hide permissions whose module belongs to an inactive plugin
+  const filteredPermissions = pluginsData
+    ? (permissionsData?.data ?? []).filter((p) => {
+        const pluginSlug = MODULE_PLUGIN_MAP[p.module ?? ""];
+        if (!pluginSlug) return true; // Core module — always visible
+        return activePluginSlugs.has(pluginSlug);
+      })
+    : (permissionsData?.data ?? []);
 
   const [expandedSubModules, setExpandedSubModules] = useState<Set<string>>(
     new Set(),
@@ -340,7 +375,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
 
   const toggleAllPermissions = (checked: boolean) => {
     if (checked) {
-      const all = new Set(permissionsData?.data?.map((p) => p.slug) || []);
+      const all = new Set(filteredPermissions.map((p) => p.slug));
       setSelectedPermissionKeys(all);
       // Uncheck all requires approval when selecting all permissions
       setApprovalSubModules({});
@@ -433,8 +468,8 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     updateRoleMutation.isPending ||
     assignPermissionsMutation.isPending;
 
-  // Group permissions by module slug
-  const groupedByModule = (permissionsData?.data || []).reduce(
+  // Group permissions by module slug (uses filtered list — inactive plugin modules excluded)
+  const groupedByModule = filteredPermissions.reduce(
     (acc, permission) => {
       const mod = permission.module || "other";
       if (!acc[mod]) acc[mod] = [];
@@ -473,7 +508,7 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     })
     .filter((g) => g.subModules.length > 0);
 
-  const allPermissions = permissionsData?.data || [];
+  const allPermissions = filteredPermissions;
   const allSelected =
     allPermissions.length > 0 &&
     allPermissions.every((p) => selectedPermissionKeys.has(p.slug));

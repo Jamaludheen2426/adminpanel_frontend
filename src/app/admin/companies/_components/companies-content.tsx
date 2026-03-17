@@ -29,11 +29,13 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { EditCompanyDialog } from '@/components/admin/companies/edit-company-dialog';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { cn } from '@/lib/utils';
 
 export function CompaniesContent() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
 
@@ -41,7 +43,7 @@ export function CompaniesContent() {
 
   const { data, isLoading, isFetching } = useCompanies({
     page,
-    limit: 10,
+    limit,
     search: debouncedSearch,
   });
 
@@ -242,31 +244,12 @@ export function CompaniesContent() {
               onDelete={(row) => setDeleteId(row.id)}
             />
 
-            {/* Pagination */}
-            {pagination && pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Page {pagination.page} of {pagination.totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(page - 1)}
-                    disabled={!pagination.hasPrevPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setPage(page + 1)}
-                    disabled={!pagination.hasNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
+            {pagination && (
+              <TablePagination
+                pagination={{ ...pagination, limit }}
+                onPageChange={setPage}
+                onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              />
             )}
           </CardContent>
         </Card>

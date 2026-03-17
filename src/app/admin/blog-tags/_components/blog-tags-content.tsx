@@ -6,11 +6,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Tag } from 'lucide-react';
 import {
-    useBlogTags, useCreateBlogTag, useUpdateBlogTag, useDeleteBlogTag, BlogTag
+    useBlogTags, useCreateBlogTag, useUpdateBlogTag, useUpdateBlogTagStatus, useDeleteBlogTag, BlogTag
 } from '@/hooks/use-blog-tags';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +20,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { DeleteDialog } from '@/components/common/delete-dialog';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -35,23 +38,27 @@ function generateSlug(name: string) {
 }
 
 export function BlogTagsContent() {
+    const isActive = useIsPluginActive('blog');
     const { t } = useTranslation();
-    const { data: rawTags = [], isLoading } = useBlogTags();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: tagsResponse, isLoading } = useBlogTags({ page, limit });
+    const rawTags: BlogTag[] = tagsResponse?.data ?? [];
+    const pagination = tagsResponse?.pagination;
     const tags = useMemo(() => rawTags.map(tag => ({
         ...tag,
-        is_active: tag.is_active === 1,
+        is_active: tag.is_active as boolean | number,
         created_at: (tag as any).createdAt ?? tag.created_at ?? "",
     })), [rawTags]);
     const createTag = useCreateBlogTag();
     const updateTag = useUpdateBlogTag();
+    const updateTagStatus = useUpdateBlogTagStatus();
     const deleteTag = useDeleteBlogTag();
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<BlogTag | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-    const [sortColumn, setSortColumn] = useState<string>('created_at');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -83,15 +90,6 @@ export function BlogTagsContent() {
         form.setValue('name', e.target.value);
         if (!slugManuallyEdited) {
             form.setValue('slug', generateSlug(e.target.value), { shouldValidate: true });
-        }
-    };
-
-    const handleSort = (column: string) => {
-        if (sortColumn === column) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortColumn(column);
-            setSortDirection('asc');
         }
     };
 
@@ -128,6 +126,8 @@ export function BlogTagsContent() {
 
     const isPending = createTag.isPending || updateTag.isPending;
 
+    if (!isActive) return <PluginDisabledState pluginName="Blog" pluginSlug="blog" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || isPending || deleteTag.isPending} />
@@ -159,14 +159,14 @@ export function BlogTagsContent() {
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_tags', 'No blog tags found.')}
-                        onStatusToggle={(row, val) => updateTag.mutate({ id: row.id, data: { is_active: val } })}
+                        onStatusToggle={(row, val) => updateTagStatus.mutate({ id: row.id, is_active: val })}
                         onEdit={(row) => openEdit(row as BlogTag)}
                         onDelete={(row) => setDeleteId(row.id)}
                         showCreated={true}
-                        sortColumn={sortColumn}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
+                        showStatus
+                        showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

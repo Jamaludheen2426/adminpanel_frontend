@@ -288,6 +288,31 @@ queryKeys.settings.group('general')
 ## Blog Post Form
 - **Content field:** Required — uses HTML-stripping refine (same pattern as announcements). Error message shown below editor.
 
+## Skills (Claude Code)
+Invoke with `/skill-name` in chat. All installed in `.claude/skills/`.
+
+| Skill | Command | Use when |
+|-------|---------|----------|
+| frontend-design | `/frontend-design` | Building a new page or component from scratch |
+| shadcn | `/shadcn` | Adding/using shadcn/ui components |
+| ui-ux-pro-max | `/ui-ux-pro-max` | Design review, colors, typography, UX audit |
+| audit-website | `/audit-website` | Performance, SEO, accessibility audit |
+| webapp-testing | `/webapp-testing` | Testing forms, CRUD flows, admin panel pages |
+| theme-factory | `/theme-factory` | Creating/updating dark & light themes |
+| brand-guidelines | `/brand-guidelines` | Visual consistency across modules |
+
+**Active theme:** Tech Innovation — dark gray `#1e1e1e` base + electric blue + neon cyan accents.
+
+## MCP Connectors
+Configured via `claude mcp add`. Manage with `claude mcp list` or `/mcp` inside Claude Code.
+
+| Connector | Purpose |
+|-----------|---------|
+| Gmail | Read/send emails from Claude Code |
+| Google Calendar | Manage calendar events |
+| claude-vscode | VSCode IDE integration |
+| Google Sheets *(optional)* | Export/import data — install via `claude mcp add --transport http googlesheets https://server.smithery.ai/googlesheets/mcp` |
+
 ## Common Issues & Patterns
 - **CORS/Cookie issues:** All API calls must go through `/api/proxy/` — never call backend directly from browser
 - **Company isolation:** Always pass `X-Company-Id` (handled automatically by `api-client.ts`)

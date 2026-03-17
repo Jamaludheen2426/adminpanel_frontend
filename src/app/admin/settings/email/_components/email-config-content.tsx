@@ -62,6 +62,7 @@ import { useEmailTemplates } from "@/hooks/use-email-templates";
 import type { EmailConfig, CreateEmailConfigDto } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from "@/components/common/table-pagination";
 
 const drivers = [
   { value: "smtp", label: "SMTP (Generic)", free: true },
@@ -90,7 +91,9 @@ const defaultForm: CreateEmailConfigDto = {
 };
 
 export function EmailConfigContent() {
-  const { data: configsData, isLoading } = useEmailConfigs();
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const { data: configsData, isLoading } = useEmailConfigs({ page, limit });
   const { data: templatesData } = useEmailTemplates();
   const createMutation = useCreateEmailConfig();
   const updateMutation = useUpdateEmailConfig();
@@ -371,84 +374,87 @@ export function EmailConfigContent() {
               </CardHeader>
               <CardContent>
                 {configs.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Driver</TableHead>
-                        <TableHead>From Email</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {configs.map((config) => (
-                        <TableRow key={config.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              {config.name}
-                              {config.is_default && (
-                                <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="capitalize">
-                              {config.driver}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {config.from_email}
-                          </TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={config.is_active}
-                              pending={
-                                (isApprovalRequired(toggleMutation.error) && toggleMutation.variables === config.id) ||
-                                (isApprovalRequired(updateMutation.error) && updateMutation.variables?.id === config.id)
-                              }
-                              onCheckedChange={() => handleToggleActive(config.id)}
-                              disabled={toggleMutation.isPending}
-                            />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => openTestDialog(config)}
-                                disabled={testMutation.isPending}
-                                title="Test Connection"
-                                className="bg-blue-500 hover:bg-blue-600 text-white"
-                              >
-                                <TestTube className="h-4 w-4 mr-1" />
-                                Test
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditDialog(config)}
-                                title="Edit"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="destructive-outline"
-                                size="icon"
-                                onClick={() => {
-                                  setDeletingId(config.id);
-                                  setDeleteDialogOpen(true);
-                                }}
-                                title="Delete"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Driver</TableHead>
+                          <TableHead>From Email</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {configs.map((config) => (
+                          <TableRow key={config.id}>
+                            <TableCell className="font-medium">
+                              <div className="flex items-center gap-2">
+                                {config.name}
+                                {config.is_default && (
+                                  <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="capitalize">
+                                {config.driver}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {config.from_email}
+                            </TableCell>
+                            <TableCell>
+                              <Switch
+                                checked={config.is_active}
+                                pending={
+                                  (isApprovalRequired(toggleMutation.error) && toggleMutation.variables === config.id) ||
+                                  (isApprovalRequired(updateMutation.error) && updateMutation.variables?.id === config.id)
+                                }
+                                onCheckedChange={() => handleToggleActive(config.id)}
+                                disabled={toggleMutation.isPending}
+                              />
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-1">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => openTestDialog(config)}
+                                  disabled={testMutation.isPending}
+                                  title="Test Connection"
+                                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                                >
+                                  <TestTube className="h-4 w-4 mr-1" />
+                                  Test
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => openEditDialog(config)}
+                                  title="Edit"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive-outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    setDeletingId(config.id);
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {configsData?.pagination && <TablePagination pagination={{ ...configsData.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
+                  </>
                 ) : (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">

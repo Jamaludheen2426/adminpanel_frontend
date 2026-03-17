@@ -6,12 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, FolderOpen } from 'lucide-react';
 import {
-    useBlogCategories, useCreateBlogCategory, useUpdateBlogCategory, useDeleteBlogCategory, BlogCategory
+    useBlogCategories, useCreateBlogCategory, useUpdateBlogCategory, useUpdateBlogCategoryStatus, useDeleteBlogCategory, BlogCategory
 } from '@/hooks/use-blog-categories';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { PageHeader } from '@/components/common/page-header';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import {
     TextInput,
@@ -27,6 +28,8 @@ import { ImageCropper } from '@/components/common/image-cropper';
 import { apiClient } from '@/lib/api-client';
 import { resolveMediaUrl } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -46,15 +49,21 @@ function generateSlug(name: string) {
 }
 
 export function BlogCategoriesContent() {
+    const isActive = useIsPluginActive('blog');
     const { t } = useTranslation();
-    const { data: rawCategories = [], isLoading } = useBlogCategories();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: categoriesResponse, isLoading } = useBlogCategories({ page, limit });
+    const rawCategories: BlogCategory[] = categoriesResponse?.data ?? [];
+    const pagination = categoriesResponse?.pagination;
     const categories = useMemo(() => rawCategories.map(cat => ({
         ...cat,
-        is_active: cat.is_active === 1,
+        is_active: cat.is_active as boolean | number,
         created_at: (cat as any).createdAt ?? cat.created_at ?? "",
     })), [rawCategories]);
     const createCategory = useCreateBlogCategory();
     const updateCategory = useUpdateBlogCategory();
+    const updateCategoryStatus = useUpdateBlogCategoryStatus();
     const deleteCategory = useDeleteBlogCategory();
 
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -64,8 +73,6 @@ export function BlogCategoriesContent() {
     const [cropperKey, setCropperKey] = useState(0);
     const [previewImageUrl, setPreviewImageUrl] = useState('');
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
-    const [sortColumn, setSortColumn] = useState<string>('created_at');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -143,15 +150,6 @@ export function BlogCategoriesContent() {
         }
     };
 
-    const handleSort = (column: string) => {
-        if (sortColumn === column) {
-            setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortColumn(column);
-            setSortDirection('asc');
-        }
-    };
-
     const columns: CommonColumn<any>[] = [
         {
             key: 'image',
@@ -192,6 +190,8 @@ export function BlogCategoriesContent() {
 
     const isPending = createCategory.isPending || updateCategory.isPending || isUploading;
 
+    if (!isActive) return <PluginDisabledState pluginName="Blog" pluginSlug="blog" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || createCategory.isPending || updateCategory.isPending || deleteCategory.isPending || isUploading} />
@@ -218,16 +218,14 @@ export function BlogCategoriesContent() {
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_categories', 'No blog categories found.')}
-                        onStatusToggle={(row, val) => updateCategory.mutate({ id: row.id, data: { is_active: val } })}
+                        onStatusToggle={(row, val) => updateCategoryStatus.mutate({ id: row.id, is_active: val })}
                         onEdit={(row) => openEdit(row as BlogCategory)}
                         onDelete={(row) => setDeleteId(row.id)}
                         showCreated={true}
                         showStatus
                         showActions
-                        sortColumn={sortColumn}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

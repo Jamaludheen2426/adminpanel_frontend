@@ -7,6 +7,7 @@ import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,6 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { resolveMediaUrl } from '@/lib/utils';
 import { BlogPostForm } from './blog-post-form';
 import { DeleteDialog } from '@/components/common/delete-dialog';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 // ─── normalise API row so CommonTable's created_at works ─────────────────────
 function normalise(post: BlogPost): BlogPost & { created_at: string } {
@@ -30,9 +33,13 @@ function normalise(post: BlogPost): BlogPost & { created_at: string } {
 // ─── Blog Posts Content ───────────────────────────────────────────────────────
 
 export function BlogPostsContent() {
+    const isActive = useIsPluginActive('blog');
     const { t } = useTranslation();
-    const { data: result, isLoading, isFetching } = useBlogPosts();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: result, isLoading, isFetching } = useBlogPosts({ page, limit });
     const rawPosts: BlogPost[] = result?.data ?? [];
+    const pagination = result?.pagination;
     const posts = rawPosts.map(normalise);
 
     const updatePost = useUpdateBlogPost();
@@ -103,6 +110,8 @@ export function BlogPostsContent() {
         },
     ];
 
+    if (!isActive) return <PluginDisabledState pluginName="Blog" pluginSlug="blog" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isFetching || createPost.isPending || updatePost.isPending || deletePost.isPending} />
@@ -142,6 +151,7 @@ export function BlogPostsContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

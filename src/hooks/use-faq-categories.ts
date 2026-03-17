@@ -18,9 +18,9 @@ export type CreateFaqCategoryDto = Omit<FaqCategory, 'id' | 'company_id' | 'crea
 export type UpdateFaqCategoryDto = Partial<CreateFaqCategoryDto>;
 
 const faqCategoriesApi = {
-    getAll: async (params?: Record<string, any>): Promise<FaqCategory[]> => {
-        const response = await apiClient.get('/faq-categories', { params: { limit: 200, ...params } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: FaqCategory[]; pagination: any }> => {
+        const response = await apiClient.get('/faq-categories', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number): Promise<FaqCategory> => {
         const response = await apiClient.get(`/faq-categories/${id}`);
@@ -43,6 +43,7 @@ export function useFaqCategories(params?: Record<string, any>) {
     return useQuery({
         queryKey: queryKeys.faqCategories.list(params ?? {}),
         queryFn: () => faqCategoriesApi.getAll(params),
+        staleTime: 2 * 60 * 1000,
     });
 }
 

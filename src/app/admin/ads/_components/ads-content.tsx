@@ -15,8 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 export function AdsContent() {
+    const isActive = useIsPluginActive('ads');
     const { t } = useTranslation();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
@@ -35,9 +39,10 @@ export function AdsContent() {
     });
 
     const rawAds: Ad[] = adsResponse?.data || [];
+    const pagination = adsResponse?.pagination;
     const ads = rawAds.map(ad => ({
         ...ad,
-        is_active: ad.is_active === 1,
+        is_active: ad.is_active as boolean | number,
         created_at: ad.created_at || new Date().toISOString()
     }));
 
@@ -176,6 +181,8 @@ export function AdsContent() {
         }
     };
 
+    if (!isActive) return <PluginDisabledState pluginName="Ads & Banners" pluginSlug="ads" />;
+
     return (
         <div className="space-y-6">
             <PageLoader open={isLoading || createAd.isPending || updateAd.isPending || deleteAd.isPending} />
@@ -209,6 +216,7 @@ export function AdsContent() {
                         showActions
                         emptyMessage={t('ads.no_ads', 'No ads found')}
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

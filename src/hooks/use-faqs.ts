@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 export interface Faq {
@@ -22,9 +22,9 @@ export type CreateFaqDto = Omit<Faq, 'id' | 'company_id' | 'category' | 'created
 export type UpdateFaqDto = Partial<CreateFaqDto>;
 
 const faqsApi = {
-    getAll: async (): Promise<Faq[]> => {
-        const response = await apiClient.get('/faqs', { params: { limit: 200 } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: Faq[]; pagination: any }> => {
+        const response = await apiClient.get('/faqs', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number): Promise<Faq> => {
         const response = await apiClient.get(`/faqs/${id}`);
@@ -45,10 +45,10 @@ const faqsApi = {
 
 const QUERY_KEY = ['faqs'];
 
-export function useFaqs() {
+export function useFaqs(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: faqsApi.getAll,
+        queryKey: [...QUERY_KEY, params ?? {}],
+        queryFn: () => faqsApi.getAll(params),
     });
 }
 
@@ -69,6 +69,10 @@ export function useCreateFaq() {
             toast.success('FAQ created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create FAQ');
         },
     });
@@ -84,6 +88,10 @@ export function useUpdateFaq() {
             toast.success('FAQ updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update FAQ');
         },
     });
@@ -98,6 +106,10 @@ export function useDeleteFaq() {
             toast.success('FAQ deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete FAQ');
         },
     });

@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { PageLoader } from '@/components/common/page-loader';
 import { DeleteDialog } from '@/components/common/delete-dialog';
+import { TablePagination } from '@/components/common/table-pagination';
 
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -36,7 +37,11 @@ type FormData = z.infer<typeof schema>;
 
 export function FaqCategoriesContent() {
     const { t } = useTranslation();
-    const { data: categories = [], isLoading } = useFaqCategories();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: categoriesResponse, isLoading } = useFaqCategories({ page, limit });
+    const rawCategories: FaqCategory[] = categoriesResponse?.data ?? [];
+    const pagination = categoriesResponse?.pagination;
     const createCategory = useCreateFaqCategory();
     const updateCategory = useUpdateFaqCategory();
     const deleteCategory = useDeleteFaqCategory();
@@ -147,7 +152,12 @@ export function FaqCategoriesContent() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {!isLoading && <DataTable columns={columns} data={categories} searchKey="name" />}
+                    {!isLoading && (
+                        <>
+                            <DataTable columns={columns} data={rawCategories} searchKey="name" />
+                            {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
+                        </>
+                    )}
                 </CardContent>
             </Card>
 

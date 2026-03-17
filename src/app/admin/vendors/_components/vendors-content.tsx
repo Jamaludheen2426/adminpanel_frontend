@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { resolveMediaUrl } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 
 const MEMBERSHIP_COLORS: Record<string, string> = {
     basic: 'bg-gray-100 text-gray-700',
@@ -121,7 +122,7 @@ function VendorDetailPane({ vendor, open, onClose }: { vendor: Vendor | null; op
 export function VendorsContent() {
     const router = useRouter();
     const [page, setPage] = useState(1);
-    const [limit] = useState(10);
+    const [limit, setLimit] = useState(10);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
@@ -242,16 +243,12 @@ export function VendorsContent() {
                         onDelete={(row) => setDeleteId(row.id)}
                         emptyMessage="No vendors found. Add your first vendor."
                     />
-                    {vendorsRes?.pagination && vendorsRes.pagination.totalPages > 1 && (
-                        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-                            <div>
-                                Showing {((page - 1) * limit) + 1}–{Math.min(page * limit, vendorsRes.pagination.totalItems)} of {vendorsRes.pagination.totalItems}
-                            </div>
-                            <div className="flex gap-1">
-                                <Button size="sm" variant="outline" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
-                                <Button size="sm" variant="outline" disabled={!vendorsRes.pagination.hasNextPage} onClick={() => setPage(p => p + 1)}>Next</Button>
-                            </div>
-                        </div>
+                    {vendorsRes?.pagination && (
+                        <TablePagination
+                            pagination={{ ...vendorsRes.pagination, limit }}
+                            onPageChange={setPage}
+                            onLimitChange={setLimit}
+                        />
                     )}
                 </CardContent>
             </Card>

@@ -30,9 +30,9 @@ export type UpdateMenuDto = Partial<CreateMenuDto>;
 const QUERY_KEY = ['menus'];
 
 const menusApi = {
-    getAll: async (): Promise<Menu[]> => {
-        const response = await apiClient.get('/menus', { params: { limit: 200 } });
-        return Array.isArray(response.data.data) ? response.data.data : [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: Menu[]; pagination: any }> => {
+        const response = await apiClient.get('/menus', { params: { page: 1, limit: 10, ...params } });
+        return { data: Array.isArray(response.data.data) ? response.data.data : [], pagination: response.data.pagination };
     },
     getById: async (id: number | string): Promise<Menu> => {
         const response = await apiClient.get(`/menus/${id}`);
@@ -59,10 +59,10 @@ const menusApi = {
     },
 };
 
-export function useMenus() {
+export function useMenus(params?: Record<string, any>) {
     return useQuery({
-        queryKey: QUERY_KEY,
-        queryFn: menusApi.getAll,
+        queryKey: [...QUERY_KEY, params ?? {}],
+        queryFn: () => menusApi.getAll(params),
     });
 }
 
@@ -83,7 +83,10 @@ export function useCreateMenu() {
             toast.success('Menu created successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create menu');
         },
     });
@@ -99,7 +102,10 @@ export function useUpdateMenu() {
             toast.success('Menu updated successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update menu');
         },
     });
@@ -139,7 +145,10 @@ export function useDeleteMenu() {
             toast.success('Menu deleted successfully');
         },
         onError: (error: any) => {
-            if (isApprovalRequired(error)) return;
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete menu');
         },
     });

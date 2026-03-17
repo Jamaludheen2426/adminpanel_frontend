@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useApprovals } from '@/hooks/use-approvals';
 import type { ApprovalRequest } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -15,11 +14,12 @@ import {
 } from '@/components/ui/select';
 import { ApprovalBadge } from '@/components/admin/approvals/approval-badge';
 import { ApprovalDetailDialog } from '@/components/admin/approvals/approval-detail-dialog';
-import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { PageLoader } from '@/components/common/page-loader';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
+import { TablePagination } from '@/components/common/table-pagination';
 
 export function ApprovalsContent() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -28,6 +28,7 @@ export function ApprovalsContent() {
   const [moduleFilter, setModuleFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const debouncedSearch = useDebounce(searchQuery, 300);
 
   const filters = {
@@ -41,7 +42,7 @@ export function ApprovalsContent() {
         : undefined,
     module_slug: moduleFilter !== 'all' ? moduleFilter : undefined,
     page: currentPage,
-    limit: 10,
+    limit,
   };
 
   const { data, isLoading } = useApprovals(filters);
@@ -187,33 +188,12 @@ export function ApprovalsContent() {
               />
             )}
 
-            {data && data.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4">
-                <div className="text-sm text-muted-foreground">
-                  Page {data.pagination.page} of {data.pagination.totalPages}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={!data.pagination.hasPrevPage}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={!data.pagination.hasNextPage}
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+            {data?.pagination && (
+              <TablePagination
+                pagination={{ ...data.pagination, limit }}
+                onPageChange={setCurrentPage}
+                onLimitChange={(newLimit) => { setLimit(newLimit); setCurrentPage(1); }}
+              />
             )}
           </CardContent>
         </Card>

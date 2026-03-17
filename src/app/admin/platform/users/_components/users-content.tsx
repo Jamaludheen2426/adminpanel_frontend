@@ -34,6 +34,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
+import { TablePagination } from "@/components/common/table-pagination";
 import {
   Popover,
   PopoverContent,
@@ -49,6 +50,7 @@ export function UsersContent() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const debouncedSearch = useDebounce(search, 300);
   const [sort, setSort] = useState<{ column: string; direction: "ASC" | "DESC" } | null>({
     column: "full_name",
@@ -65,7 +67,7 @@ export function UsersContent() {
 
   const { data, isLoading, isFetching } = useUsers({
     page,
-    limit: 10,
+    limit,
     search: debouncedSearch,
     sort_by: sort?.column,
     sort_order: sort?.direction,
@@ -277,32 +279,12 @@ export function UsersContent() {
               disableStatusToggle={(row) => isSuperAdminOrDeveloper(row)}
             />
 
-            {data?.pagination && data.pagination.totalPages > 1 && (
-              <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground">
-                <p>
-                  Page {data.pagination.page} / {data.pagination.totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[10px]"
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={!data.pagination.hasPrevPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-[10px]"
-                    onClick={() => setPage((p) => p + 1)}
-                    disabled={!data.pagination.hasNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
+            {data?.pagination && (
+              <TablePagination
+                pagination={{ ...data.pagination, limit }}
+                onPageChange={setPage}
+                onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              />
             )}
           </CardContent>
         </Card>

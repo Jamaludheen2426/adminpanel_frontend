@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
@@ -63,7 +63,13 @@ export const useCreateAdBanner = () => {
             qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner created successfully');
         },
-        onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to create banner'),
+        onError: (e: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(e)) {
+                qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
+                return;
+            }
+            toast.error(e?.response?.data?.message || 'Failed to create banner');
+        },
     });
 };
 
@@ -79,7 +85,13 @@ export const useUpdateAdBanner = () => {
             qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner updated successfully');
         },
-        onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to update banner'),
+        onError: (e: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(e)) {
+                qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
+                return;
+            }
+            toast.error(e?.response?.data?.message || 'Failed to update banner');
+        },
     });
 };
 
@@ -95,6 +107,12 @@ export const useDeleteAdBanner = () => {
             qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
             toast.success('Banner deleted successfully');
         },
-        onError: (e: any) => toast.error(e?.response?.data?.message || 'Failed to delete banner'),
+        onError: (e: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(e)) {
+                qc.invalidateQueries({ queryKey: queryKeys.adBanners.all });
+                return;
+            }
+            toast.error(e?.response?.data?.message || 'Failed to delete banner');
+        },
     });
 };

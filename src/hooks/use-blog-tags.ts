@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
@@ -17,9 +17,9 @@ export type CreateBlogTagDto = Omit<BlogTag, 'id' | 'company_id' | 'created_at' 
 export type UpdateBlogTagDto = Partial<CreateBlogTagDto>;
 
 const blogTagsApi = {
-    getAll: async (): Promise<BlogTag[]> => {
-        const response = await apiClient.get('/blog-tags', { params: { limit: 500 } });
-        return response.data.data || [];
+    getAll: async (params?: Record<string, any>): Promise<{ data: BlogTag[]; pagination: any }> => {
+        const response = await apiClient.get('/blog-tags', { params: { page: 1, limit: 10, ...params } });
+        return { data: response.data.data || [], pagination: response.data.pagination };
     },
     getById: async (id: number): Promise<BlogTag> => {
         const response = await apiClient.get(`/blog-tags/${id}`);
@@ -33,15 +33,19 @@ const blogTagsApi = {
         const response = await apiClient.put(`/blog-tags/${id}`, data);
         return response.data.data?.blogTag || response.data.blogTag;
     },
+    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<BlogTag> => {
+        const response = await apiClient.patch(`/blog-tags/${id}/status`, { is_active });
+        return response.data.data?.blogTag || response.data.blogTag;
+    },
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/blog-tags/${id}`);
     },
 };
 
-export function useBlogTags() {
+export function useBlogTags(params?: Record<string, any>) {
     return useQuery({
-        queryKey: queryKeys.blogTags.list({}),
-        queryFn: blogTagsApi.getAll,
+        queryKey: queryKeys.blogTags.list(params ?? {}),
+        queryFn: () => blogTagsApi.getAll(params),
         staleTime: 2 * 60 * 1000,
     });
 }
@@ -63,6 +67,10 @@ export function useCreateBlogTag() {
             toast.success('Blog tag created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create blog tag');
         },
     });
@@ -78,7 +86,24 @@ export function useUpdateBlogTag() {
             toast.success('Blog tag updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update blog tag');
+        },
+    });
+}
+
+export function useUpdateBlogTagStatus() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: blogTagsApi.updateStatus,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to update status');
         },
     });
 }
@@ -92,6 +117,10 @@ export function useDeleteBlogTag() {
             toast.success('Blog tag deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogTags.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete blog tag');
         },
     });

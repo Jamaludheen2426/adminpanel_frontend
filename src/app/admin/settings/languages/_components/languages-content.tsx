@@ -56,6 +56,7 @@ import { isApprovalRequired } from "@/lib/api-client";
 import { HelpCircle } from "lucide-react";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { useServerSort } from "@/hooks/use-server-sort";
 import { SortHead } from "@/components/ui/sort-head";
 
@@ -63,6 +64,7 @@ export function LanguagesContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const { sort_by, sort_order, handleSort } = useServerSort('name');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
@@ -75,7 +77,7 @@ export function LanguagesContent() {
     name: string;
   } | null>(null);
 
-  const { data, isLoading, isFetching } = useLanguages({ page, limit: 10, search, sort_by, sort_order });
+  const { data, isLoading, isFetching } = useLanguages({ page, limit, search, sort_by, sort_order });
   const deleteLanguageMutation = useDeleteLanguage();
   const setDefaultMutation = useSetDefaultLanguage();
   const translateAllMutation = useTranslateAllToLanguage();
@@ -388,31 +390,8 @@ export function LanguagesContent() {
                   </TableBody>
                 </Table>
 
-                {data?.pagination && data.pagination.totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4">
-                    <p className="text-sm text-muted-foreground">
-                      {t("common.page", "Page")} {data.pagination.page} /{" "}
-                      {data.pagination.totalPages}
-                    </p>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={!data.pagination.hasPrevPage}
-                      >
-                        {t("common.previous", "Previous")}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => p + 1)}
-                        disabled={!data.pagination.hasNextPage}
-                      >
-                        {t("common.next", "Next")}
-                      </Button>
-                    </div>
-                  </div>
+                {data?.pagination && (
+                  <TablePagination pagination={{ ...data.pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />
                 )}
               </CardContent>
             </Card>

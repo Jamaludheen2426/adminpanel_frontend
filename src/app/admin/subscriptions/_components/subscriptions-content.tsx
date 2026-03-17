@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { RichTextEditor } from '@/components/common/rich-text-editor';
 
@@ -33,7 +34,10 @@ const schema = z.object({
     name: z.string().trim().min(1, 'Plan name is required'),
     description: z.string().default(''),
     menu_ids: z.array(z.number()).default([]),
-    price: z.coerce.number().min(0, 'Price must be 0 or more'),
+    price: z.preprocess(
+        (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+        z.number({ required_error: 'Price is required' }).min(0, 'Price must be 0 or more')
+    ),
     validity: z.coerce.number().int().min(0).default(0),
     features: z.string().default(''),
     sort_order: z.coerce.number().int().min(0).default(0),
@@ -53,8 +57,13 @@ function normalise(item: Subscription): Subscription & { created_at: string; is_
 
 export function SubscriptionsContent() {
     const { t } = useTranslation();
-    const { data: raw = [], isLoading } = useSubscriptions();
-    const { data: menus = [] } = useMenus();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: subsResponse, isLoading } = useSubscriptions({ page, limit });
+    const raw: Subscription[] = subsResponse?.data ?? [];
+    const pagination = subsResponse?.pagination;
+    const { data: menusResponse } = useMenus({ limit: 200 });
+    const menus = menusResponse?.data ?? [];
     const subscriptions = useMemo(() => raw.map(normalise), [raw]);
 
     const createSubscription = useCreateSubscription();
@@ -70,7 +79,7 @@ export function SubscriptionsContent() {
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: {
-            name: '', description: '', menu_ids: [], price: 0,
+            name: '', description: '', menu_ids: [], price: undefined,
             validity: 0, features: '', sort_order: 0, is_active: true,
         },
     });
@@ -84,7 +93,7 @@ export function SubscriptionsContent() {
 
     const openCreate = () => {
         setEditItem(null);
-        form.reset({ name: '', description: '', menu_ids: [], price: 0, validity: 0, features: '', sort_order: 0, is_active: true });
+        form.reset({ name: '', description: '', menu_ids: [], price: undefined, validity: 0, features: '', sort_order: 0, is_active: true });
         setDialogOpen(true);
     };
 
@@ -198,6 +207,7 @@ export function SubscriptionsContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

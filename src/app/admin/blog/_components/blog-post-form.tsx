@@ -181,8 +181,10 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
     );
     const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!defaultValues?.slug);
 
-    const { data: categories = [] } = useBlogCategories();
-    const { data: tags = [] } = useBlogTags();
+    const { data: categoriesResponse } = useBlogCategories({ limit: 500 });
+    const categories = categoriesResponse?.data ?? [];
+    const { data: tagsResponse } = useBlogTags({ limit: 500 });
+    const tags = tagsResponse?.data ?? [];
     const { data: usersResult } = useUsers({ limit: 200 });
     const users = usersResult?.data ?? [];
 

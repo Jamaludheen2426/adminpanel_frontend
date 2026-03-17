@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
@@ -63,7 +63,11 @@ export const useCreateAd = () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad created successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create ad');
         },
     });
@@ -80,7 +84,11 @@ export const useUpdateAd = () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad updated successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update ad');
         },
     });
@@ -97,7 +105,11 @@ export const useDeleteAd = () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
             toast.success('Ad deleted successfully');
         },
-        onError: (error: any) => {
+        onError: (error: Error & { response?: { data?: { message?: string } } }) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.ads.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete ad');
         },
     });

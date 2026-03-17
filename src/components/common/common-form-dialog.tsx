@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -70,10 +70,14 @@ export function CommonFormDialog({
         defaultValues,
     });
 
-    // Reset form when dialog opens with new defaultValues
+    // Reset form whenever the dialog opens so edit data is always loaded
+    useEffect(() => {
+        if (open) reset(defaultValues);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open]);
+
     const handleOpenChange = (val: boolean) => {
-        if (val) reset(defaultValues);
-        else reset(defaultValues);
+        if (!val) reset(defaultValues);
         onOpenChange(val);
     };
 

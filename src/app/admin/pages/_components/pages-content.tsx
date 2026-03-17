@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { PageLoader } from '@/components/common/page-loader';
+import { TablePagination } from '@/components/common/table-pagination';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 function normalise(item: Page): Page & { created_at: string; is_active: boolean } {
     return {
@@ -20,9 +23,13 @@ function normalise(item: Page): Page & { created_at: string; is_active: boolean 
 }
 
 export function PagesContent() {
+    const isActive = useIsPluginActive('pages');
     const router = useRouter();
-    const { data: result, isLoading } = usePages();
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const { data: result, isLoading } = usePages({ page, limit });
     const rawPages: Page[] = result?.data ?? (Array.isArray(result) ? result : []);
+    const pagination = result?.pagination;
     const pages = useMemo(() => rawPages.map(normalise), [rawPages]);
 
     const deletePage = useDeletePage();
@@ -58,6 +65,8 @@ export function PagesContent() {
             ),
         },
     ];
+
+    if (!isActive) return <PluginDisabledState pluginName="Pages" pluginSlug="pages" />;
 
     return (
         <>
@@ -98,6 +107,7 @@ export function PagesContent() {
                         showCreated
                         showActions
                     />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

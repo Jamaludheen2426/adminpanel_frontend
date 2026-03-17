@@ -31,6 +31,7 @@ import {
 import { EmailTemplate } from "@/types";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from "@/components/common/page-loader";
+import { TablePagination } from "@/components/common/table-pagination";
 
 const templateSchema = z.object({
   name: z.string().trim().min(2, "Template name required"),
@@ -43,6 +44,8 @@ const templateSchema = z.object({
 type TemplateFormData = z.infer<typeof templateSchema>;
 
 export function EmailTemplatesContent() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSendTestOpen, setIsSendTestOpen] = useState(false);
@@ -55,7 +58,7 @@ export function EmailTemplatesContent() {
     body: string;
   } | null>(null);
 
-  const { data: templatesData, isLoading } = useEmailTemplates();
+  const { data: templatesData, isLoading } = useEmailTemplates({ page, limit });
   const createMutation = useCreateEmailTemplate();
   const updateMutation = useUpdateEmailTemplate();
   const deleteMutation = useDeleteEmailTemplate();
@@ -177,7 +180,8 @@ export function EmailTemplatesContent() {
     }
   ];
 
-  const templates = templatesData?.data || [];
+  const templates: EmailTemplate[] = templatesData?.data || [];
+  const pagination = templatesData?.pagination;
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || previewMutation.isPending || sendMutation.isPending;
 
   return (
@@ -389,6 +393,13 @@ export function EmailTemplatesContent() {
               showActions
               emptyMessage="No templates created yet"
             />
+            {pagination && (
+              <TablePagination
+                pagination={{ ...pagination, limit }}
+                onPageChange={setPage}
+                onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+              />
+            )}
           </CardContent>
         </Card>
 

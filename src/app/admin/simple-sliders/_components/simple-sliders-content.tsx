@@ -15,10 +15,14 @@ import { PageLoader } from '@/components/common/page-loader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { DeleteDialog } from '@/components/common/delete-dialog';
+import { TablePagination } from '@/components/common/table-pagination';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useIsPluginActive } from '@/hooks/use-plugins';
+import { PluginDisabledState } from '@/components/common/plugin-disabled';
 
 export function SimpleSlidersContent() {
+    const isActive = useIsPluginActive('simple-slider');
     const router = useRouter();
     const { t } = useTranslation();
 
@@ -84,6 +88,8 @@ export function SimpleSlidersContent() {
         created_at: item.created_at || new Date().toISOString(),
     }));
 
+    if (!isActive) return <PluginDisabledState pluginName="Simple Slider" pluginSlug="simple-slider" />;
+
     return (
         <>
             <PageLoader open={isLoading || isDeleting} />
@@ -116,17 +122,14 @@ export function SimpleSlidersContent() {
                         showStatus={false}
                         showCreated={false}
                         showActions={true}
-                        pagination={
-                            pagination && {
-                                page: pagination.page,
-                                pageSize: pagination.limit,
-                                totalItems: pagination.totalItems,
-                                totalPages: pagination.totalPages,
-                                onPageChange: setPage,
-                                onPageSizeChange: setLimit,
-                            }
-                        }
                     />
+                    {pagination && (
+                        <TablePagination
+                            pagination={{ ...pagination, limit }}
+                            onPageChange={setPage}
+                            onLimitChange={(newLimit) => { setLimit(newLimit); setPage(1); }}
+                        />
+                    )}
                 </CardContent>
             </Card>
 
