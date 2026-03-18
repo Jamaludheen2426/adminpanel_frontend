@@ -5,7 +5,6 @@ import { Pencil, Trash2, ArrowUpDown, ChevronDown, ChevronUp, Search, ChevronLef
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -27,7 +26,7 @@ export interface CommonColumn<T> {
 }
 
 interface CommonTableProps<
-  T extends { id: number; is_active: boolean | number; created_at: string }
+  T extends { id: number; is_active: boolean | number; created_at: string; has_pending_approval?: boolean }
 > {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: CommonColumn<any>[];
@@ -71,7 +70,7 @@ function formatDate(dateStr: string): string {
 }
 
 export function CommonTable<
-  T extends { id: number; is_active: boolean | number; created_at: string }
+  T extends { id: number; is_active: boolean | number; created_at: string; has_pending_approval?: boolean }
 >({
   columns,
   data,
@@ -249,17 +248,12 @@ export function CommonTable<
 
                     {showStatus && (
                       <TableCell className="px-5 py-4">
-                        {row.is_active === 2 ? (
-                          <Badge variant="outline" className="text-amber-600 border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-800 text-[11px] font-medium px-2 py-0.5">
-                            Pending
-                          </Badge>
-                        ) : (
-                          <Switch
-                            checked={Boolean(row.is_active)}
-                            onCheckedChange={(val) => onStatusToggle?.(row, val)}
-                            disabled={!onStatusToggle || (disableStatusToggle?.(row) ?? false)}
-                          />
-                        )}
+                        <Switch
+                          pending={Number(row.is_active) === 2 || !!row.has_pending_approval}
+                          checked={Number(row.is_active) === 1}
+                          onCheckedChange={(val) => onStatusToggle?.(row, val)}
+                          disabled={!onStatusToggle || (disableStatusToggle?.(row) ?? false)}
+                        />
                       </TableCell>
                     )}
 
