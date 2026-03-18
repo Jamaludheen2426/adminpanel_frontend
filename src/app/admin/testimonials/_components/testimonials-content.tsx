@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Pencil, Trash2, User, Building } from 'lucide-react';
+import { Plus, Pencil, Trash2, User, Building, Clock } from 'lucide-react';
 import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial, Testimonial } from '@/hooks/use-testimonials';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
@@ -41,10 +41,10 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: Testimonial): Testimonial & { created_at: string; is_active: boolean } {
+function normalise(item: Testimonial) {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: item.is_active,   // keep raw value (2 = pending)
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
 }
@@ -181,6 +181,27 @@ export function TestimonialsContent() {
                 </div>
             ),
         },
+        {
+            key: 'is_active',
+            header: t('common.status', 'Status'),
+            render: (row) => {
+                if (Number(row.is_active) === 2) {
+                    return (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800">
+                            <Clock className="h-3 w-3" /> Pending
+                        </span>
+                    );
+                }
+                return (
+                    <Switch
+                        checked={Boolean(row.is_active)}
+                        onCheckedChange={(val) =>
+                            updateTestimonial.mutate({ id: row.id, data: { is_active: val } })
+                        }
+                    />
+                );
+            },
+        },
     ];
 
     const isPending = createTestimonial.isPending || updateTestimonial.isPending || isUploading;
@@ -209,12 +230,8 @@ export function TestimonialsContent() {
                         data={testimonials as any}
                         isLoading={isLoading}
                         emptyMessage={t('testimonial.no_results', 'No testimonials found.')}
-                        onStatusToggle={(row, val) =>
-                            updateTestimonial.mutate({ id: row.id, data: { is_active: val } })
-                        }
-                        onEdit={openEdit}
+                        onEdit={(row) => Number(row.is_active) !== 2 && openEdit(row)}
                         onDelete={(row) => setDeleteId(row.id)}
-                        showStatus
                         showCreated
                         showActions
                     />
