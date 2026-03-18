@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { useFaqs, useCreateFaq, useUpdateFaq, useDeleteFaq, Faq } from '@/hooks/use-faqs';
+import { isApprovalRequired } from '@/lib/api-client';
 import { useFaqCategories } from '@/hooks/use-faq-categories';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
@@ -117,10 +118,11 @@ export function FaqsContent() {
     };
 
     const onSubmit = (data: FormData) => {
+        const onError = (error: any) => { if (isApprovalRequired(error)) closeDialog(); };
         if (editItem) {
-            updateFaq.mutate({ id: editItem.id, data }, { onSuccess: closeDialog });
+            updateFaq.mutate({ id: editItem.id, data }, { onSuccess: closeDialog, onError });
         } else {
-            createFaq.mutate(data, { onSuccess: closeDialog });
+            createFaq.mutate(data, { onSuccess: closeDialog, onError });
         }
     };
 

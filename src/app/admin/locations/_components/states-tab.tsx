@@ -113,7 +113,7 @@ export function StatesTab() {
   const { data: pageData, isLoading } = useStatesPaginated({
     page, limit: PAGE_SIZE, search: search || undefined,
     ...(filterCountryId !== "all" ? { country_id: Number(filterCountryId) } : {}),
-    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
   } as any);
   const states = pageData?.data ?? [];
   const pagination = pageData?.pagination;

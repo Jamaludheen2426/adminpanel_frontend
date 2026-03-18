@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 
@@ -64,6 +64,10 @@ export function useCreateFaqCategory() {
             toast.success('FAQ Category created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create FAQ Category');
         },
     });
@@ -79,6 +83,10 @@ export function useUpdateFaqCategory() {
             toast.success('FAQ Category updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update FAQ Category');
         },
     });
@@ -93,6 +101,10 @@ export function useDeleteFaqCategory() {
             toast.success('FAQ Category deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete FAQ Category');
         },
     });

@@ -147,7 +147,7 @@ export function LocalitiesTab() {
         : filterCountryId !== 'all'
           ? { country_id: Number(filterCountryId) }
           : {}),
-    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
   } as any);
   const localities = (pageData?.data ?? []) as LocalityWithNested[];
   const pagination = pageData?.pagination;

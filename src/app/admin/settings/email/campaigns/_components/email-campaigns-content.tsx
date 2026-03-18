@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
+import { isApprovalRequired } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -168,22 +169,22 @@ export function EmailCampaignsContent() {
   };
 
   const handleSubmit = () => {
+    const onError = (e: any) => { if (isApprovalRequired(e)) setDialogOpen(false); };
     if (editingCampaign) {
       updateMutation.mutate(
         { id: editingCampaign.id, data: form },
-        { onSuccess: () => setDialogOpen(false) },
+        { onSuccess: () => setDialogOpen(false), onError },
       );
     } else {
-      createMutation.mutate(form, { onSuccess: () => setDialogOpen(false) });
+      createMutation.mutate(form, { onSuccess: () => setDialogOpen(false), onError });
     }
   };
 
   const handleDelete = () => {
     if (deletingId) {
       deleteMutation.mutate(deletingId, {
-        onSuccess: () => {
-          setDeletingId(null);
-        },
+        onSuccess: () => setDeletingId(null),
+        onError: () => setDeletingId(null),
       });
     }
   };

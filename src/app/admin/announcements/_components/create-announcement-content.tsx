@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/use-translation';
 import { useCreateAnnouncement } from '@/hooks/use-announcements';
+import { isApprovalRequired } from '@/lib/api-client';
 import { AnnouncementForm } from './announcement-form';
 
 export function CreateAnnouncementContent() {
@@ -21,6 +22,7 @@ export function CreateAnnouncementContent() {
                 onSave={(data, exitAfter) => {
                     create.mutate(data, {
                         onSuccess: () => { if (exitAfter) router.push('/admin/announcements'); },
+                        onError: (e) => { if (isApprovalRequired(e)) router.push('/admin/announcements'); },
                     });
                 }}
             />

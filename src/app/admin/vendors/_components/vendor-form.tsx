@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { useCreateVendor, useUpdateVendor, Vendor } from '@/hooks/use-vendors';
+import { isApprovalRequired } from '@/lib/api-client';
 import { CommonForm, CommonFormSection } from '@/components/common/common-form';
 import { Building2, User, Landmark, Share2, Globe, Youtube, Facebook, Instagram, Twitter, Linkedin, MessageCircle, Music, Send, Bookmark } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,7 @@ import { useCountries, useStates, useCities, useLocalities } from '@/hooks/use-l
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import dynamic from 'next/dynamic';
+import { resolveMediaUrl } from '@/lib/utils';
 
 const MapPicker = dynamic(
     () => import('@/components/common/map-picker').then(m => m.MapPicker),
@@ -242,11 +244,14 @@ export function VendorForm({ vendor }: Props) {
                     label: 'Office Location on Map',
                     type: 'custom',
                     colSpan: 2,
-                    render: ({ setValue }) => (
+                    render: ({ setValue, watch }) => (
                         <MapPicker
                             label="Office Location on Map"
                             value={mapCoords}
                             flyToQuery={mapFlyQuery || undefined}
+                            logo={watch('company_logo') ? resolveMediaUrl(watch('company_logo')!) : undefined}
+                            companyName={watch('company_name') || undefined}
+                            city={selCityName || selDistrictName || selStateName || undefined}
                             onChange={(coords) => {
                                 setMapCoords(coords);
                                 setValue('latitude',  coords?.lat ?? null);
@@ -461,10 +466,11 @@ export function VendorForm({ vendor }: Props) {
         payload.latitude = mapCoords?.lat ?? null;
         payload.longitude = mapCoords?.lng ?? null;
 
+        const onError = (e: any) => { if (isApprovalRequired(e)) router.push('/admin/vendors'); };
         if (isEdit && vendor) {
-            update.mutate({ id: vendor.id, data: payload }, { onSuccess: () => router.push('/admin/vendors') });
+            update.mutate({ id: vendor.id, data: payload }, { onSuccess: () => router.push('/admin/vendors'), onError });
         } else {
-            create.mutate(payload, { onSuccess: () => router.push('/admin/vendors') });
+            create.mutate(payload, { onSuccess: () => router.push('/admin/vendors'), onError });
         }
     };
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCreateBlogPost } from '@/hooks/use-blog-posts';
+import { isApprovalRequired } from '@/lib/api-client';
 import { BlogPostForm } from './blog-post-form';
 import { useTranslation } from '@/hooks/use-translation';
 import { PageLoader } from '@/components/common/page-loader';
@@ -20,11 +21,14 @@ export function CreateBlogPostContent() {
             </div>
             <BlogPostForm
                 isPending={create.isPending}
-                onSave={(data) =>
-                    create.mutate(data, {
-                        onSuccess: () => router.push('/admin/blog'),
-                    })
-                }
+                onSave={async (data) => {
+                    try {
+                        await create.mutateAsync(data);
+                        router.push('/admin/blog');
+                    } catch (e) {
+                        if (isApprovalRequired(e)) router.push('/admin/blog');
+                    }
+                }}
             />
         </div>
     );

@@ -159,7 +159,7 @@ export type BlogPostFormData = z.infer<typeof schema>;
 
 interface BlogPostFormProps {
     defaultValues?: Partial<BlogPost>;
-    onSave: (data: BlogPostFormData) => void;
+    onSave: (data: BlogPostFormData) => Promise<void>;
     isPending: boolean;
 }
 
@@ -188,7 +188,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
     const { data: usersResult } = useUsers({ limit: 200 });
     const users = usersResult?.data ?? [];
 
-    const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<BlogPostFormData>({
+    const { register, control, handleSubmit, setValue, watch, trigger, setError, formState: { errors } } = useForm<BlogPostFormData>({
         resolver: zodResolver(schema),
         defaultValues: {
             title: defaultValues?.title ?? '',
@@ -212,7 +212,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
     const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setValue('title', e.target.value);
         if (!slugManuallyEdited) {
-            setValue('slug', generateSlug(e.target.value), { shouldValidate: true });
+            setValue('slug', generateSlug(e.target.value));
         }
     };
 
@@ -241,8 +241,21 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
     const toggleId = (ids: number[], id: number): number[] =>
         ids.includes(id) ? ids.filter((i) => i !== id) : [...ids, id];
 
+    const onSubmit = async (data: BlogPostFormData) => {
+        try {
+            await onSave(data);
+        } catch (err: any) {
+            const message: string = err?.response?.data?.message || err?.message || 'Failed to save';
+            if (message.toLowerCase().includes('slug')) {
+                setError('slug', { type: 'server', message });
+            } else {
+                toast.error(message);
+            }
+        }
+    };
+
     return (
-        <form onSubmit={handleSubmit(onSave)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
             {/* Title + Slug — 2 col */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,8 +281,9 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
                         {...register('slug')}
                         onChange={(e) => {
                             setSlugManuallyEdited(true);
-                            setValue('slug', e.target.value, { shouldValidate: true });
+                            setValue('slug', e.target.value);
                         }}
+                        onBlur={() => trigger('slug')}
                     />
                     {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
                 </div>

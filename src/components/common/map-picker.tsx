@@ -17,6 +17,12 @@ interface MapPickerProps {
     label?: string;
     /** When this string changes the map silently geocodes it and flies to the area (no pin dropped). */
     flyToQuery?: string;
+    /** Company logo URL — shown as pin background image */
+    logo?: string;
+    /** Company name shown inside the pin */
+    companyName?: string;
+    /** City name shown inside the pin */
+    city?: string;
 }
 
 const DEFAULT_CENTER: LatLng = { lat: 20.5937, lng: 78.9629 }; // India centre
@@ -26,19 +32,46 @@ const AREA_ZOOM    = 10; // zoom used when auto-centering on a selected region
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function buildPinIcon(L: any) {
+function buildPinIcon(L: any, opts?: { logo?: string; companyName?: string; city?: string }) {
+    const { logo, companyName, city } = opts ?? {};
+
+    const name    = companyName ? companyName.slice(0, 16) + (companyName.length > 16 ? '…' : '') : 'Vendor';
+    const cityStr = city        ? city.slice(0, 16)        + (city.length        > 16 ? '…' : '') : '';
+
+    // Ensure absolute URL — CSS background-image needs absolute URL in Leaflet DOM
+    const logoUrl = logo
+        ? (logo.startsWith('http') ? logo : `${window.location.origin}${logo.startsWith('/') ? '' : '/'}${logo}`)
+        : null;
+
+    const iconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>`;
+
+    const avatar = logoUrl
+        ? `<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;border:2px solid rgba(255,255,255,0.8);flex-shrink:0;background:#1e3a8a;">
+            <img src="${logoUrl}" width="32" height="32" style="object-fit:cover;width:32px;height:32px;display:block;" onerror="this.parentNode.innerHTML='${iconSvg.replace(/"/g, "&quot;")}';" />
+           </div>`
+        : `<div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;flex-shrink:0;">${iconSvg}</div>`;
+
+    // 80px wide × 100px tall SVG teardrop
+    const html = `
+      <div style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.45));font-family:sans-serif;position:relative;width:80px;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" width="80" height="100" style="display:block;">
+          <path d="M40 2 C20 2 4 18 4 38 C4 58 40 98 40 98 C40 98 76 58 76 38 C76 18 60 2 40 2 Z" fill="white"/>
+          <path d="M40 6 C22 6 8 20 8 38 C8 56 40 94 40 94 C40 94 72 56 72 38 C72 20 58 6 40 6 Z" fill="#1d4ed8"/>
+        </svg>
+        <div style="position:absolute;top:0;left:0;width:80px;height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">
+          ${avatar}
+          <div style="text-align:center;padding:0 6px;width:100%;">
+            <div style="font-size:9px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+            ${cityStr ? `<div style="font-size:8px;color:rgba(255,255,255,0.82);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📍 ${cityStr}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+
     return L.divIcon({
-        html: `<div style="
-            width:36px;height:36px;
-            background:hsl(221.2 83.2% 53.3%);
-            border:3px solid white;
-            border-radius:50% 50% 50% 0;
-            transform:rotate(-45deg);
-            box-shadow:0 2px 8px rgba(0,0,0,0.35);
-        "></div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
-        className: '',
+        html,
+        iconSize:   [80, 100],
+        iconAnchor: [40, 100],
+        className:  '',
     });
 }
 
@@ -56,7 +89,11 @@ async function nominatimSearch(query: string): Promise<LatLng | null> {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function MapPicker({ value, onChange, label = 'Office Location', flyToQuery }: MapPickerProps) {
+export function MapPicker({ value, onChange, label = 'Office Location', flyToQuery, logo, companyName, city }: MapPickerProps) {
+    // Use a ref so stale closures inside Leaflet event handlers always read the latest values
+    const pinOptsRef = useRef({ logo, companyName, city });
+    useEffect(() => { pinOptsRef.current = { logo, companyName, city }; }, [logo, companyName, city]);
+
     const mapRef       = useRef<any>(null);
     const markerRef    = useRef<any>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -71,6 +108,12 @@ export function MapPicker({ value, onChange, label = 'Office Location', flyToQue
 
     // ─── Sync external value ──────────────────────────────────────────────────
     useEffect(() => { setPinned(value ?? null); }, [value]);
+
+    // ─── Re-render marker icon when company info changes ─────────────────────
+    useEffect(() => {
+        if (!markerRef.current || !leafletRef.current) return;
+        markerRef.current.setIcon(buildPinIcon(leafletRef.current, { logo, companyName, city }));
+    }, [logo, companyName, city]);
 
     // ─── Load Leaflet (browser only) ──────────────────────────────────────────
     useEffect(() => {
@@ -117,7 +160,7 @@ export function MapPicker({ value, onChange, label = 'Office Location', flyToQue
             maxZoom: 19,
         }).addTo(map);
 
-        const pinIcon = buildPinIcon(L);
+        const pinIcon = buildPinIcon(L, pinOptsRef.current);
 
         if (pinned) {
             markerRef.current = L.marker([pinned.lat, pinned.lng], { icon: pinIcon, draggable: true }).addTo(map);
@@ -130,7 +173,7 @@ export function MapPicker({ value, onChange, label = 'Office Location', flyToQue
 
         map.on('click', (e: any) => {
             const coords: LatLng = { lat: +e.latlng.lat.toFixed(7), lng: +e.latlng.lng.toFixed(7) };
-            const icon = buildPinIcon(L);
+            const icon = buildPinIcon(L, pinOptsRef.current);
             if (markerRef.current) {
                 markerRef.current.setLatLng([coords.lat, coords.lng]);
             } else {
@@ -167,7 +210,7 @@ export function MapPicker({ value, onChange, label = 'Office Location', flyToQue
             return;
         }
 
-        const icon = buildPinIcon(L);
+        const icon = buildPinIcon(L, pinOptsRef.current);
         if (markerRef.current) {
             markerRef.current.setLatLng([coords.lat, coords.lng]);
         } else {

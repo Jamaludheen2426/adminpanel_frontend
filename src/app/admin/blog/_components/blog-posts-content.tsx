@@ -164,9 +164,9 @@ export function BlogPostsContent() {
                     </DialogHeader>
                     <BlogPostForm
                         isPending={createPost.isPending}
-                        onSave={(data) => {
+                        onSave={async (data) => {
+                            await createPost.mutateAsync(data);
                             setCreateOpen(false);
-                            createPost.mutate(data);
                         }}
                     />
                 </DialogContent>
@@ -184,9 +184,9 @@ export function BlogPostsContent() {
                             key={editPost.id}
                             defaultValues={editPost}
                             isPending={updatePost.isPending}
-                            onSave={(data) => {
+                            onSave={async (data) => {
+                                await updatePost.mutateAsync({ id: editPost.id, data });
                                 setEditPost(null);
-                                updatePost.mutate({ id: editPost.id, data });
                             }}
                         />
                     )}

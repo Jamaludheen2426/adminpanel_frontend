@@ -4,17 +4,7 @@ import { useState, useMemo, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import {
-  Plus,
-  Search,
-  Pencil,
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
-  Upload,
-  Download,
-} from "lucide-react";
+import { Plus, Search, Upload, Download } from "lucide-react";
 import {
   useCountriesPaginated,
   useCreateCountry,
@@ -103,7 +93,7 @@ export function CountriesTab() {
   const PAGE_SIZE = 20;
   const { data: pageData, isLoading } = useCountriesPaginated({
     page, limit: PAGE_SIZE, search: search || undefined,
-    ...(sort ? { sort: sort.column, order: sort.direction } : {}),
+    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
   } as any);
   const countries = pageData?.data ?? [];
   const pagination = pageData?.pagination;

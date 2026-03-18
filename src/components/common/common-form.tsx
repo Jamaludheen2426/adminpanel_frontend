@@ -120,7 +120,10 @@ export function CommonForm({
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             const url = res.data.data?.file?.url || res.data.data?.url || res.data.url;
-            if (url) setImageUrls(prev => ({ ...prev, [fieldName]: url }));
+            if (url) {
+                setImageUrls(prev => ({ ...prev, [fieldName]: url }));
+                setValue(fieldName, url); // sync to RHF so watch() reflects the new URL
+            }
         } catch (err: any) {
             toast.error(err.response?.data?.message || 'Failed to upload image');
         } finally {

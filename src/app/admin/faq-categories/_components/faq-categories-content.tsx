@@ -12,6 +12,7 @@ import {
     useDeleteFaqCategory,
     FaqCategory
 } from '@/hooks/use-faq-categories';
+import { isApprovalRequired } from '@/lib/api-client';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
@@ -88,14 +89,12 @@ export function FaqCategoriesContent() {
     };
 
     const onSubmit = (data: FormData) => {
-        const payload = {
-            ...data,
-            description: data.description || null,
-        };
+        const payload = { ...data, description: data.description || null };
+        const onError = (error: any) => { if (isApprovalRequired(error)) closeDialog(); };
         if (editItem) {
-            updateCategory.mutate({ id: editItem.id, data: payload }, { onSuccess: closeDialog });
+            updateCategory.mutate({ id: editItem.id, data: payload }, { onSuccess: closeDialog, onError });
         } else {
-            createCategory.mutate(payload, { onSuccess: closeDialog });
+            createCategory.mutate(payload, { onSuccess: closeDialog, onError });
         }
     };
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useBlogPost, useUpdateBlogPost } from '@/hooks/use-blog-posts';
+import { isApprovalRequired } from '@/lib/api-client';
 import { BlogPostForm } from './blog-post-form';
 import { useTranslation } from '@/hooks/use-translation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,11 +42,14 @@ export function EditBlogPostContent({ id }: { id: number }) {
             <BlogPostForm
                 defaultValues={post}
                 isPending={update.isPending}
-                onSave={(data) =>
-                    update.mutate({ id, data }, {
-                        onSuccess: () => router.push('/admin/blog'),
-                    })
-                }
+                onSave={async (data) => {
+                    try {
+                        await update.mutateAsync({ id, data });
+                        router.push('/admin/blog');
+                    } catch (e) {
+                        if (isApprovalRequired(e)) router.push('/admin/blog');
+                    }
+                }}
             />
         </div>
     );

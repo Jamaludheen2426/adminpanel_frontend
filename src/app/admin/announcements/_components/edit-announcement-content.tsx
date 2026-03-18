@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/use-translation';
 import { useAnnouncement, useUpdateAnnouncement } from '@/hooks/use-announcements';
+import { isApprovalRequired } from '@/lib/api-client';
 import { AnnouncementForm } from './announcement-form';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -42,6 +43,7 @@ export function EditAnnouncementContent({ id }: { id: number }) {
                 onSave={(data, exitAfter) => {
                     update.mutate({ id, data }, {
                         onSuccess: () => { if (exitAfter) router.push('/admin/announcements'); },
+                        onError: (e) => { if (isApprovalRequired(e)) router.push('/admin/announcements'); },
                     });
                 }}
             />

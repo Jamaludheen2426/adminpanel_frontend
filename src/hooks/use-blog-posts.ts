@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
 import type { BlogCategory } from './use-blog-categories';
@@ -95,7 +95,10 @@ export function useCreateBlogPost() {
             toast.success('Blog post created successfully');
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to create blog post');
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
+                return;
+            }
         },
     });
 }
@@ -110,7 +113,10 @@ export function useUpdateBlogPost() {
             toast.success('Blog post updated successfully');
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || 'Failed to update blog post');
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
+                return;
+            }
         },
     });
 }
@@ -124,6 +130,10 @@ export function useDeleteBlogPost() {
             toast.success('Blog post deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete blog post');
         },
     });
