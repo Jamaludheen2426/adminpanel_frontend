@@ -51,7 +51,7 @@ export default function AdminNavbar() {
         {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Search */}
+        {/* Search — full bar on md+, icon-only on mobile */}
         <div className="hidden md:flex items-center">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -62,6 +62,9 @@ export default function AdminNavbar() {
             />
           </div>
         </div>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Search className="h-5 w-5" />
+        </Button>
 
         {/* Right Actions */}
         <div className="flex items-center gap-2">
@@ -78,7 +81,7 @@ export default function AdminNavbar() {
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[340px] max-h-[400px] overflow-y-auto">
+              <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-[340px] max-h-[400px] overflow-y-auto">
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Unread Messages</span>
                   <Badge variant="secondary" className="text-xs">{unreadContactsCount}</Badge>
@@ -129,7 +132,7 @@ export default function AdminNavbar() {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[340px] max-h-[400px] overflow-y-auto">
+              <DropdownMenuContent align="end" className="w-[calc(100vw-2rem)] sm:w-[340px] max-h-[400px] overflow-y-auto">
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Pending Approvals</span>
                   {pendingCount > 0 && (

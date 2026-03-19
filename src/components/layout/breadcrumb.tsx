@@ -104,21 +104,21 @@ export default function Breadcrumb() {
   }
 
   return (
-    <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+    <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 overflow-x-auto whitespace-nowrap scrollbar-none">
       {/* Home Icon */}
       <Link
         href="/admin"
-        className="hover:text-foreground transition-colors"
+        className="hover:text-foreground transition-colors shrink-0"
       >
         <Home className="h-4 w-4" />
       </Link>
 
       {items.slice(1).map((item, index) => (
-        <div key={item.href} className="flex items-center gap-2">
+        <div key={item.href} className="flex items-center gap-2 shrink-0">
           <ChevronRight className="h-4 w-4" />
 
           {index === items.length - 2 ? (
-            <span className="text-foreground font-medium">
+            <span className="text-foreground font-medium max-w-[160px] truncate md:max-w-none">
               {item.label}
             </span>
           ) : (

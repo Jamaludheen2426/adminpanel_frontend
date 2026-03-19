@@ -81,7 +81,7 @@ export function TopHeader() {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px]">
+            <DropdownMenuContent align="end" className="min-w-[130px] sm:min-w-[150px]">
               {languages.length > 0 ? (
                 languages.map((lang) => (
                   <DropdownMenuItem
@@ -113,7 +113,7 @@ export function TopHeader() {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px]">
+            <DropdownMenuContent align="end" className="min-w-[130px] sm:min-w-[150px]">
               {currencies.length > 0 ? (
                 currencies.map((currency) => (
                   <DropdownMenuItem

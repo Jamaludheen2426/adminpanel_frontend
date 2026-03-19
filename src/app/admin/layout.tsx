@@ -69,7 +69,7 @@ export default function AdminLayout({
 
               {/* Main Content Area */}
               <main className="flex-1 overflow-y-auto">
-                <div className="p-6">
+                <div className="p-3 md:p-6">
                   <Breadcrumb />
                   {children}
                 </div>

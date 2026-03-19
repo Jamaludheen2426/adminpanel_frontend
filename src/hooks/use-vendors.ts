@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { toast } from 'sonner';
 
 const VENDOR_KEYS = {
@@ -100,6 +100,10 @@ export const useCreateVendor = () => {
             toast.success('Vendor created successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: VENDOR_KEYS.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to create vendor');
         },
     });
@@ -118,6 +122,10 @@ export const useUpdateVendor = () => {
             toast.success('Vendor updated successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: VENDOR_KEYS.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to update vendor');
         },
     });
@@ -152,6 +160,10 @@ export const useDeleteVendor = () => {
             toast.success('Vendor deleted successfully');
         },
         onError: (error: any) => {
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: VENDOR_KEYS.all });
+                return;
+            }
             toast.error(error.response?.data?.message || 'Failed to delete vendor');
         },
     });

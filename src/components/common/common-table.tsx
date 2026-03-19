@@ -23,6 +23,7 @@ export interface CommonColumn<T> {
   className?: string;
   headerAlign?: "left" | "right";
   sortable?: boolean;
+  hideOnMobile?: boolean;
 }
 
 interface CommonTableProps<
@@ -145,7 +146,7 @@ export function CommonTable<
 
       <PageLoader open={isLoading} />
       {!isLoading && (
-        <div className="w-full overflow-hidden rounded-2xl border border-border/60 bg-background shadow-sm ring-1 ring-border/20">
+        <div className="w-full overflow-x-auto rounded-2xl border border-border/60 bg-background shadow-sm ring-1 ring-border/20">
           <Table>
             {/* ── Header ── */}
             <TableHeader>
@@ -156,6 +157,7 @@ export function CommonTable<
                     onClick={() => handleSortClick(col.key, col.sortable)}
                     className={`
                       ${col.className || ""}
+                      ${col.hideOnMobile ? "hidden md:table-cell" : ""}
                       h-12 px-5
                       text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/70
                       whitespace-nowrap
@@ -185,7 +187,7 @@ export function CommonTable<
                   </TableHead>
                 )}
                 {showCreated && (
-                  <TableHead className="h-12 px-5 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/70 whitespace-nowrap">
+                  <TableHead className="hidden sm:table-cell h-12 px-5 text-[11px] font-semibold tracking-wider uppercase text-muted-foreground/70 whitespace-nowrap">
                     Created
                   </TableHead>
                 )}
@@ -233,6 +235,7 @@ export function CommonTable<
                         key={col.key}
                         className={`
                           ${col.className || ""}
+                          ${col.hideOnMobile ? "hidden md:table-cell" : ""}
                           px-5 py-4 text-sm leading-snug
                           ${colIndex === 0
                             ? "font-semibold text-foreground"
@@ -258,7 +261,7 @@ export function CommonTable<
                     )}
 
                     {showCreated && (
-                      <TableCell className="px-5 py-4 text-sm tabular-nums text-muted-foreground/70 font-normal tracking-tight">
+                      <TableCell className="hidden sm:table-cell px-5 py-4 text-sm tabular-nums text-muted-foreground/70 font-normal tracking-tight">
                         {formatDate(row.created_at)}
                       </TableCell>
                     )}
@@ -301,11 +304,11 @@ export function CommonTable<
 
       {/* ── Pagination ── */}
       {pagination && !isLoading && (
-        <div className="flex items-center justify-between pt-2 px-0.5">
+        <div className="flex items-center justify-between pt-2 px-0.5 flex-wrap gap-2">
           <div className="flex items-center gap-2.5 text-sm text-muted-foreground/80">
             {pagination.onPageSizeChange && (
               <>
-                <span className="text-xs font-medium tracking-wide">Rows per page</span>
+                <span className="hidden sm:inline text-xs font-medium tracking-wide">Rows per page</span>
                 <Select
                   value={String(pagination.pageSize)}
                   onValueChange={(v) => pagination.onPageSizeChange!(Number(v))}
