@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide browser-native password reveal button (Chrome/Edge/Safari)
+   so it doesn't conflict with our custom eye-icon toggle */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-password-reveal-button,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
+
 /* Leaflet map CSS */
 @import 'leaflet/dist/leaflet.css';
 
