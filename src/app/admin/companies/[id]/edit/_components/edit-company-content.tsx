@@ -108,7 +108,7 @@ export function EditCompanyContent({ companyId }: { companyId: number }) {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Edit Company</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Edit Company</h1>
               <p className="text-muted-foreground">
                 Update company information
               </p>

@@ -139,7 +139,7 @@ export function FaqCategoriesContent() {
             <PageLoader open={isLoading || isPending || deleteCategory.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>
                             <CardDescription>{t('faq.categories_desc', 'Manage categories for your FAQ section')}</CardDescription>

@@ -205,7 +205,7 @@ export function TestimonialsContent() {
             <PageLoader open={isLoading || isPending || deleteTestimonial.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('testimonial.title', 'Testimonials')}</CardTitle>
                             <CardDescription>{t('testimonial.desc', 'Manage customer reviews and feedback')}</CardDescription>

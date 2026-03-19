@@ -110,7 +110,7 @@ export function PlatformContent() {
 
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('platform.page_desc', 'Manage employees, roles, and system administration')}
           </p>

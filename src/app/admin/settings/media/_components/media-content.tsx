@@ -406,7 +406,7 @@ export function MediaContent() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold">Media Storage Settings</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Media Storage Settings</h1>
                 <p className="text-muted-foreground mt-1">
                   Configure where and how your media files are stored
                 </p>

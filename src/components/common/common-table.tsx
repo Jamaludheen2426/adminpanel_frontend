@@ -146,7 +146,7 @@ export function CommonTable<
 
       <PageLoader open={isLoading} />
       {!isLoading && (
-        <div className="w-full overflow-x-auto rounded-2xl border border-border/60 bg-background shadow-sm ring-1 ring-border/20">
+        <div className="w-full rounded-2xl border border-border/60 bg-background shadow-sm ring-1 ring-border/20">
           <Table>
             {/* ── Header ── */}
             <TableHeader>

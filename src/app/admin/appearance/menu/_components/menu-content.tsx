@@ -60,7 +60,7 @@ export function MenuContent() {
       <div className="space-y-6">
         <PageLoader open={bulkUpdateMutation.isPending} />
         <div>
-          <h1 className="text-3xl font-bold">Menu</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Menu</h1>
           <p className="text-muted-foreground mt-1">
             Configure sidebar menu appearance and behavior
           </p>

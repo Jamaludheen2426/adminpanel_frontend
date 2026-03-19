@@ -117,13 +117,13 @@ export function BlogPostsContent() {
             <PageLoader open={isFetching || createPost.isPending || updatePost.isPending || deletePost.isPending} />
 
             <div>
-                <h1 className="text-3xl font-bold">{t('blog.posts_title', 'Blog Posts')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('blog.posts_title', 'Blog Posts')}</h1>
                 <p className="text-muted-foreground mt-1">{t('blog.posts_desc', 'Manage all blog posts')}</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('blog.posts_title', 'Blog Posts')}</CardTitle>
                             <CardDescription>{t('blog.posts_desc', 'Manage all blog posts')}</CardDescription>

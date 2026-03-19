@@ -146,9 +146,9 @@ export function CompaniesContent() {
         <PageLoader open={isLoading || isFetching || deleteCompany.isPending || updateStatus.isPending} />
 
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Companies</h1>
             <p className="text-muted-foreground">
               Manage all companies in the system
             </p>

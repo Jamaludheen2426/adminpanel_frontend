@@ -67,7 +67,7 @@ export default function StripeConfigPage() {
                                 <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                             </Link>
                             <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
+                                <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                                     <CreditCard className="w-7 h-7 text-violet-500" />
                                     Stripe Payments Configuration
                                 </h1>
@@ -80,7 +80,7 @@ export default function StripeConfigPage() {
                         <div className="max-w-2xl space-y-6">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
                                         <CardTitle>Stripe API Keys</CardTitle>
                                         <a
                                             href="https://dashboard.stripe.com/apikeys"

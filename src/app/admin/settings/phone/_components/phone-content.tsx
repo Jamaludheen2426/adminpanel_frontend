@@ -302,7 +302,7 @@ export function PhoneContent() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold">Phone Settings</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Phone Settings</h1>
                 <p className="text-muted-foreground mt-1">
                   Configure phone number validation and country code options
                 </p>

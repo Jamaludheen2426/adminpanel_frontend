@@ -188,7 +188,7 @@ export function AdsContent() {
             <PageLoader open={isLoading || createAd.isPending || updateAd.isPending || deleteAd.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('nav.ads', 'Ads')}</CardTitle>
                             <CardDescription>{t('ads.description', 'Manage front-end advertisements and banners.')}</CardDescription>

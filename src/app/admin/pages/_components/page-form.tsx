@@ -382,7 +382,7 @@ export function PageForm({ page }: { page?: Page }) {
                                 <p className="text-xs text-muted-foreground">Lower number = shown first</p>
                             </div>
                             <Separator />
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
                                     <p className="text-sm font-medium">Featured Page</p>
                                     <p className="text-xs text-muted-foreground">Highlight on frontend</p>

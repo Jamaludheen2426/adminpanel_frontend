@@ -118,7 +118,7 @@ export default function Breadcrumb() {
           <ChevronRight className="h-4 w-4" />
 
           {index === items.length - 2 ? (
-            <span className="text-foreground font-medium max-w-[160px] truncate md:max-w-none">
+            <span className="text-foreground font-medium max-w-[200px] truncate md:max-w-none">
               {item.label}
             </span>
           ) : (

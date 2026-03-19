@@ -171,7 +171,7 @@ export function FaqsContent() {
             <PageLoader open={isLoading || isPending || deleteFaq.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('faq.title', 'FAQs')}</CardTitle>
                             <CardDescription>{t('faq.desc', 'Manage frequently asked questions and answers')}</CardDescription>

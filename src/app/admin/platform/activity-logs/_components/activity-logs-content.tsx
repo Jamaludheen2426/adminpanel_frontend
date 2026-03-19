@@ -66,9 +66,9 @@ export function ActivityLogsContent() {
       <div className="space-y-6">
         <PageLoader open={isLoading} />
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{t("activity.logs")}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t("activity.logs")}</h1>
             <p className="text-muted-foreground mt-1">
               {t("activity.logs_desc")}
             </p>

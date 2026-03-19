@@ -64,7 +64,7 @@ export default function TwilioConfigPage() {
                                 <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                             </Link>
                             <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
+                                <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                                     <MessageSquare className="w-7 h-7 text-pink-500" />
                                     Twilio SMS Configuration
                                 </h1>
@@ -77,7 +77,7 @@ export default function TwilioConfigPage() {
                         <div className="max-w-2xl space-y-6">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
                                         <CardTitle>Twilio API Credentials</CardTitle>
                                         <a
                                             href="https://console.twilio.com/"

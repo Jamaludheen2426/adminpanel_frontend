@@ -185,7 +185,7 @@ export function AnnouncementForm({ defaultValues, onSave, isPending }: Announcem
                     {/* CTA Action */}
                     <Card>
                         <CardContent className="pt-6 space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
                                     <Label className="text-base font-medium">
                                         {t('announcements.has_action', 'Has action')}

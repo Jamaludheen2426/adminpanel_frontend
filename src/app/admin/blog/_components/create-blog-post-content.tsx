@@ -16,7 +16,7 @@ export function CreateBlogPostContent() {
         <div className="space-y-6">
             <PageLoader open={create.isPending} />
             <div>
-                <h1 className="text-3xl font-bold">{t('blog.create_post', 'Create Blog Post')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('blog.create_post', 'Create Blog Post')}</h1>
                 <p className="text-muted-foreground mt-1">{t('blog.create_post_desc', 'Add a new post to your blog')}</p>
             </div>
             <BlogPostForm

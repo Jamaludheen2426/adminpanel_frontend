@@ -49,7 +49,7 @@ export function ModulesContent() {
         <PageLoader open={isLoading} />
 
         <div>
-          <h1 className="text-3xl font-bold">Modules & Permissions</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Modules & Permissions</h1>
           <p className="text-muted-foreground mt-1">
             System modules and their auto-generated permissions. Assign these to roles and configure approval requirements in Role Management.
           </p>

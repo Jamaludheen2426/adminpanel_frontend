@@ -210,9 +210,9 @@ export function TranslationsContent() {
 
         {!isLoading && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold">{t('nav.translations')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.translations')}</h1>
                 <p className="text-muted-foreground">{t('settings.translations_desc')}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -320,7 +320,7 @@ export function TranslationsContent() {
             {missingCount && missingCount.unresolved > 0 && (
               <Card className="border-yellow-500/50 bg-yellow-500/5">
                 <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-5 w-5 text-yellow-500" />
                       <CardTitle className="text-lg">
@@ -343,7 +343,7 @@ export function TranslationsContent() {
             {/* Stats Section - Horizontal Scrollable */}
             {stats && (
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <h2 className="text-sm font-medium text-muted-foreground">{t('translations.completion_stats', 'Completion Statistics')}</h2>
                   <span className="text-xs text-muted-foreground">{languages.length} {t('translations.languages', 'languages')}</span>
                 </div>

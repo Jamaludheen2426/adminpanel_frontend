@@ -334,7 +334,7 @@ export function MediaLibraryContent() {
                 {/* Header */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                     <div>
-                        <h1 className="text-3xl font-bold">{t('media.title', 'Media Library')}</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold">{t('media.title', 'Media Library')}</h1>
                         <span className="text-muted-foreground mt-1 text-sm flex items-center gap-1">
                             {t('media.driver_label', 'Driver')}: <Badge variant="secondary" className="ml-1">{driver}</Badge>
                         </span>

@@ -123,7 +123,7 @@ export function BannersContent() {
             <PageLoader open={isLoading || createBanner.isPending || updateBanner.isPending || deleteBanner.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>{t('nav.ad_banners', 'Create Banner')}</CardTitle>
                             <CardDescription>{t('ads.banners_desc', 'Define banner dimension templates that are used to enforce image sizes in ads.')}</CardDescription>

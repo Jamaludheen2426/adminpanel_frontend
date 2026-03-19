@@ -36,7 +36,7 @@ export function EditBlogPostContent({ id }: { id: number }) {
         <div className="space-y-6">
             <PageLoader open={update.isPending} />
             <div>
-                <h1 className="text-3xl font-bold">{t('blog.edit_post', 'Edit Blog Post')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('blog.edit_post', 'Edit Blog Post')}</h1>
                 <p className="text-muted-foreground mt-1">{post.title}</p>
             </div>
             <BlogPostForm

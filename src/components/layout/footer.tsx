@@ -16,15 +16,15 @@ export default function AdminFooter() {
 
   return (
     <footer className="border-t bg-background">
-      <div className="px-6 py-4">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <span>&copy; {currentYear} Admin Dashboard.</span>
             <span className="hidden sm:inline">Made with</span>
             <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500 hidden sm:inline" />
           </div>
 
-          <nav className="flex items-center gap-1">
+          <nav className="flex flex-wrap items-center justify-center gap-1">
             {footerLinks.map((link, index) => (
               <div key={link.href} className="flex items-center">
                 <Link

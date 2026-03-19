@@ -183,7 +183,7 @@ export function SubscriptionsContent() {
             <PageLoader open={isLoading || isPending || deleteSubscription.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <CardTitle>Subscriptions</CardTitle>
                             <CardDescription>Manage subscription plans</CardDescription>

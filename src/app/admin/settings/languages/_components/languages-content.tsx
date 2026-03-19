@@ -165,8 +165,8 @@ export function LanguagesContent() {
 
         {!isLoading && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">{t("languages.title")}</h1>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold">{t("languages.title")}</h1>
               <div className="flex items-center gap-2">
                 {/* HELP BUTTON */}
                 <Dialog>

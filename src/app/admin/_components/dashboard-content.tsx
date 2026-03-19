@@ -93,7 +93,7 @@ function DeveloperDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Total Companies
@@ -109,7 +109,7 @@ function DeveloperDashboard() {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Active Companies
@@ -123,7 +123,7 @@ function DeveloperDashboard() {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Suspended
@@ -137,7 +137,7 @@ function DeveloperDashboard() {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Total Users
@@ -153,7 +153,7 @@ function DeveloperDashboard() {
 
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">
                       Active Users
@@ -171,7 +171,7 @@ function DeveloperDashboard() {
           {/* Companies List */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <CardTitle>All Companies</CardTitle>
                 <Link href="/admin/companies">
                   <Button variant="ghost" size="sm">
@@ -186,9 +186,9 @@ function DeveloperDashboard() {
                   <TableRow>
                     <TableHead>Company</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Users</TableHead>
-                    <TableHead>Active Users</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead className="hidden sm:table-cell">Users</TableHead>
+                    <TableHead className="hidden md:table-cell">Active Users</TableHead>
+                    <TableHead className="hidden sm:table-cell">Created</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -223,9 +223,9 @@ function DeveloperDashboard() {
                             {company.is_active === 1 ? 'Active' : company.is_active === 0 ? 'Suspended' : 'Pending'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{company.user_count || 0}</TableCell>
-                        <TableCell>{company.active_user_count || 0}</TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="hidden sm:table-cell">{company.user_count || 0}</TableCell>
+                        <TableCell className="hidden md:table-cell">{company.active_user_count || 0}</TableCell>
+                        <TableCell className="hidden sm:table-cell text-muted-foreground">
                           {company.created_at ? format(new Date(company.created_at), "MMM dd, yyyy") : "-"}
                         </TableCell>
                       </TableRow>
@@ -282,9 +282,9 @@ function CompanyDashboard() {
       {missingKeysCount && missingKeysCount.unresolved > 0 && (
         <Card className="border-yellow-500/50 bg-yellow-500/5">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                <div className="w-10 h-10 shrink-0 rounded-lg bg-yellow-500/10 flex items-center justify-center">
                   <AlertTriangle className="h-5 w-5 text-yellow-500" />
                 </div>
                 <div>
@@ -297,7 +297,7 @@ function CompanyDashboard() {
                 </div>
               </div>
               <Link href="/admin/settings/translations/missing">
-                <Button size="sm">
+                <Button size="sm" className="shrink-0">
                   <Languages className="mr-2 h-4 w-4" />
                   Review & Create
                 </Button>
@@ -315,7 +315,7 @@ function CompanyDashboard() {
             <Link key={stat.labelKey} href={stat.href}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">
                         {t(stat.labelKey)}
@@ -362,7 +362,7 @@ function CompanyDashboard() {
       {/* Recent Activity Logs */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <CardTitle>{t('activity.recent')}</CardTitle>
             <Link href="/admin/platform/activity-logs">
               <Button variant="ghost" size="sm">
@@ -379,9 +379,9 @@ function CompanyDashboard() {
                   <TableRow>
                     <TableHead>{t('common.user')}</TableHead>
                     <TableHead>{t('common.action')}</TableHead>
-                    <TableHead>{t('common.description')}</TableHead>
-                    <TableHead>{t('activity.ip_address', 'IP Address')}</TableHead>
-                    <TableHead>{t('common.date')}</TableHead>
+                    <TableHead className="hidden md:table-cell">{t('common.description')}</TableHead>
+                    <TableHead className="hidden lg:table-cell">{t('activity.ip_address', 'IP Address')}</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t('common.date')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -398,15 +398,15 @@ function CompanyDashboard() {
                       <TableCell>
                         <Badge variant="outline">{log.action}</Badge>
                       </TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground">
+                      <TableCell className="hidden md:table-cell max-w-xs truncate text-muted-foreground">
                         {log.description || "-"}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         {log.ip_address ? (
                           <code className="text-xs bg-muted px-1.5 py-0.5 rounded">{log.ip_address}</code>
                         ) : '-'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="hidden sm:table-cell text-muted-foreground">
                         {log.createdAt ? format(new Date(log.createdAt), "MMM dd, HH:mm") : "-"}
                       </TableCell>
                     </TableRow>
@@ -438,7 +438,7 @@ export function DashboardContent() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">{t('nav.dashboard')}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.dashboard')}</h1>
         <p className="text-muted-foreground mt-1">
           {t('auth.welcome_back')}, {user?.full_name || "Admin"}
         </p>

@@ -84,12 +84,12 @@ export function ContactDetails({ id }: { id: number }) {
             <PageLoader open={deleteContact.isPending || sendReply.isPending} />
             {/* Page title */}
             <div>
-                <h1 className="text-3xl font-bold">{contact.subject || t('contacts.no_subject', '(No Subject)')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{contact.subject || t('contacts.no_subject', '(No Subject)')}</h1>
                 <p className="text-muted-foreground mt-1">{t('contacts.from', 'From')}: {contact.name} &lt;{contact.email}&gt;</p>
             </div>
 
             {/* Action bar */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
                 <Button variant="ghost" size="sm" onClick={() => router.back()} className="gap-2">
                     <ArrowLeft className="h-4 w-4" />
                     {t('common.back', 'Back')}
@@ -211,7 +211,7 @@ export function ContactDetails({ id }: { id: number }) {
                 ) : (
                     <Card className={replyMode ? 'ring-2 ring-primary ring-offset-2' : ''}>
                         <CardHeader className="border-b">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
                                     <CardTitle className="text-lg flex items-center gap-2">
                                         <Mail className="h-4 w-4 text-primary" />

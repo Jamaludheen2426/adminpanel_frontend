@@ -81,7 +81,7 @@ export function OptimizeContent() {
         <div className="space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold">Optimize</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Optimize</h1>
             <p className="text-muted-foreground mt-1">
               Performance optimization settings for images, loading, and data
             </p>
@@ -102,7 +102,7 @@ export function OptimizeContent() {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Image Compression Toggle */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <Label className="text-base">Image Compression</Label>
                   <p className="text-sm text-muted-foreground">
@@ -120,7 +120,7 @@ export function OptimizeContent() {
               {/* Quality Slider */}
               {values['optimize.image_compression'] === '1' && (
                 <div className="space-y-3 pl-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <Label>Compression Quality</Label>
                     <span className="text-sm font-medium text-primary">
                       {values['optimize.image_quality']}%

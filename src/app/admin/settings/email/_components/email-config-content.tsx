@@ -338,7 +338,7 @@ export function EmailConfigContent() {
         <PageLoader open={isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending || testMutation.isPending || toggleMutation.isPending} />
         {!isLoading && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <Link href="/admin/settings">
                   <Button variant="ghost" size="icon">
@@ -346,7 +346,7 @@ export function EmailConfigContent() {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-3xl font-bold">Email Settings</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold">Email Settings</h1>
                   <p className="text-muted-foreground mt-1">
                     Configure email providers and manage templates
                   </p>
@@ -534,7 +534,7 @@ export function EmailConfigContent() {
                     <>
                       <Separator />
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
                           <div>
                             <p className="text-sm font-medium flex items-center gap-2">
                               <Inbox className="h-4 w-4 text-blue-500" />

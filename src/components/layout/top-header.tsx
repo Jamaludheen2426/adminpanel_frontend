@@ -60,12 +60,12 @@ export function TopHeader() {
 
   return (
     <div className="h-10 bg-muted/50 border-b">
-      <div className="h-full flex items-center justify-between px-4">
-        <div className="text-xs text-muted-foreground">
+      <div className="h-full flex items-center justify-between px-2 sm:px-4">
+        <div className="text-xs text-muted-foreground hidden sm:block">
           {t('dashboard.welcome_admin')}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 ml-auto">
           {/* Company Switcher - Only for Developer */}
           {isDeveloper && (
             <CompanySwitcher />

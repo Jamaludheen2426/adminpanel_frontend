@@ -233,8 +233,8 @@ export function UsersContent() {
         {/* Global Page Loader */}
         <PageLoader open={isLoading || isFetching || deleteUserMutation.isPending || toggleStatusMutation.isPending || updateUserMutation.isPending} />
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Employees</h1>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">Employees</h1>
           <Button onClick={() => router.push("/admin/platform/users/create")}>
             <Plus className="mr-2 h-4 w-4" />
             Add Employee

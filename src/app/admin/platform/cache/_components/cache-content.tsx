@@ -83,7 +83,7 @@ export function CacheContent() {
           </Button>
         </Link>
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">Cache Manager</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Cache Manager</h1>
           <p className="text-muted-foreground mt-1">
             Manage and clear application caches
           </p>

@@ -99,8 +99,8 @@ export function RolesContent() {
         {/* Page Loader */}
         <PageLoader open={isLoading || isFetching || deleteRoleMutation.isPending || toggleStatusMutation.isPending} />
 
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{t("nav.roles")}</h1>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold">{t("nav.roles")}</h1>
           <Button onClick={() => router.push("/admin/platform/roles/create")}>
             <Plus className="mr-2 h-4 w-4" />
             {t("roles.add_role")}

@@ -34,7 +34,7 @@ export function EditAnnouncementContent({ id }: { id: number }) {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">{t('announcements.edit_title', 'Edit Announcement')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('announcements.edit_title', 'Edit Announcement')}</h1>
                 <p className="text-muted-foreground mt-1">{announcement.name}</p>
             </div>
             <AnnouncementForm

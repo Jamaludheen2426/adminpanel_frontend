@@ -166,7 +166,7 @@ export function AdminAppearanceContent() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold">Dashboard Color Theme</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Dashboard Color Theme</h1>
                 <p className="text-muted-foreground mt-1">
                   Customize colors for light and dark mode
                 </p>
@@ -177,7 +177,7 @@ export function AdminAppearanceContent() {
               {/* Light Mode Colors */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <CardTitle>Light Mode Colors</CardTitle>
                       <CardDescription>Colors applied in light mode</CardDescription>
@@ -233,7 +233,7 @@ export function AdminAppearanceContent() {
               {/* Dark Mode Colors */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <CardTitle>Dark Mode Colors</CardTitle>
                       <CardDescription>Colors applied in dark mode</CardDescription>
@@ -292,7 +292,7 @@ export function AdminAppearanceContent() {
               {/* Light Mode Button Colors */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <CardTitle>Light Mode Button Colors</CardTitle>
                       <CardDescription>Button colors applied in light mode</CardDescription>
@@ -348,7 +348,7 @@ export function AdminAppearanceContent() {
               {/* Dark Mode Button Colors */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <CardTitle>Dark Mode Button Colors</CardTitle>
                       <CardDescription>Button colors applied in dark mode</CardDescription>

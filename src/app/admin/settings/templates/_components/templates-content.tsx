@@ -248,7 +248,7 @@ export function TemplatesContent() {
     <PermissionGuard permission="email_templates.read">
       <div className="space-y-6">
         <PageLoader open={isLoading || createMutation.isPending || updateMutation.isPending || deleteMutation.isPending} />
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <Link href="/admin/settings/email">
               <Button variant="ghost" size="icon">
@@ -256,7 +256,7 @@ export function TemplatesContent() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold">Email Templates</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold">Email Templates</h1>
               <p className="text-muted-foreground mt-1">
                 Manage email templates with dynamic variables
               </p>
@@ -272,7 +272,7 @@ export function TemplatesContent() {
         {!isLoading && (
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <CardTitle>Templates</CardTitle>
                   <CardDescription>
@@ -584,7 +584,7 @@ export function TemplatesContent() {
                       <SelectItem
                         key={v.key}
                         value={v.key}
-                        className="flex items-center justify-between"
+                        className="flex flex-wrap items-center justify-between gap-4"
                       >
                         <div className="flex items-center justify-between w-full">
                           <span className="font-mono text-sm">{`{{${v.key}}}`}</span>

@@ -243,7 +243,7 @@ export default function GatewayConfigContent({ slug }: { slug: string }) {
 
             <div className="space-y-6">
                 {/* ── Top Bar ── */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <Link href="/admin/payments">
                             <Button variant="ghost" size="icon" className="h-8 w-8">

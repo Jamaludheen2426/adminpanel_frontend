@@ -88,7 +88,7 @@ export function CreateCompanyContent() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Create Company</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Create Company</h1>
           <p className="text-muted-foreground">
             Add a new company with initial super admin
           </p>

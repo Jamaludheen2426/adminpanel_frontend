@@ -213,7 +213,7 @@ export function AdminSettingsContent() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold">Site Settings</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">Site Settings</h1>
                 <p className="text-muted-foreground mt-1">
                   Configure logo, favicon, title, font
                 </p>
@@ -224,7 +224,7 @@ export function AdminSettingsContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card className="md:col-span-2">
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                  <CardTitle className="flex flex-wrap items-center justify-between gap-4">
                     Site Logo
                     {currentSiteLogoUrl && (
                       <a
@@ -278,7 +278,7 @@ export function AdminSettingsContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                  <CardTitle className="flex flex-wrap items-center justify-between gap-4">
                     Site Favicon
                     {currentFaviconUrl && (
                       <a
@@ -313,7 +313,7 @@ export function AdminSettingsContent() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
+                  <CardTitle className="flex flex-wrap items-center justify-between gap-4">
                     Sidepanel Settings
                     {currentLogoUrl && (
                       <a
@@ -421,7 +421,7 @@ export function AdminSettingsContent() {
             {/* FOURTH ROW - Login Screen Background */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className="flex flex-wrap items-center justify-between gap-4">
                   Login Screen Background
                   {currentBackgroundUrl && (
                     <a

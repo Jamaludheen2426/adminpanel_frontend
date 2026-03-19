@@ -104,7 +104,7 @@ export function ApprovalsContent() {
         <PageLoader open={isLoading} />
 
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Approval Requests</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Approval Requests</h1>
           <p className="text-muted-foreground">
             Review and manage approval requests from your team
           </p>

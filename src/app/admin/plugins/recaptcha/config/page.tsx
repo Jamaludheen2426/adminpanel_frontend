@@ -66,7 +66,7 @@ export default function RecaptchaConfigPage() {
                                 <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
                             </Link>
                             <div>
-                                <h1 className="text-3xl font-bold flex items-center gap-2">
+                                <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
                                     <Shield className="w-7 h-7 text-green-500" />
                                     Google reCAPTCHA Configuration
                                 </h1>
@@ -79,7 +79,7 @@ export default function RecaptchaConfigPage() {
                         <div className="max-w-2xl space-y-6">
                             <Card>
                                 <CardHeader>
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
                                         <CardTitle>reCAPTCHA Settings</CardTitle>
                                         <a
                                             href="https://www.google.com/recaptcha/admin"

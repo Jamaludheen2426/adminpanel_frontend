@@ -78,7 +78,7 @@ export function TimezoneContent() {
       <div className="space-y-6">
         <PageLoader open={updateCompany.isPending || updateProfile.isPending} />
         <div>
-          <h1 className="text-3xl font-bold">Timezone Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Timezone Settings</h1>
           <p className="text-muted-foreground mt-1">
             Configure timezone for your company and personal preference
           </p>

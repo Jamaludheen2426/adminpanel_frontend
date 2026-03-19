@@ -14,7 +14,7 @@ export function CreateAnnouncementContent() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold">{t('announcements.create_title', 'Create Announcement')}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold">{t('announcements.create_title', 'Create Announcement')}</h1>
                 <p className="text-muted-foreground mt-1">{t('announcements.create_desc', 'Add a new announcement for your users')}</p>
             </div>
             <AnnouncementForm

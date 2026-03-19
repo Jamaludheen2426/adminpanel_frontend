@@ -60,7 +60,7 @@ export default function AdminLayout({
             <AppSidebar />
 
             {/* Main Content */}
-            <SidebarInset className="flex flex-col flex-1">
+            <SidebarInset className="flex flex-col flex-1 min-w-0">
               {/* Top Header with Language, Currency, Theme */}
               <TopHeader />
 
@@ -68,8 +68,8 @@ export default function AdminLayout({
               <AdminNavbar />
 
               {/* Main Content Area */}
-              <main className="flex-1 overflow-y-auto">
-                <div className="p-3 md:p-6">
+              <main className="flex-1 overflow-y-auto overflow-x-hidden">
+                <div className="p-3 sm:p-4 md:p-6">
                   <Breadcrumb />
                   {children}
                 </div>
