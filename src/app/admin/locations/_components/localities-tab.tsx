@@ -153,18 +153,14 @@ export function LocalitiesTab() {
   const pagination = pageData?.pagination;
 
   const { data: countriesRaw = [] } = useCountries();
-  const { data: allStatesRaw = [] } = useStates();
-  const { data: allDistrictsRaw = [] } = useCities();
+  const filterCountryIdNum = filterCountryId !== 'all' ? Number(filterCountryId) : undefined;
+  const filterStateIdNum = filterStateId !== 'all' ? Number(filterStateId) : undefined;
+  const { data: filterStatesRaw = [] } = useStates(filterCountryIdNum, true);
+  const { data: filterDistrictsRaw = [] } = useCities(filterStateIdNum);
+  const { data: dialogStatesRaw = [] } = useStates(selectedCountryId ?? undefined);
+  const { data: dialogDistrictsRaw = [] } = useCities(selectedStateId ?? undefined);
 
-  const countries = useMemo(() => countriesRaw.filter((c) => Boolean(c.is_active)), [countriesRaw]);
-  const allStates = useMemo(() => {
-    const activeCountryIds = new Set(countries.map((c) => c.id));
-    return allStatesRaw.filter((s) => Boolean(s.is_active) && activeCountryIds.has(s.country_id));
-  }, [allStatesRaw, countries]);
-  const allDistricts = useMemo(() => {
-    const activeStateIds = new Set(allStates.map((s) => s.id));
-    return allDistrictsRaw.filter((d) => Boolean(d.is_active) && activeStateIds.has(d.state_id));
-  }, [allDistrictsRaw, allStates]);
+  const countries = countriesRaw;
 
   const createLocality = useCreateLocality();
   const updateLocality = useUpdateLocality();
@@ -187,47 +183,10 @@ export function LocalitiesTab() {
 
   // ── Filter dropdown cascading options ──────────────────────────────────────
 
-  const filterStates = useMemo(
-    () =>
-      filterCountryId === 'all'
-        ? allStates
-        : allStates.filter((s) => s.country_id === Number(filterCountryId)),
-    [allStates, filterCountryId]
-  );
-
-  const filterDistricts = useMemo(() => {
-    if (filterStateId !== 'all')
-      return allDistricts.filter((d) => d.state_id === Number(filterStateId));
-    if (filterCountryId !== 'all') {
-      const stateIds = allStates
-        .filter((s) => s.country_id === Number(filterCountryId))
-        .map((s) => s.id);
-      return allDistricts.filter((d) => stateIds.includes(d.state_id));
-    }
-    return allDistricts;
-  }, [allDistricts, allStates, filterCountryId, filterStateId]);
-
-  // Dialog cascading
-  const dialogStates = useMemo(
-    () =>
-      selectedCountryId
-        ? allStates.filter((s) => s.country_id === selectedCountryId)
-        : allStates,
-    [allStates, selectedCountryId]
-  );
-  const dialogDistricts = useMemo(
-    () =>
-      selectedStateId
-        ? allDistricts.filter((d) => d.state_id === selectedStateId)
-        : selectedCountryId
-          ? allDistricts.filter(
-            (d) =>
-              allStates.find((s) => s.id === d.state_id)?.country_id ===
-              selectedCountryId
-          )
-          : allDistricts,
-    [allDistricts, allStates, selectedCountryId, selectedStateId]
-  );
+  const filterStates = filterStatesRaw;
+  const filterDistricts = filterDistrictsRaw;
+  const dialogStates = dialogStatesRaw;
+  const dialogDistricts = dialogDistrictsRaw;
 
   // ── Processed list ──────────────────────────────────────────────────────────
 

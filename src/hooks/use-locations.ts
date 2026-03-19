@@ -27,7 +27,7 @@ export interface LocationListParams {
 const locationsApi = {
   // Countries
   getCountries: async (): Promise<Country[]> => {
-    const response = await apiClient.get('/locations/countries', { params: { limit: 1000 } });
+    const response = await apiClient.get('/locations/countries', { params: { limit: 1000, is_active: 1 } });
     return response.data.data || [];
   },
   getCountriesPaginated: async (params: LocationListParams): Promise<LocationPage<Country>> => {
@@ -47,9 +47,11 @@ const locationsApi = {
   },
 
   // States
-  getStates: async (countryId?: number): Promise<State[]> => {
+  getStates: async (countryId?: number, hasDistricts?: boolean): Promise<State[]> => {
     const url = countryId ? `/locations/states/${countryId}` : '/locations/states';
-    const response = await apiClient.get(url, { params: { limit: 1000 } });
+    const params: Record<string, unknown> = { limit: 1000, is_active: 1 };
+    if (hasDistricts) params.has_districts = 1;
+    const response = await apiClient.get(url, { params });
     return response.data.data || [];
   },
   getStatesPaginated: async (params: LocationListParams): Promise<LocationPage<State>> => {
@@ -71,7 +73,7 @@ const locationsApi = {
   // Districts (was Cities → /cities → now /districts)
   getDistricts: async (stateId?: number): Promise<City[]> => {
     const url = stateId ? `/locations/districts/${stateId}` : '/locations/districts';
-    const response = await apiClient.get(url, { params: { limit: 1000 } });
+    const response = await apiClient.get(url, { params: { limit: 1000, is_active: 1, has_cities: 1 } });
     return response.data.data || [];
   },
   getDistrictsPaginated: async (params: LocationListParams): Promise<LocationPage<City>> => {
@@ -198,10 +200,10 @@ export function useCountriesPaginated(params: LocationListParams) {
 
 // ─── State hooks ──────────────────────────────────────────────────────────────
 
-export function useStates(countryId?: number) {
+export function useStates(countryId?: number, hasDistricts?: boolean) {
   return useQuery({
-    queryKey: queryKeys.locations.states(countryId),
-    queryFn: () => locationsApi.getStates(countryId),
+    queryKey: [...queryKeys.locations.states(countryId), ...(hasDistricts ? ['has_districts'] : [])],
+    queryFn: () => locationsApi.getStates(countryId, hasDistricts),
     retry: 1,
     staleTime: 5 * 60 * 1000,
   });

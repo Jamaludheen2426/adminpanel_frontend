@@ -153,14 +153,14 @@ const menuItems: MenuItem[] = [
     pluginSlug: "ads",
     children: [
       { labelKey: "nav.ads", href: "/admin/ads", icon: Megaphone, permission: "ads.view" },
-      { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "banners.view" },
+      { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "ads.view" },
     ],
   },
   {
     labelKey: "nav.simple_sliders",
     href: "/admin/simple-sliders",
     icon: Image,
-    permission: "simpleSliders.view",
+    permission: "simple_sliders.view",
     pluginSlug: "simple-slider",
   },
   {

@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Mail, Phone, Calendar, Clock, Inbox, Send, CheckCircle2, Trash2, AlertTriangle, Settings } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ArrowLeft, Mail, Phone, Calendar, Clock, Inbox, Send, Trash2, AlertTriangle, Settings } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { PageLoader } from '@/components/common/page-loader';
 import { DeleteDialog } from '@/components/common/delete-dialog';
@@ -33,13 +34,6 @@ export function ContactDetails({ id }: { id: number }) {
     const { data: emailConfigsRes, isLoading: emailConfigsLoading } = useEmailConfigs({ limit: 100 } as any);
     const emailConfigs = (emailConfigsRes?.data || []).filter((c: any) => c.is_active);
     const hasEmailConfigs = !emailConfigsLoading && emailConfigs.length > 0;
-    useEffect(() => {
-        if (contact && contact.status === 'unread') {
-            updateStatus.mutate({ id: contact.id, status: 'read' });
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [contact?.id]);
-
     useEffect(() => {
         if (emailConfigs.length > 0 && !selectedEmailConfigId) {
             const def = emailConfigs.find((c: any) => c.is_default) || emailConfigs[0];
@@ -101,12 +95,6 @@ export function ContactDetails({ id }: { id: number }) {
                     {t('common.back', 'Back')}
                 </Button>
                 <div className="flex items-center gap-2">
-                    {isUnread && (
-                        <Button variant="outline" size="sm" onClick={() => updateStatus.mutate({ id: contact.id, status: 'read' })} disabled={updateStatus.isPending}>
-                            <CheckCircle2 className="mr-2 h-4 w-4" />
-                            {t('contacts.mark_as_read', 'Mark as Read')}
-                        </Button>
-                    )}
                     <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
                         <Trash2 className="mr-2 h-4 w-4" />
                         {t('common.delete', 'Delete')}
@@ -137,9 +125,16 @@ export function ContactDetails({ id }: { id: number }) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
-                            <Badge className={`border-0 ${isUnread ? 'bg-yellow-400 text-yellow-900 hover:bg-yellow-400' : 'bg-green-500 text-white hover:bg-green-500'}`}>
-                                {isUnread ? t('contacts.status_unread', 'Unread') : t('contacts.status_read', 'Read')}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">{isUnread ? t('contacts.status_unread', 'Unread') : t('contacts.status_read', 'Read')}</span>
+                                <Switch
+                                    checked={!isUnread}
+                                    onCheckedChange={(checked) =>
+                                        updateStatus.mutate({ id: contact.id, status: checked ? 'read' : 'unread' })
+                                    }
+                                    disabled={updateStatus.isPending}
+                                />
+                            </div>
                             <div className="text-xs text-muted-foreground text-right">
                                 <div className="flex items-center gap-1 justify-end">
                                     <Calendar className="h-3 w-3" />

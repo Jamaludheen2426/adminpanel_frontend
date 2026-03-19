@@ -104,12 +104,10 @@ export function CitiesTab() {
   const cities = pageData?.data ?? [];
   const pagination = pageData?.pagination;
   const { data: countriesRaw = [] } = useCountries();
-  const { data: allStatesRaw = [] } = useStates();
-  const countries = useMemo(() => countriesRaw.filter((c) => Boolean(c.is_active)), [countriesRaw]);
-  const allStates = useMemo(() => {
-    const activeCountryIds = new Set(countries.map((c) => c.id));
-    return allStatesRaw.filter((s) => Boolean(s.is_active) && activeCountryIds.has(s.country_id));
-  }, [allStatesRaw, countries]);
+  const filterCountryIdNum = filterCountryId !== "all" ? Number(filterCountryId) : undefined;
+  const { data: filterStates = [] } = useStates(filterCountryIdNum, true);
+  const { data: dialogStates = [] } = useStates(selectedCountryId ?? undefined);
+  const countries = countriesRaw;
   const createCity = useCreateCity();
   const updateCity = useUpdateCity();
   const deleteCity = useDeleteCity();
@@ -119,21 +117,8 @@ export function CitiesTab() {
     defaultValues: { name: "", slug: "", sort_order: 0, is_active: true, is_default: false },
   });
 
-  const filterStates = useMemo(
-    () => filterCountryId === "all"
-      ? allStates
-      : allStates.filter((s) => s.country_id === Number(filterCountryId)),
-    [allStates, filterCountryId],
-  );
-
-  const dialogStates = useMemo(
-    () => selectedCountryId ? allStates.filter((s) => s.country_id === selectedCountryId) : allStates,
-    [allStates, selectedCountryId],
-  );
-
   const getCityCountryName = (city: City): string =>
     city.country?.name ?? city.state?.country?.name ??
-    allStates.find((s) => s.id === city.state_id)?.country?.name ??
     countries.find((c) => c.id === city.country_id)?.name ?? "–";
 
   const normalise = (item: City) => ({
@@ -302,7 +287,7 @@ export function CitiesTab() {
 
   return (
     <>
-      <PageLoader open={isLoading || isPending || deleteCity.isPending || csvLoading} />
+      <PageLoader open={(isLoading || isPending || deleteCity.isPending) && !csvImporting} />
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -315,8 +300,8 @@ export function CitiesTab() {
               <Button size="sm" variant="outline" onClick={downloadSampleCSV}>
                 <Download className="mr-2 h-4 w-4" /> {t("locations.sample_csv", "Sample CSV")}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => csvRef.current?.click()}>
-                <Upload className="mr-2 h-4 w-4" /> {t("locations.import_csv", "Import CSV")}
+              <Button size="sm" variant="outline" onClick={() => csvRef.current?.click()} disabled={csvLoading}>
+                <Upload className="mr-2 h-4 w-4" /> {csvLoading ? "Reading..." : t("locations.import_csv", "Import CSV")}
               </Button>
               <Button size="sm" onClick={openCreate}>
                 <Plus className="mr-2 h-4 w-4" /> {t("locations.add_district", "Add District")}
@@ -346,7 +331,6 @@ export function CitiesTab() {
               onValueChange={(v) => { setFilterStateId(v); setPage(1); }}
               allLabel={t("locations.all_states", "All States")}
               placeholder="Search state..."
-              disabled={filterCountryId === "all"}
             />
           </div>
 
