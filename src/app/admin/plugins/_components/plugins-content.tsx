@@ -177,19 +177,21 @@ export function PluginsContent() {
                 {!isLoading && !isError && (
                     <Tabs defaultValue="active" className="space-y-6">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <TabsList className="h-10">
-                                <TabsTrigger value="active" className="gap-2">
-                                    <CheckCircle className="w-4 h-4" />
-                                    Active Plugins
+                            <TabsList className="h-10 w-full sm:w-auto">
+                                <TabsTrigger value="active" className="gap-2 flex-1 sm:flex-none">
+                                    <CheckCircle className="w-4 h-4 shrink-0" />
+                                    <span className="hidden sm:inline">Active Plugins</span>
+                                    <span className="sm:hidden">Active</span>
                                     {activePlugins.length > 0 && (
                                         <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                                             {activePlugins.length}
                                         </Badge>
                                     )}
                                 </TabsTrigger>
-                                <TabsTrigger value="explore" className="gap-2">
-                                    <Compass className="w-4 h-4" />
-                                    Explore Plugins
+                                <TabsTrigger value="explore" className="gap-2 flex-1 sm:flex-none">
+                                    <Compass className="w-4 h-4 shrink-0" />
+                                    <span className="hidden sm:inline">Explore Plugins</span>
+                                    <span className="sm:hidden">Explore</span>
                                     <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                                         {allPlugins.length}
                                     </Badge>

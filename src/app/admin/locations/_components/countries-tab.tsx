@@ -455,7 +455,7 @@ export function CountriesTab() {
           }}
         >
           <DialogContent
-            className="max-w-4xl flex flex-col"
+            className="max-w-4xl flex flex-col overflow-y-hidden"
             style={{ maxHeight: "85vh" }}
           >
             <DialogHeader>

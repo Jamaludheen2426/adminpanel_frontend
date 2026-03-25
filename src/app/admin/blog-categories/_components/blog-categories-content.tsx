@@ -214,7 +214,7 @@ export function BlogCategoriesContent() {
                         columns={columns}
                         data={(categories || []).map(c => ({
                             ...c,
-                            created_at: c.created_at || (c as any).createdAt || new Date().toISOString()
+                            created_at: c.created_at || (c as any).createdAt || ''
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_categories', 'No blog categories found.')}

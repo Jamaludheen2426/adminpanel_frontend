@@ -21,12 +21,40 @@ interface ModuleGroup {
 }
 
 const moduleGroups: ModuleGroup[] = [
-  { name: "Settings", slug: "settings", color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" },
-  { name: "Users & Roles", slug: "users_roles", color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300" },
-  { name: "Content", slug: "cms", color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" },
-  { name: "Localization", slug: "localization", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
-  { name: "System", slug: "system", color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
+  { name: "Users & Roles",        slug: "users_roles",  color: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300" },
+  { name: "Settings",             slug: "settings",     color: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" },
+  { name: "Content",              slug: "content",      color: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" },
+  { name: "Commerce & Marketing", slug: "commerce",     color: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300" },
+  { name: "Communication",        slug: "communication",color: "bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300" },
+  { name: "Media & Files",        slug: "media_files",  color: "bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300" },
+  { name: "Localization",         slug: "localization", color: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300" },
+  { name: "System",               slug: "system",       color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300" },
 ];
+
+// Maps a permission's module slug → its parent group slug (for approval keying)
+const MODULE_TO_GROUP: Record<string, string> = {
+  // Users & Roles
+  employees: "users_roles", roles: "users_roles", permissions: "users_roles", modules: "users_roles",
+  // Settings
+  settings: "settings",
+  // Content
+  pages: "content", blog: "content", testimonials: "content", announcements: "content",
+  faqs: "content", faq_categories: "content", simple_sliders: "content",
+  // Commerce & Marketing
+  ads: "commerce", banners: "commerce", vendors: "commerce", payments: "commerce",
+  subscriptions: "commerce", menus: "commerce", newsletters: "commerce",
+  // Communication
+  contact: "communication", email_configs: "communication",
+  email_templates: "communication", email_campaigns: "communication",
+  // Media & Files
+  media: "media_files",
+  // Localization
+  languages: "localization", currencies: "localization",
+  locations: "localization", translations: "localization",
+  // System
+  activity_logs: "system", plugins: "system", appearance: "system",
+  companies: "system", approvals: "system",
+};
 
 export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
   const { data: role, isLoading: roleLoading } = useRole(roleId);
@@ -48,12 +76,12 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
       });
       setSelectedPermissionKeys(keys);
 
-      // Read requires_approval from the RolePermission join data
+      // Read requires_approval from the RolePermission join data — keyed by group slug
       const modules: Record<string, boolean> = {};
       role.permissions.forEach((p: Permission & { RolePermission?: { requires_approval?: boolean } }) => {
-        const mod = p.module || 'other';
+        const groupSlug = MODULE_TO_GROUP[p.module || ''] || 'system';
         if (p.RolePermission?.requires_approval) {
-          modules[mod] = true;
+          modules[groupSlug] = true;
         }
       });
       setApprovalModules(modules);
@@ -106,10 +134,10 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
       .map((slug) => {
         const permission = permissionsData?.data?.find((p) => p.slug === slug);
         if (!permission) return null;
-        const mod = permission.module || 'other';
+        const groupSlug = MODULE_TO_GROUP[permission.module || ''] || 'system';
         return {
           permissionId: permission.id,
-          requiresApproval: !!approvalModules[mod],
+          requiresApproval: !!approvalModules[groupSlug],
         };
       })
       .filter(Boolean) as { permissionId: number; requiresApproval: boolean }[];
@@ -144,13 +172,7 @@ export function RolePermissions({ roleId, onSuccess }: RolePermissionsProps) {
   // Build grouped permissions structure with sub-modules
   const groupedPermissions = moduleGroups.map((group) => {
     const modulesInGroup = Object.keys(groupedByModule).filter((mod) => {
-      // Group by module category
-      if (group.slug === "settings") return mod === "settings";
-      if (group.slug === "users_roles") return ["employees", "roles", "permissions", "modules"].includes(mod);
-      if (group.slug === "cms") return ["media", "translations", "languages"].includes(mod);
-      if (group.slug === "localization") return ["locations", "currencies"].includes(mod);
-      if (group.slug === "system") return ["activity_logs", "email_campaigns", "email_configs", "email_templates", "other"].includes(mod);
-      return false;
+      return (MODULE_TO_GROUP[mod] || 'system') === group.slug;
     });
 
     // Create sub-modules structure

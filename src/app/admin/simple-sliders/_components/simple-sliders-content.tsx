@@ -85,7 +85,7 @@ export function SimpleSlidersContent() {
     const dataForTable = sliders.map(item => ({
         ...item,
         is_active: item.is_active as any,
-        created_at: item.created_at || new Date().toISOString(),
+        created_at: item.created_at || (item as any).createdAt || '',
     }));
 
     if (!isActive) return <PluginDisabledState pluginName="Simple Slider" pluginSlug="simple-slider" />;

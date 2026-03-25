@@ -155,7 +155,7 @@ export function BlogTagsContent() {
                         columns={columns}
                         data={(tags || []).map(t => ({
                             ...t,
-                            created_at: t.created_at || (t as any).createdAt || new Date().toISOString()
+                            created_at: t.created_at || (t as any).createdAt || ''
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_tags', 'No blog tags found.')}

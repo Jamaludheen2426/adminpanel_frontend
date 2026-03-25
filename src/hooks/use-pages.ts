@@ -131,9 +131,11 @@ export function useCreatePage() {
             toast.success('Page created successfully');
         },
         onError: (error: any) => {
-            if (!isApprovalRequired(error)) {
-                toast.error(error.response?.data?.message || 'Failed to create page');
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.pages.lists() });
+                return;
             }
+            toast.error(error.response?.data?.message || 'Failed to create page');
         },
     });
 }
@@ -148,9 +150,11 @@ export function useUpdatePage() {
             toast.success('Page updated successfully');
         },
         onError: (error: any) => {
-            if (!isApprovalRequired(error)) {
-                toast.error(error.response?.data?.message || 'Failed to update page');
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.pages.lists() });
+                return;
             }
+            toast.error(error.response?.data?.message || 'Failed to update page');
         },
     });
 }
@@ -179,9 +183,11 @@ export function useDeletePage() {
             toast.success('Page deleted successfully');
         },
         onError: (error: any) => {
-            if (!isApprovalRequired(error)) {
-                toast.error(error.response?.data?.message || 'Failed to delete page');
+            if (isApprovalRequired(error)) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.pages.lists() });
+                return;
             }
+            toast.error(error.response?.data?.message || 'Failed to delete page');
         },
     });
 }

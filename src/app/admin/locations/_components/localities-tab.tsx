@@ -508,7 +508,7 @@ export function LocalitiesTab() {
       {/* ── CSV Preview Dialog ── */}
       {csvPreview && (
         <Dialog open={!!csvPreview} onOpenChange={(open) => { if (!open && !csvImporting) { setCsvPreview(null); setCsvFile(null); setCsvProgress(0); } }}>
-          <DialogContent className="max-w-4xl flex flex-col" style={{ maxHeight: '85vh' }}>
+          <DialogContent className="max-w-4xl flex flex-col overflow-y-hidden" style={{ maxHeight: '85vh' }}>
             <DialogHeader>
               <DialogTitle>Preview Import — ~{csvTotalRows.toLocaleString()} cities</DialogTitle>
               <DialogDescription>

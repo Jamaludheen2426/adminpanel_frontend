@@ -43,7 +43,7 @@ export function AdsContent() {
     const ads = rawAds.map(ad => ({
         ...ad,
         is_active: ad.is_active as boolean | number,
-        created_at: ad.created_at || new Date().toISOString()
+        created_at: ad.created_at || (ad as any).createdAt || ''
     }));
 
     const updateAd = useUpdateAd();

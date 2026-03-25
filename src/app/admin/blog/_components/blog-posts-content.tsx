@@ -139,7 +139,7 @@ export function BlogPostsContent() {
                         columns={columns}
                         data={(posts || []).map(p => ({
                             ...p,
-                            created_at: p.created_at || (p as any).createdAt || new Date().toISOString()
+                            created_at: p.created_at || (p as any).createdAt || ''
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_posts', 'No blog posts found.')}

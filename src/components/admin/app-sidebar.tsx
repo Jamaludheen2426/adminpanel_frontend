@@ -153,7 +153,7 @@ const menuItems: MenuItem[] = [
     pluginSlug: "ads",
     children: [
       { labelKey: "nav.ads", href: "/admin/ads", icon: Megaphone, permission: "ads.view" },
-      { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "ads.view" },
+      { labelKey: "nav.ad_banners", href: "/admin/banners", icon: Image, permission: "banners.view" },
     ],
   },
   {
@@ -177,7 +177,7 @@ const menuItems: MenuItem[] = [
     pluginSlug: "faq",
     children: [
       { labelKey: "nav.faq_list", href: "/admin/faqs", icon: HelpCircle, permission: "faqs.view" },
-      { labelKey: "nav.faq_categories", href: "/admin/faqs/categories", icon: HelpCircle, permission: "faqs.view" },
+      { labelKey: "nav.faq_categories", href: "/admin/faq-categories", icon: HelpCircle, permission: "faq_categories.view" },
     ],
   },
   {

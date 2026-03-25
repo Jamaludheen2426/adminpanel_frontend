@@ -99,6 +99,7 @@ export function useCreateBlogPost() {
                 queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
                 return;
             }
+            toast.error(error.response?.data?.message || 'Failed to create blog post');
         },
     });
 }
@@ -117,6 +118,7 @@ export function useUpdateBlogPost() {
                 queryClient.invalidateQueries({ queryKey: queryKeys.blogPosts.all });
                 return;
             }
+            toast.error(error.response?.data?.message || 'Failed to update blog post');
         },
     });
 }

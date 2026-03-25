@@ -29,9 +29,9 @@ import { PluginDisabledState } from '@/components/common/plugin-disabled';
 const schema = z.object({
     name: z.string().trim().min(1, 'Name is required'),
     designation: z.string().trim().min(1, 'Designation/Company is required'),
-    content: z.string().trim().min(1, 'Content is required').refine(
-        (val) => val.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, '').trim().length > 0,
-        { message: 'Content cannot be empty' }
+    content: z.string().refine(
+        (val) => val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim().length > 0,
+        { message: 'Content is required' }
     ),
     image: z.string().default(''),
     sort_order: z.preprocess((val) => Number(val), z.number().default(0)),
