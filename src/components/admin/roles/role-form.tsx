@@ -99,9 +99,6 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
         "languages",
         "pages",
         "blog",
-        "blog_posts",
-        "blog_categories",
-        "blog_tags",
         "testimonials",
         "ads",
         "announcements",
@@ -121,6 +118,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
       "settings",
       "employees", "roles", "permissions", "modules", "approvals", "companies",
       "media", "translations", "languages", "pages", "blog", "blog_posts", "blog_categories", "blog_tags", "testimonials", "ads", "announcements", "faqs", "faq_categories", "newsletters", "contact",
+
       "locations", "currencies",
       "appearance"
     ];
@@ -179,6 +177,49 @@ function groupSettingsPermissions(
     name:
       displayNames[key] ||
       key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    permissions: perms,
+  }));
+}
+
+// Split faq permissions into virtual sub-modules by slug prefix (faqs / faq_categories)
+function groupFaqPermissions(
+  permissions: Permission[],
+): { slug: string; name: string; permissions: Permission[] }[] {
+  const displayNames: Record<string, string> = {
+    faqs: "FAQs",
+    faq_categories: "FAQ Categories",
+  };
+  const groupMap: Record<string, Permission[]> = {};
+  permissions.forEach((p) => {
+    const prefix = p.slug?.split(".")[0] || "faqs";
+    if (!groupMap[prefix]) groupMap[prefix] = [];
+    groupMap[prefix].push(p);
+  });
+  return Object.entries(groupMap).map(([key, perms]) => ({
+    slug: key,
+    name: displayNames[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    permissions: perms,
+  }));
+}
+
+// Split blog permissions into virtual sub-modules by slug prefix (blog_posts / blog_categories / blog_tags)
+function groupBlogPermissions(
+  permissions: Permission[],
+): { slug: string; name: string; permissions: Permission[] }[] {
+  const displayNames: Record<string, string> = {
+    blog_posts: "Blog Posts",
+    blog_categories: "Blog Categories",
+    blog_tags: "Blog Tags",
+  };
+  const groupMap: Record<string, Permission[]> = {};
+  permissions.forEach((p) => {
+    const prefix = p.slug?.split(".")[0] || "blog";
+    if (!groupMap[prefix]) groupMap[prefix] = [];
+    groupMap[prefix].push(p);
+  });
+  return Object.entries(groupMap).map(([key, perms]) => ({
+    slug: key,
+    name: displayNames[key] || key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
     permissions: perms,
   }));
 }
@@ -275,20 +316,37 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
         ),
       );
       let subMods: { slug: string; permissions: Permission[] }[];
+      const grouped = (permissionsData.data || []).reduce(
+        (acc, p) => {
+          const mod = p.module || "other";
+          if (!acc[mod]) acc[mod] = [];
+          acc[mod].push(p);
+          return acc;
+        },
+        {} as Record<string, Permission[]>,
+      );
       if (group.slug === "settings") {
         subMods = groupSettingsPermissions(
           permissionsData.data.filter((p) => p.module === "settings"),
         );
+      } else if (group.slug === "cms") {
+        subMods = subModuleSlugs.flatMap((mod) => {
+          if (mod === "blog") {
+            return groupBlogPermissions(grouped["blog"] || []).map((s) => ({
+              slug: s.slug,
+              permissions: s.permissions,
+            }));
+          }
+          if (mod === "faqs") {
+            return groupFaqPermissions(grouped["faqs"] || []).map((s) => ({
+              slug: s.slug,
+              permissions: s.permissions,
+            }));
+          }
+          return [{ slug: mod, permissions: grouped[mod] || [] }];
+        });
       } else {
-        const grouped = (permissionsData.data || []).reduce(
-          (acc, p) => {
-            const mod = p.module || "other";
-            if (!acc[mod]) acc[mod] = [];
-            acc[mod].push(p);
-            return acc;
-          },
-          {} as Record<string, Permission[]>,
-        );
+
         subMods = subModuleSlugs.map((mod) => ({
           slug: mod,
           permissions: grouped[mod] || [],
@@ -495,6 +553,21 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
         // Split settings permissions into virtual sub-modules by section
         const settingsPerms = groupedByModule["settings"] || [];
         subModules = groupSettingsPermissions(settingsPerms);
+      } else if (group.slug === "cms") {
+        const cmsNames: Record<string, string> = { faq_categories: "FAQ Categories" };
+        subModules = subModuleSlugs.flatMap((mod) => {
+          if (mod === "blog") {
+            return groupBlogPermissions(groupedByModule["blog"] || []);
+          }
+          if (mod === "faqs") {
+            return groupFaqPermissions(groupedByModule["faqs"] || []);
+          }
+          return [{
+            slug: mod,
+            name: cmsNames[mod] ?? mod.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+            permissions: groupedByModule[mod] || [],
+          }];
+        });
       } else {
         subModules = subModuleSlugs.map((mod) => ({
           slug: mod,
