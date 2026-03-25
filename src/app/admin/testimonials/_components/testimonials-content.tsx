@@ -242,12 +242,12 @@ export function TestimonialsContent() {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="name">{t('common.name', 'Name')} *</Label>
+                                <Label htmlFor="name">{t('common.name', 'Name')} <span className="text-destructive">*</span></Label>
                                 <Input id="name" {...form.register('name')} placeholder="e.g. John Doe" />
                                 {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="designation">{t('testimonial.designation', 'Designation / Company')} *</Label>
+                                <Label htmlFor="designation">{t('testimonial.designation', 'Designation / Company')} <span className="text-destructive">*</span></Label>
                                 <Input id="designation" {...form.register('designation')} placeholder="e.g. CEO, Google" />
                                 {form.formState.errors.designation && <p className="text-xs text-destructive">{form.formState.errors.designation.message}</p>}
                             </div>
@@ -269,7 +269,7 @@ export function TestimonialsContent() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="content">{t('common.content', 'Content')} *</Label>
+                            <Label htmlFor="content">{t('common.content', 'Content')} <span className="text-destructive">*</span></Label>
                             <Controller
                                 control={form.control}
                                 name="content"

@@ -182,12 +182,12 @@ export function BlogTagsContent() {
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
                         <div className="space-y-2">
-                            <Label htmlFor="tag-name">{t('common.name', 'Name')} *</Label>
+                            <Label htmlFor="tag-name">{t('common.name', 'Name')} <span className="text-destructive">*</span></Label>
                             <Input id="tag-name" placeholder="e.g. Technology" {...form.register('name')} onChange={handleNameChange} />
                             {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="tag-slug">{t('common.slug', 'Slug')} *</Label>
+                            <Label htmlFor="tag-slug">{t('common.slug', 'Slug')} <span className="text-destructive">*</span></Label>
                             <Input
                                 id="tag-slug"
                                 placeholder="e.g. technology"

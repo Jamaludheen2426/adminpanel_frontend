@@ -8,6 +8,7 @@ import {
     useSimpleSliders,
     useDeleteSimpleSlider,
     useUpdateSimpleSlider,
+    useUpdateSimpleSliderStatus,
     type SimpleSlider,
 } from '@/hooks/use-simple-sliders';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
@@ -33,6 +34,7 @@ export function SimpleSlidersContent() {
     const { data: qData, isLoading } = useSimpleSliders({ page, limit, search });
     const { mutate: deleteSlider, isPending: isDeleting } = useDeleteSimpleSlider();
     const { mutate: updateSlider } = useUpdateSimpleSlider();
+    const { mutate: updateSliderStatus } = useUpdateSimpleSliderStatus();
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -71,7 +73,7 @@ export function SimpleSlidersContent() {
                     <Switch
                         checked={row.is_active === 1}
                         onCheckedChange={(val) =>
-                            updateSlider({ id: row.id, payload: { is_active: val ? 1 : 0 } })
+                            updateSliderStatus({ id: row.id, is_active: val ? 1 : 0 })
                         }
                     />
                 );

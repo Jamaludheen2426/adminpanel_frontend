@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users";
+import { isApprovalRequired } from "@/lib/api-client";
 import { useRoles } from "@/hooks/use-roles";
 import { useAuth } from "@/hooks/use-auth";
 import { useCountries, useStates, useCities, useLocalities } from "@/hooks/use-locations";
@@ -33,7 +34,7 @@ const employeeSchema = z.object({
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
   username: z.string().optional(),
   email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().optional(),
+  phone: z.string().trim().min(1, "Phone is required"),
   dob: z.string().optional(),
   gender: z.enum(["male", "female", "other"]).optional(),
   marital_status: z.enum(["married", "unmarried"]).optional(),
@@ -42,8 +43,8 @@ const employeeSchema = z.object({
   city_id: z.number().optional(),
   pincode_id: z.number().optional(),
   address: z.string().optional(),
-  department: z.string().optional(),
-  designation: z.string().optional(),
+  department: z.string().trim().min(1, "Department is required"),
+  designation: z.string().trim().min(1, "Designation is required"),
   doj: z.string().optional(),
   dor: z.string().optional(),
   role_id: z.number({ required_error: "Please select a role" }),
@@ -132,11 +133,12 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
 
   // Password section: hide when editing a user whose role level >= current user's level
   // (Admin cannot change SuperAdmin/Developer password)
-  const canChangePassword = !user || currentUserLevel > targetUserLevel;
+  const canChangePassword = !user || user.id === currentUser?.id || currentUserLevel > targetUserLevel;
 
   const availableRoles = rolesData?.data?.filter((role) => {
     if (currentUser?.role?.slug === "developer") return true;
-    return role.level <= currentUserLevel;
+    if (user && role.id === user.role_id) return true; // always include user's current role
+    return role.level < currentUserLevel;
   }) || [];
 
   const {
@@ -192,13 +194,17 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
     // Remove password if blank (edit mode, keep current)
     if (!submitData.password) delete submitData.password;
 
+    const navigateToList = () => { onSuccess?.() ?? router.push("/admin/platform/users"); };
+
     if (user) {
       updateUserMutation.mutate({ id: user.id, data: submitData }, {
-        onSuccess: () => { onSuccess?.() ?? router.push("/admin/platform/users"); }
+        onSuccess: navigateToList,
+        onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
       });
     } else {
       createUserMutation.mutate(submitData as EmployeeFormData & { password: string }, {
-        onSuccess: () => { onSuccess?.() ?? router.push("/admin/platform/users"); }
+        onSuccess: navigateToList,
+        onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
       });
     }
   };
@@ -231,8 +237,9 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Mobile</Label>
+            <Label htmlFor="phone">Mobile <span className="text-destructive">*</span></Label>
             <Input id="phone" placeholder="Enter phone number" {...register("phone")} />
+            {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
 
           <DatePickerField
@@ -356,17 +363,19 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
       {/* Work Information */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Work Information</CardTitle>
+          <CardTitle className="text-base">Past Work Information</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="department">Department</Label>
+            <Label htmlFor="department">Department <span className="text-destructive">*</span></Label>
             <Input id="department" placeholder="Enter department" {...register("department")} />
+            {errors.department && <p className="text-sm text-destructive">{errors.department.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="designation">Designation</Label>
+            <Label htmlFor="designation">Designation <span className="text-destructive">*</span></Label>
             <Input id="designation" placeholder="Enter designation" {...register("designation")} />
+            {errors.designation && <p className="text-sm text-destructive">{errors.designation.message}</p>}
           </div>
 
           <DatePickerField
@@ -393,7 +402,6 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                   availableRoles.map((role) => (
                     <SelectItem key={role.id} value={role.id.toString()}>
                       {role.name}
-                      <span className="text-xs text-muted-foreground ml-2">Lv.{role.level}</span>
                     </SelectItem>
                   ))
                 ) : (

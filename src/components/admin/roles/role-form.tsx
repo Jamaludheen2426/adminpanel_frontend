@@ -21,6 +21,7 @@ import {
 import { usePermissions } from "@/hooks/use-permissions";
 import { usePlugins } from "@/hooks/use-plugins";
 import { cn } from "@/lib/utils";
+import { isApprovalRequired } from "@/lib/api-client";
 import type { Role, Permission } from "@/types";
 
 const roleSchema = z.object({
@@ -98,10 +99,14 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
         "languages",
         "pages",
         "blog",
+        "blog_posts",
+        "blog_categories",
+        "blog_tags",
         "testimonials",
         "ads",
         "announcements",
         "faqs",
+        "faq_categories",
         "newsletters",
         "contact",
       ].includes(m),
@@ -115,7 +120,7 @@ function getModulesForGroup(groupSlug: string, allModules: string[]): string[] {
     const assignedModules = [
       "settings",
       "employees", "roles", "permissions", "modules", "approvals", "companies",
-      "media", "translations", "languages", "pages", "blog", "testimonials", "ads", "announcements", "faqs", "newsletters", "contact",
+      "media", "translations", "languages", "pages", "blog", "blog_posts", "blog_categories", "blog_tags", "testimonials", "ads", "announcements", "faqs", "faq_categories", "newsletters", "contact",
       "locations", "currencies",
       "appearance"
     ];
@@ -423,6 +428,8 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
     }
   };
 
+  const navigateToList = () => { onSuccess?.() ?? router.push("/admin/platform/roles"); };
+
   const onSubmit = async (data: RoleFormData) => {
     const payload = buildPayload(selectedPermissionKeys);
     const apiData = { ...data, is_active: data.is_active ? 1 : 0 };
@@ -433,13 +440,10 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
           onSuccess: () => {
             assignPermissionsMutation.mutate(
               { id: role.id, permissions: payload },
-              {
-                onSuccess: () => {
-                  onSuccess?.() ?? router.push("/admin/platform/roles");
-                },
-              },
+              { onSuccess: navigateToList },
             );
           },
+          onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
         },
       );
     } else {
@@ -448,16 +452,13 @@ export function RoleForm({ role, onSuccess }: RoleFormProps) {
           if (payload.length > 0) {
             assignPermissionsMutation.mutate(
               { id: newRole.id, permissions: payload },
-              {
-                onSuccess: () => {
-                  onSuccess?.() ?? router.push("/admin/platform/roles");
-                },
-              },
+              { onSuccess: navigateToList },
             );
           } else {
-            onSuccess?.() ?? router.push("/admin/platform/roles");
+            navigateToList();
           }
         },
+        onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
       });
     }
   };

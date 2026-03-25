@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +32,17 @@ export default function LoginPage() {
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  // Clear browser autofill on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      if (emailInput && emailInput.value) emailInput.value = '';
+      if (passwordInput && passwordInput.value) passwordInput.value = '';
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const adminLogoUrl = settings?.find((s) => s.key === "site_logo_url")?.value || "";
   const adminTitle = settings?.find((s) => s.key === "admin_title")?.value || "Admin Login";

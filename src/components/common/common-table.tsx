@@ -61,6 +61,10 @@ interface CommonTableProps<
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   disableStatusToggle?: (row: any) => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  disableEdit?: (row: any) => boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  disableDelete?: (row: any) => boolean;
 }
 
 function formatDate(dateStr: string): string {
@@ -91,6 +95,8 @@ export function CommonTable<
   onSearch,
   pagination,
   disableStatusToggle,
+  disableEdit,
+  disableDelete,
 }: CommonTableProps<T>) {
   const [searchValue, setSearchValue] = useState("");
   const [internalSortColumn, setInternalSortColumn] = useState<string | undefined>(undefined);
@@ -276,9 +282,10 @@ export function CommonTable<
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => onEdit(row)}
+                              onClick={() => { if (!(disableEdit?.(row) ?? false)) onEdit(row); }}
                               title="Edit"
-                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 active:scale-95 transition-all duration-150"
+                              disabled={disableEdit?.(row) ?? false}
+                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-primary hover:bg-primary/10 active:scale-95 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
@@ -287,9 +294,10 @@ export function CommonTable<
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => onDelete(row)}
+                              onClick={() => { if (!(disableDelete?.(row) ?? false)) onDelete(row); }}
                               title="Delete"
-                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all duration-150"
+                              disabled={disableDelete?.(row) ?? false}
+                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 active:scale-95 transition-all duration-150 disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>

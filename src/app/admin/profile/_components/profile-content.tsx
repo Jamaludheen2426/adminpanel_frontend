@@ -41,9 +41,9 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    current_password: z.string().trim().min(6, "Current password must be at least 6 characters"),
-    new_password: z.string().trim().min(6, "New password must be at least 6 characters"),
-    confirm_password: z.string().trim().min(6, "Confirm password must be at least 6 characters"),
+    current_password: z.string().min(6, "Current password must be at least 6 characters"),
+    new_password: z.string().min(6, "New password must be at least 6 characters"),
+    confirm_password: z.string().min(6, "Confirm password must be at least 6 characters"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords don't match",
@@ -88,7 +88,7 @@ export function ProfileContent() {
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       current_password: "",
       new_password: "",
@@ -97,7 +97,8 @@ export function ProfileContent() {
   });
 
   const onProfileSubmit = (data: ProfileFormData) => {
-    updateProfileMutation.mutate(data);
+    const { email, ...updateData } = data;
+    updateProfileMutation.mutate(updateData);
   };
 
   const onPasswordSubmit = (data: PasswordFormData) => {
@@ -236,6 +237,8 @@ export function ProfileContent() {
                       id="email"
                       type="email"
                       placeholder="john@example.com"
+                      disabled
+                      className="opacity-60 cursor-not-allowed"
                       {...profileForm.register("email")}
                     />
                     {profileForm.formState.errors.email && (

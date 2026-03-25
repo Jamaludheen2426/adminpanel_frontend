@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Search, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PermissionGuard } from "@/components/guards/permission-guard";
@@ -31,6 +31,8 @@ import {
 import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useUsers, useDeleteUser, useToggleUserStatus, useUpdateUser } from "@/hooks/use-users";
 import { useRoles } from "@/hooks/use-roles";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserRoleLevel } from "@/lib/auth-utils";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
@@ -42,12 +44,12 @@ import {
 } from "@/components/ui/popover";
 import type { User } from "@/types";
 
-const isSuperAdminOrDeveloper = (user: User) =>
-  user.role?.slug === "super_admin" || user.role?.slug === "developer";
 
 export function UsersContent() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user: currentUser } = useAuth();
+  const currentUserLevel = getUserRoleLevel(currentUser);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -78,7 +80,7 @@ export function UsersContent() {
   const updateUserMutation = useUpdateUser();
 
   const handleDelete = (user: User) => {
-    if (isSuperAdminOrDeveloper(user)) return;
+    if (user.id === currentUser?.id || (user.role?.level ?? 0) >= currentUserLevel) return;
     setDeleteUser(user);
   };
 
@@ -93,6 +95,7 @@ export function UsersContent() {
 
   const handleRoleChange = (user: User, roleId: string) => {
     const newRole = rolesData?.data?.find((r) => r.id.toString() === roleId);
+    if (!newRole || newRole.level >= currentUserLevel) return;
     setRoleChangeDialog({
       user,
       newRoleId: roleId,
@@ -110,8 +113,11 @@ export function UsersContent() {
   };
 
   const handleLoginAccessChange = (user: User, loginAccess: boolean) => {
+    if (user.id === currentUser?.id || (user.role?.level ?? 0) >= currentUserLevel) return;
     updateUserMutation.mutate({ id: user.id, data: { login_access: loginAccess ? 1 : 0 } });
   };
+
+  const isHigherOrEqualLevel = (user: User) => (user.role?.level ?? 0) >= currentUserLevel;
 
   const handleSort = (column: string) => {
     setSort((prev) => {
@@ -168,7 +174,7 @@ export function UsersContent() {
       key: "role",
       header: "Role",
       render: (row) => (
-        isSuperAdminOrDeveloper(row) ? (
+        isHigherOrEqualLevel(row) ? (
           <Badge variant="secondary" className="text-[10px] font-medium h-5">
             {row.role?.name || "—"}
           </Badge>
@@ -186,21 +192,22 @@ export function UsersContent() {
             </PopoverTrigger>
             <PopoverContent className="w-[180px] p-1" align="start">
               <div className="flex flex-col">
-                {rolesData?.data?.map((role) => (
-                  <button
-                    key={role.id}
-                    type="button"
-                    className={`text-left text-xs px-3 py-1.5 rounded hover:bg-muted transition-colors ${role.id === row.role_id ? "bg-muted font-semibold" : ""
-                      }`}
-                    onClick={() => {
-                      if (role.id !== row.role_id) {
-                        handleRoleChange(row, role.id.toString());
-                      }
-                    }}
-                  >
-                    {role.name}
-                  </button>
-                ))}
+                {rolesData?.data
+                  ?.filter((role) => role.level < currentUserLevel)
+                  .map((role) => (
+                    <button
+                      key={role.id}
+                      type="button"
+                      className={`text-left text-xs px-3 py-1.5 rounded hover:bg-muted transition-colors ${role.id === row.role_id ? "bg-muted font-semibold" : ""}`}
+                      onClick={() => {
+                        if (role.id !== row.role_id) {
+                          handleRoleChange(row, role.id.toString());
+                        }
+                      }}
+                    >
+                      {role.name}
+                    </button>
+                  ))}
               </div>
             </PopoverContent>
           </Popover>
@@ -216,7 +223,8 @@ export function UsersContent() {
           onText="ON"
           offText="OFF"
           disabled={
-            isSuperAdminOrDeveloper(row) ||
+            row.id === currentUser?.id ||
+            isHigherOrEqualLevel(row) ||
             (updateUserMutation.isPending &&
               updateUserMutation.variables?.id === row.id)
           }
@@ -263,8 +271,7 @@ export function UsersContent() {
               sortColumn={sort?.column}
               sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
               onStatusToggle={(row, val) => {
-                // Prevent status toggle for super admin or developer
-                if (isSuperAdminOrDeveloper(row)) return;
+                if (isHigherOrEqualLevel(row) || row.id === currentUser?.id) return;
                 toggleStatusMutation.mutate({
                   id: row.id,
                   is_active: val ? 1 : 0,
@@ -276,7 +283,9 @@ export function UsersContent() {
               showStatus
               showCreated
               showActions
-              disableStatusToggle={(row) => isSuperAdminOrDeveloper(row)}
+              disableStatusToggle={(row) => isHigherOrEqualLevel(row) || row.id === currentUser?.id}
+              disableEdit={(row) => row.id !== currentUser?.id && (row.role?.level ?? 0) >= currentUserLevel}
+              disableDelete={(row) => row.id === currentUser?.id || (row.role?.level ?? 0) >= currentUserLevel}
             />
 
             {data?.pagination && (

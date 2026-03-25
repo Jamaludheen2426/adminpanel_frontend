@@ -298,6 +298,17 @@ export function LocalitiesTab() {
   };
 
   const onSubmit = (data: LocalityForm) => {
+    // Check for duplicate pincode in same city
+    const isDuplicate = localities.some(
+      (loc) =>
+        loc.city_id === data.city_id &&
+        loc.pincode.trim().toLowerCase() === data.pincode.trim().toLowerCase() &&
+        loc.id !== editItem?.id
+    );
+    if (isDuplicate) {
+      form.setError('pincode', { message: 'This pincode already exists in the selected district' });
+      return;
+    }
     if (editItem) {
       updateLocality.mutate(
         { id: editItem.id, data },

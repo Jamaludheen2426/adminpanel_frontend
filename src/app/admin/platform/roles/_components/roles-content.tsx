@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Search, Check } from "lucide-react";
+import { Plus, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   CommonTable,
   type CommonColumn,
 } from "@/components/common/common-table";
-import { Switch } from "@/components/ui/switch";
-import { isApprovalRequired } from "@/lib/api-client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useRoles, useDeleteRole, useToggleRoleStatus } from "@/hooks/use-roles";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserRoleLevel } from "@/lib/auth-utils";
 import { useTranslation } from "@/hooks/use-translation";
 import { useDebounce } from "@/hooks/use-debounce";
 import { PageLoader } from "@/components/common/page-loader";
@@ -25,6 +25,8 @@ import { useMemo } from "react";
 export function RolesContent() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { user: currentUser } = useAuth();
+  const currentUserLevel = getUserRoleLevel(currentUser);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -57,14 +59,11 @@ export function RolesContent() {
 
   const normalise = (item: Role) => ({
     ...item,
-    is_active: item.is_active === 1,
+    is_active: item.is_active,
     created_at: (item as any).createdAt ?? item.created_at ?? "",
   });
 
   const roles = useMemo(() => (data?.data ?? []).map(normalise), [data?.data]);
-
-  const isSuperAdminOrDeveloper = (role: Role) =>
-    role.slug === "super_admin" || role.slug === "developer";
 
   const columns: CommonColumn<Role>[] = [
     {
@@ -130,12 +129,18 @@ export function RolesContent() {
               onSort={handleSort}
               sortColumn={sort?.column}
               sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
-              onStatusToggle={(row, val) => toggleStatusMutation.mutate({ id: row.id, is_active: val ? 1 : 0 })}
+              onStatusToggle={(row, val) => {
+                if ((row.level ?? 0) > currentUserLevel || row.id === currentUser?.role_id) return;
+                toggleStatusMutation.mutate({ id: row.id, is_active: val ? 1 : 0 });
+              }}
+              disableStatusToggle={(row) => (row.level ?? 0) > currentUserLevel || row.id === currentUser?.role_id}
               onEdit={(row) => router.push(`/admin/platform/roles/${row.id}/edit`)}
               onDelete={(row) => {
-                if (isSuperAdminOrDeveloper(row)) return;
+                if ((row.level ?? 0) > currentUserLevel || row.id === currentUser?.role_id) return;
                 setDeleteRole(row);
               }}
+              disableEdit={(row) => (row.level ?? 0) > currentUserLevel}
+              disableDelete={(row) => (row.level ?? 0) > currentUserLevel || row.id === currentUser?.role_id}
               emptyMessage={t("roles.no_roles_found")}
               showStatus
               showCreated

@@ -10,6 +10,7 @@ import {
     useFaqCategories,
     useCreateFaqCategory,
     useUpdateFaqCategory,
+    useUpdateFaqCategoryStatus,
     useDeleteFaqCategory,
     FaqCategory
 } from '@/hooks/use-faq-categories';
@@ -46,6 +47,7 @@ export function FaqCategoriesContent() {
     const createCategory = useCreateFaqCategory();
     const updateCategory = useUpdateFaqCategory();
     const deleteCategory = useDeleteFaqCategory();
+    const updateCategoryStatus = useUpdateFaqCategoryStatus();
 
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<FaqCategory | null>(null);
@@ -112,8 +114,8 @@ export function FaqCategoriesContent() {
             cell: ({ row }) => (
                 <Switch
                     checked={Number(row.original.is_active) === 1}
-                    disabled={Number(row.original.is_active) === 2 || updateCategory.isPending}
-                    onCheckedChange={(checked) => updateCategory.mutate({ id: row.original.id, data: { is_active: checked } })}
+                    disabled={Number(row.original.is_active) === 2 || updateCategory.isPending || updateCategoryStatus.isPending}
+                    onCheckedChange={(checked) => updateCategoryStatus.mutate({ id: row.original.id, is_active: checked })}
                 />
             ),
         },

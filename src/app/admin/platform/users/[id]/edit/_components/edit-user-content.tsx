@@ -4,6 +4,8 @@ import { useUser } from "@/hooks";
 import { UserForm } from "@/components/admin/users/user-form";
 import { PermissionGuard } from "@/components/guards/permission-guard";
 import { PageLoader } from "@/components/common/page-loader";
+import { useAuth } from "@/hooks/use-auth";
+import { getUserRoleLevel } from "@/lib/auth-utils";
 
 interface EditUserContentProps {
   userId: number;
@@ -11,10 +13,20 @@ interface EditUserContentProps {
 
 export function EditUserContent({ userId }: EditUserContentProps) {
   const { data: userData, isLoading } = useUser(userId);
+  const { user: currentUser } = useAuth();
+  const currentUserLevel = getUserRoleLevel(currentUser);
 
   if (!isLoading && !userData) {
     return (
       <div className="text-center py-16 text-muted-foreground">Employee not found.</div>
+    );
+  }
+
+  if (!isLoading && userData && userData.id !== currentUser?.id && (userData.role?.level ?? 0) >= currentUserLevel) {
+    return (
+      <div className="text-center py-16 text-muted-foreground">
+        You do not have permission to edit this employee.
+      </div>
     );
   }
 

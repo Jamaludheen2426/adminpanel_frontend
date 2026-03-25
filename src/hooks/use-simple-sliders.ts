@@ -60,6 +60,10 @@ const simpleSlidersApi = {
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/simple-sliders/${id}`);
     },
+    updateStatus: async ({ id, is_active }: { id: number; is_active: 0 | 1 }): Promise<SimpleSlider> => {
+        const response = await apiClient.patch(`/simple-sliders/${id}/status`, { is_active });
+        return response.data.data?.slider || response.data.data;
+    },
 };
 
 export const useSimpleSliders = (params?: GetSimpleSlidersParams) => {
@@ -133,6 +137,20 @@ export const useDeleteSimpleSlider = () => {
                 return;
             }
             toast.error(error.response?.data?.message || 'Failed to delete slider');
+        },
+    });
+};
+
+export const useUpdateSimpleSliderStatus = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: simpleSlidersApi.updateStatus,
+        onSuccess: (_, vars) => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.simpleSliders.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.simpleSliders.detail(vars.id) });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to update status');
         },
     });
 };
