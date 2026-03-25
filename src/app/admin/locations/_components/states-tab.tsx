@@ -138,7 +138,7 @@ export function StatesTab() {
   // ── normalise function for CommonTable ──
   const normalise = (item: State) => ({
     ...item,
-    is_active: Boolean(item.is_active),
+    is_active: item.is_active,   // keep raw value (2 = pending)
     created_at: (item as any).createdAt ?? item.created_at ?? "",
     country_name: item.country?.name ?? "",
   });
@@ -216,6 +216,7 @@ export function StatesTab() {
   };
 
   const openEdit = (state: State) => {
+    if (Number(state.is_active) === 2) return;
     setEditItem(state);
     form.reset({
       name: state.name,
@@ -223,7 +224,7 @@ export function StatesTab() {
       slug: state.slug ?? "",
       country_id: state.country_id,
       sort_order: state.sort_order,
-      is_active: Boolean(state.is_active),
+      is_active: Number(state.is_active) === 1,
       is_default: Boolean(state.is_default),
     });
     setDialogOpen(true);

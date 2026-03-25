@@ -106,13 +106,14 @@ export function FaqsContent() {
     };
 
     const openEdit = (item: Faq) => {
+        if (Number(item.is_active) === 2) return; // block editing pending items
         setEditItem(item);
         form.reset({
             faq_category_id: item.faq_category_id,
             question: item.question,
             answer: item.answer,
             sort_order: item.sort_order,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };

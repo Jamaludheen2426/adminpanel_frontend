@@ -128,6 +128,11 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const { data: rolesData } = useRoles({ limit: 100 });
 
   const currentUserLevel = getUserRoleLevel(currentUser);
+  const targetUserLevel = user?.role?.level ?? 0;
+
+  // Password section: hide when editing a user whose role level >= current user's level
+  // (Admin cannot change SuperAdmin/Developer password)
+  const canChangePassword = !user || currentUserLevel > targetUserLevel;
 
   const availableRoles = rolesData?.data?.filter((role) => {
     if (currentUser?.role?.slug === "developer") return true;
@@ -402,7 +407,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
       </Card>
 
       {/* Account Settings */}
-      <Card>
+      {canChangePassword && <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Account Settings</CardTitle>
         </CardHeader>
@@ -459,7 +464,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isPending}>

@@ -34,6 +34,10 @@ const faqCategoriesApi = {
         const response = await apiClient.put(`/faq-categories/${id}`, data);
         return response.data.data?.faqCategory || response.data.faqCategory;
     },
+    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<FaqCategory> => {
+        const response = await apiClient.patch(`/faq-categories/${id}/status`, { is_active });
+        return response.data.data?.faqCategory || response.data.faqCategory;
+    },
     delete: async (id: number): Promise<void> => {
         await apiClient.delete(`/faq-categories/${id}`);
     },
@@ -88,6 +92,19 @@ export function useUpdateFaqCategory() {
                 return;
             }
             toast.error(error.response?.data?.message || 'Failed to update FAQ Category');
+        },
+    });
+}
+
+export function useUpdateFaqCategoryStatus() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: faqCategoriesApi.updateStatus,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to update status');
         },
     });
 }

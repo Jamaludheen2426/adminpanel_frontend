@@ -202,7 +202,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
             category_ids: defaultValues?.categories?.map((c) => c.id) ?? [],
             tag_ids: defaultValues?.tags?.map((tg) => tg.id) ?? [],
             is_featured: Boolean(defaultValues?.is_featured),
-            is_active: defaultValues?.is_active !== undefined ? Boolean(defaultValues.is_active) : true,
+            is_active: defaultValues?.is_active !== undefined ? Number(defaultValues.is_active) === 1 : true,
         },
     });
 

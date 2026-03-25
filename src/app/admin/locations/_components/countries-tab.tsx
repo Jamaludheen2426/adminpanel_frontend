@@ -115,7 +115,7 @@ export function CountriesTab() {
 
   const normalise = (item: Country) => ({
     ...item,
-    is_active: Boolean(item.is_active),
+    is_active: item.is_active,   // keep raw value (2 = pending)
     created_at: (item as any).createdAt ?? item.created_at ?? "",
   });
 
@@ -192,13 +192,14 @@ export function CountriesTab() {
   };
 
   const openEdit = (country: Country) => {
+    if (Number(country.is_active) === 2) return;
     setEditItem(country);
     form.reset({
       name: country.name,
       code: country.code,
       nationality: country.nationality ?? "",
       sort_order: country.sort_order,
-      is_active: Boolean(country.is_active),
+      is_active: Number(country.is_active) === 1,
       is_default: Boolean(country.is_default),
     });
     setDialogOpen(true);

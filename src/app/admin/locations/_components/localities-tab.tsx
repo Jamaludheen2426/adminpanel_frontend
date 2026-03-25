@@ -174,7 +174,7 @@ export function LocalitiesTab() {
   // ── normalise function for CommonTable ──
   const normalise = (item: LocalityWithNested) => ({
     ...item,
-    is_active: Boolean(item.is_active),
+    is_active: item.is_active,   // keep raw value (2 = pending)
     created_at: (item as any).createdAt ?? item.created_at ?? '',
     country_name: getCountryName(item),
     state_name: getStateName(item),
@@ -281,12 +281,13 @@ export function LocalitiesTab() {
   };
 
   const openEdit = (loc: LocalityWithNested) => {
+    if (Number(loc.is_active) === 2) return;
     setEditItem(loc);
     form.reset({
       name: loc.name,
       pincode: loc.pincode,
       city_id: loc.city_id,
-      is_active: Boolean(loc.is_active),
+      is_active: Number(loc.is_active) === 1,
       is_default: Boolean(loc.is_default),
     });
     const countryId = getCountryId(loc);

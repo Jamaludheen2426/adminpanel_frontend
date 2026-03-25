@@ -135,12 +135,10 @@ function DateTimePicker({ value, onChange, placeholder }: {
 
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-type NormalizedAnnouncement = Omit<Announcement, 'is_active' | 'created_at'> & { is_active: boolean; created_at: string };
-
-function normalise(item: Announcement): NormalizedAnnouncement {
+function normalise(item: Announcement) {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: item.is_active,   // keep raw value (2 = pending)
         created_at: item.created_at ?? (item as any).createdAt ?? '',
     };
 }
@@ -183,6 +181,7 @@ export function AnnouncementsContent() {
     };
 
     const openEdit = (item: Announcement) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         form.reset({
             name: item.name,
@@ -195,7 +194,7 @@ export function AnnouncementsContent() {
             open_in_new_tab: Boolean(item.open_in_new_tab),
             bg_color: (item.bg_color as string) ?? '#ffffff',
             text_color: (item.text_color as string) ?? '#000000',
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };

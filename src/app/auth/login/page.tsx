@@ -87,7 +87,7 @@ export default function LoginPage() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" autoComplete="off">
               {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-gray-700 text-sm font-medium">

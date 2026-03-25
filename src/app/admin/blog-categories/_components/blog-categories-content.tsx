@@ -97,6 +97,7 @@ export function BlogCategoriesContent() {
     };
 
     const openEdit = (item: BlogCategory) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         setSlugManuallyEdited(true);
         setPreviewImageUrl(resolveMediaUrl(item.image || ''));
@@ -106,7 +107,7 @@ export function BlogCategoriesContent() {
             description: item.description ?? '',
             image: item.image ?? '',
             sort_order: item.sort_order,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };

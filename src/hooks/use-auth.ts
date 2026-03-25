@@ -262,9 +262,9 @@ export function useSmartLogin() {
       const res = await apiClient.post('/vendors/auth/login', data);
       return { type: 'vendor' as const, vendor: res.data.data.vendor };
     },
-    onSuccess: ({ type }) => {
-      if (type === 'admin') {
-        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+    onSuccess: (result) => {
+      if (result.type === 'admin') {
+        queryClient.setQueryData(queryKeys.auth.me(), result.user);
         toast.success('Login successful');
         if (typeof window !== 'undefined') {
           const exp = new Date();

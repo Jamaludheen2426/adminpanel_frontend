@@ -46,10 +46,10 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-function normalise(item: Subscription): Subscription & { created_at: string; is_active: boolean } {
+function normalise(item: Subscription) {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: item.is_active,   // keep raw value (2 = pending)
         menu_ids: Array.isArray(item.menu_ids) ? item.menu_ids : [],
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
@@ -98,6 +98,7 @@ export function SubscriptionsContent() {
     };
 
     const openEdit = (item: Subscription) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         form.reset({
             name: item.name,
@@ -107,7 +108,7 @@ export function SubscriptionsContent() {
             validity: item.validity ?? 0,
             features: item.features || '',
             sort_order: item.sort_order ?? 0,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };

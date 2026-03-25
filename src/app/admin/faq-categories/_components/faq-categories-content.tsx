@@ -4,11 +4,12 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Pencil, Trash2, List } from 'lucide-react';
+import { Plus, List } from 'lucide-react';
 import {
     useFaqCategories,
     useCreateFaqCategory,
     useUpdateFaqCategory,
+    useUpdateFaqCategoryStatus,
     useDeleteFaqCategory,
     FaqCategory
 } from '@/hooks/use-faq-categories';
@@ -36,10 +37,10 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: FaqCategory): FaqCategory & { created_at: string; is_active: boolean } {
+function normalise(item: FaqCategory) {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: item.is_active,   // keep raw value (2 = pending)
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
 }
@@ -54,6 +55,7 @@ export function FaqCategoriesContent() {
     const categories = useMemo(() => rawCategories.map(normalise), [rawCategories]);
     const createCategory = useCreateFaqCategory();
     const updateCategory = useUpdateFaqCategory();
+    const updateCategoryStatus = useUpdateFaqCategoryStatus();
     const deleteCategory = useDeleteFaqCategory();
 
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,12 +80,13 @@ export function FaqCategoriesContent() {
     };
 
     const openEdit = (item: FaqCategory) => {
+        if (Number(item.is_active) === 2) return; // block editing pending items
         setEditItem(item);
         form.reset({
             name: item.name,
             description: item.description ?? '',
             sort_order: item.sort_order,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };
@@ -146,7 +149,7 @@ export function FaqCategoriesContent() {
                         isLoading={isLoading}
                         emptyMessage={t('faq.no_categories', 'No categories found.')}
                         onStatusToggle={(row, val) =>
-                            updateCategory.mutate({ id: row.id, data: { is_active: val } })
+                            updateCategoryStatus.mutate({ id: row.id, is_active: val })
                         }
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}

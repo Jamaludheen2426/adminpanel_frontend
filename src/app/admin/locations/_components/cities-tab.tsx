@@ -123,7 +123,7 @@ export function CitiesTab() {
 
   const normalise = (item: City) => ({
     ...item,
-    is_active: Boolean(item.is_active),
+    is_active: item.is_active,   // keep raw value (2 = pending)
     created_at: (item as any).createdAt ?? item.created_at ?? "",
     state_name: item.state?.name ?? "–",
     country_name: getCityCountryName(item),
@@ -190,12 +190,13 @@ export function CitiesTab() {
   };
 
   const openEdit = (city: City) => {
+    if (Number(city.is_active) === 2) return;
     setEditItem(city);
     form.reset({
       name: city.name, state_id: city.state_id,
       country_id: city.country_id ?? undefined,
       slug: city.slug ?? "", sort_order: city.sort_order,
-      is_active: Boolean(city.is_active), is_default: Boolean(city.is_default),
+      is_active: Number(city.is_active) === 1, is_default: Boolean(city.is_default),
     });
     if (city.country_id) setSelectedCountryId(city.country_id);
     setDialogOpen(true);

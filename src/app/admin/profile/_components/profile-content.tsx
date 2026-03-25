@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,7 +21,7 @@ import { useUploadMedia } from "@/hooks/use-media";
 import { useTranslation } from "@/hooks/use-translation";
 import { useTimezones } from "@/hooks/use-timezones";
 import { Spinner } from "@/components/ui/spinner";
-import { User, Mail, Phone, Shield, Calendar, Camera } from "lucide-react";
+import { User, Mail, Phone, Shield, Calendar, Camera, Eye, EyeOff } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,9 +41,9 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    current_password: z.string().min(1, "Current password is required"),
-    new_password: z.string().min(6, "New password must be at least 6 characters"),
-    confirm_password: z.string().min(1, "Please confirm your password"),
+    current_password: z.string().trim().min(6, "Current password must be at least 6 characters"),
+    new_password: z.string().trim().min(6, "New password must be at least 6 characters"),
+    confirm_password: z.string().trim().min(6, "Confirm password must be at least 6 characters"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords don't match",
@@ -61,6 +61,9 @@ export function ProfileContent() {
   const uploadMedia = useUploadMedia();
   const { data: timezones = [] } = useTimezones();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -85,6 +88,7 @@ export function ProfileContent() {
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
+    mode: "onBlur",
     defaultValues: {
       current_password: "",
       new_password: "",
@@ -288,12 +292,22 @@ export function ProfileContent() {
                 <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="current_password">{t('profile.current_password')}</Label>
-                    <Input
-                      id="current_password"
-                      type="password"
-                      placeholder={t('profile.enter_current_password')}
-                      {...passwordForm.register("current_password")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="current_password"
+                        type={showCurrentPassword ? "text" : "password"}
+                        placeholder={t('profile.enter_current_password')}
+                        className="pr-10"
+                        {...passwordForm.register("current_password")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     {passwordForm.formState.errors.current_password && (
                       <p className="text-sm text-destructive">
                         {passwordForm.formState.errors.current_password.message}
@@ -303,12 +317,22 @@ export function ProfileContent() {
 
                   <div className="space-y-2">
                     <Label htmlFor="new_password">{t('profile.new_password')}</Label>
-                    <Input
-                      id="new_password"
-                      type="password"
-                      placeholder={t('profile.enter_new_password')}
-                      {...passwordForm.register("new_password")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="new_password"
+                        type={showNewPassword ? "text" : "password"}
+                        placeholder={t('profile.enter_new_password')}
+                        className="pr-10"
+                        {...passwordForm.register("new_password")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     {passwordForm.formState.errors.new_password && (
                       <p className="text-sm text-destructive">
                         {passwordForm.formState.errors.new_password.message}
@@ -318,12 +342,22 @@ export function ProfileContent() {
 
                   <div className="space-y-2">
                     <Label htmlFor="confirm_password">{t('profile.confirm_password')}</Label>
-                    <Input
-                      id="confirm_password"
-                      type="password"
-                      placeholder={t('profile.confirm_new_password')}
-                      {...passwordForm.register("confirm_password")}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="confirm_password"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder={t('profile.confirm_new_password')}
+                        className="pr-10"
+                        {...passwordForm.register("confirm_password")}
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-0 top-0 h-full px-3 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     {passwordForm.formState.errors.confirm_password && (
                       <p className="text-sm text-destructive">
                         {passwordForm.formState.errors.confirm_password.message}

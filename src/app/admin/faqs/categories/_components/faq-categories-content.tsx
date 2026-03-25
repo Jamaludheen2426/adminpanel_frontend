@@ -69,12 +69,13 @@ export function FaqCategoriesContent() {
     };
 
     const openEdit = (item: FaqCategory) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         form.reset({
             name: item.name,
             description: item.description ?? '',
             sort_order: item.sort_order,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setDialogOpen(true);
     };
@@ -110,9 +111,9 @@ export function FaqCategoriesContent() {
             header: t('common.active', 'Active'),
             cell: ({ row }) => (
                 <Switch
-                    checked={Boolean(row.original.is_active)}
+                    checked={Number(row.original.is_active) === 1}
+                    disabled={Number(row.original.is_active) === 2 || updateCategory.isPending}
                     onCheckedChange={(checked) => updateCategory.mutate({ id: row.original.id, data: { is_active: checked } })}
-                    disabled={updateCategory.isPending}
                 />
             ),
         },

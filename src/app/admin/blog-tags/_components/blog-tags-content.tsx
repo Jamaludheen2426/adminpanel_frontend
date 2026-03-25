@@ -80,9 +80,10 @@ export function BlogTagsContent() {
     };
 
     const openEdit = (item: BlogTag) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         setSlugManuallyEdited(true);
-        form.reset({ name: item.name, slug: item.slug, is_active: Boolean(item.is_active) });
+        form.reset({ name: item.name, slug: item.slug, is_active: Number(item.is_active) === 1 });
         setDialogOpen(true);
     };
 

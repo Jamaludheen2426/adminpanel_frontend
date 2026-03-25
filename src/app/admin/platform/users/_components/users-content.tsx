@@ -123,7 +123,7 @@ export function UsersContent() {
 
   const normalise = (item: User) => ({
     ...item,
-    is_active: item.is_active === 1,
+    is_active: item.is_active,   // keep raw value (0=inactive, 1=active, 2=pending)
     created_at: (item as any).createdAt ?? item.created_at ?? "",
   });
 

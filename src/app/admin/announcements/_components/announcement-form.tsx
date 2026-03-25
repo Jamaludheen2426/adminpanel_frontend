@@ -73,7 +73,7 @@ export function AnnouncementForm({ defaultValues, onSave, isPending }: Announcem
             open_in_new_tab: Boolean(defaultValues?.open_in_new_tab),
             bg_color: defaultValues?.bg_color ?? '#ffffff',
             text_color: defaultValues?.text_color ?? '#000000',
-            is_active: defaultValues?.is_active !== undefined ? Boolean(defaultValues.is_active) : true,
+            is_active: defaultValues?.is_active !== undefined ? Number(defaultValues.is_active) === 1 : true,
         },
     });
 

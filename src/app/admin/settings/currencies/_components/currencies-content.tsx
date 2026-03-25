@@ -196,7 +196,7 @@ export function CurrenciesContent() {
 
                         <TableCell>
                           <Switch
-                            checked={Boolean(currency.is_active)}
+                            checked={Number(currency.is_active) === 1}
                             pending={
                               isApprovalRequired(
                                 toggleStatusMutation.error

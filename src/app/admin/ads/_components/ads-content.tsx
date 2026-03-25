@@ -204,7 +204,7 @@ export function AdsContent() {
                         data={ads as any}
                         columns={columns}
                         isLoading={isLoading}
-                        onEdit={(row: any) => setEditAd(row)}
+                        onEdit={(row: any) => Number(row.is_active) !== 2 && setEditAd(row)}
                         onDelete={(row: any) => setDeleteId(row.id)}
                         onStatusToggle={(row: any, val: boolean) =>
                             updateAd.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })

@@ -97,6 +97,7 @@ export function TestimonialsContent() {
     };
 
     const openEdit = (item: Testimonial) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         form.reset({
             name: item.name,
@@ -104,7 +105,7 @@ export function TestimonialsContent() {
             content: item.content,
             image: item.image,
             sort_order: item.sort_order,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
         });
         setPreviewImageUrl(resolveMediaUrl(item.image || ''));
         setCropperKey(k => k + 1);

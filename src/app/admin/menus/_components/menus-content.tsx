@@ -73,10 +73,10 @@ function DynamicIcon({ name, color, size = 'h-5 w-5' }: { name: string; color?: 
     return <LucideIcon className={size} style={style} />;
 }
 
-function normalise(item: Menu): Menu & { created_at: string; is_active: boolean; display_status: boolean } {
+function normalise(item: Menu) {
     return {
         ...item,
-        is_active: Boolean(item.is_active),
+        is_active: item.is_active,   // keep raw value (2 = pending)
         display_status: Boolean(item.display_status),
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
     };
@@ -136,6 +136,7 @@ export function MenusContent() {
     };
 
     const openEdit = (item: Menu) => {
+        if (Number(item.is_active) === 2) return;
         setEditItem(item);
         form.reset({
             name: item.name,
@@ -143,7 +144,7 @@ export function MenusContent() {
             icon_fill_color_light: item.icon_fill_color_light || '',
             icon_fill_color_dark: item.icon_fill_color_dark || '',
             sort_order: item.sort_order ?? 0,
-            is_active: Boolean(item.is_active),
+            is_active: Number(item.is_active) === 1,
             display_status: Boolean(item.display_status),
         });
         setDialogOpen(true);

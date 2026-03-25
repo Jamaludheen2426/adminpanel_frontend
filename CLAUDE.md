@@ -1,5 +1,12 @@
 # AdminPanel Frontend — CLAUDE.md
 
+## Module Documentation
+Detailed per-module docs (routes, hooks, DB tables, permissions, approval workflow) are in:
+- **Index:** [`docs/INDEX.md`](docs/INDEX.md)
+- **Modules:** [`docs/modules/`](docs/modules/) — one file per module group
+
+Read the relevant module doc when working on a specific feature. The index lists all 19 module docs.
+
 ## Project Overview
 Next.js 15.1 admin dashboard with TypeScript. Multi-tenant, role-based access control (RBAC), approval workflows, and extensive content management. Built with React 19, Shadcn/ui, TanStack Query, and Tailwind CSS.
 

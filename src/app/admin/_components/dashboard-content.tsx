@@ -265,10 +265,10 @@ function CompanyDashboard() {
 
   // Define quick actions with permissions
   const quickActions = [
-    { href: "/admin/platform/users", icon: Users, labelKey: "users.manage_users", permission: "employees.view" },
-    { href: "/admin/platform/roles", icon: Shield, labelKey: "roles.manage_roles", permission: "roles.view" },
-    { href: "/admin/settings", icon: Settings, labelKey: "nav.settings", permission: "settings.view" },
-    { href: "/admin/platform/activity-logs", icon: Activity, labelKey: "activity.logs", permission: "activity_logs.view" },
+    { href: "/admin/platform/users", icon: Users, label: "Manage Users", permission: "employees.view" },
+    { href: "/admin/platform/roles", icon: Shield, label: "Manage Roles", permission: "roles.view" },
+    { href: "/admin/settings", icon: Settings, label: "Settings", permission: "settings.view" },
+    { href: "/admin/platform/activity-logs", icon: Activity, label: "Activity Logs", permission: "activity_logs.view" },
   ];
 
   // Filter quick actions based on permissions
@@ -308,7 +308,7 @@ function CompanyDashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {visibleStats.map((stat) => {
           const Icon = stat.icon;
           return (
@@ -343,14 +343,14 @@ function CompanyDashboard() {
           <CardTitle>{t('dashboard.quick_actions')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
             {visibleActions.map((action) => {
               const Icon = action.icon;
               return (
-                <Link key={action.labelKey} href={action.href}>
-                  <Button variant="outline" className="w-full">
-                    <Icon className="mr-2 h-4 w-4" />
-                    {t(action.labelKey)}
+                <Link key={action.label} href={action.href}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <Icon className="mr-2 h-4 w-4 shrink-0" />
+                    <span className="truncate">{action.label}</span>
                   </Button>
                 </Link>
               );
