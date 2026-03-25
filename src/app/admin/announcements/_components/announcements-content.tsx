@@ -50,6 +50,8 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+type NormalizedAnnouncement = Omit<Announcement, 'created_at'> & { created_at: string };
+
 function toDate(dt: string | null | undefined): Date | null {
     if (!dt) return null;
     const d = new Date(dt);
@@ -135,7 +137,7 @@ function DateTimePicker({ value, onChange, placeholder }: {
 
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: Announcement) {
+function normalise(item: Announcement): NormalizedAnnouncement {
     return {
         ...item,
         is_active: item.is_active,   // keep raw value (2 = pending)
@@ -223,7 +225,7 @@ export function AnnouncementsContent() {
     const isPending = createAnnouncement.isPending || updateAnnouncement.isPending;
 
     // ── CommonTable column definitions ───────────────────────────────────────────
-    const columns: CommonColumn<NormalizedAnnouncement>[] = [
+    const columns: CommonColumn<Announcement>[] = [
         {
             key: 'name',
             header: t('announcements.name', 'Name'),
