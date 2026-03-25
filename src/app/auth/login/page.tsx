@@ -97,6 +97,7 @@ export default function LoginPage() {
                   id="email"
                   type="email"
                   placeholder="admin@example.com"
+                  autoComplete="new-password"
                   className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500"
                   {...register("email")}
                 />
@@ -115,6 +116,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    autoComplete="new-password"
                     className="bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500 pr-10"
                     {...register("password")}
                   />

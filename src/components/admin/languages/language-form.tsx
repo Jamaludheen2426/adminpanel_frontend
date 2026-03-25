@@ -42,7 +42,8 @@ export function LanguageForm({ open, onOpenChange, language, onSuccess }: Langua
 
     const handleSubmit = (data: any) => {
         if (language) {
-            updateMutation.mutate({ id: language.id, data }, { onSuccess });
+            const { code, ...updateData } = data;
+            updateMutation.mutate({ id: language.id, data: updateData }, { onSuccess });
         } else {
             createMutation.mutate(data, { onSuccess });
         }

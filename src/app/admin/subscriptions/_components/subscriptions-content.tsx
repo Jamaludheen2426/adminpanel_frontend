@@ -36,7 +36,7 @@ const schema = z.object({
     menu_ids: z.array(z.number()).default([]),
     price: z.preprocess(
         (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
-        z.number({ required_error: 'Price is required' }).min(0, 'Price must be 0 or more')
+        z.number({ required_error: 'Price is required' }).min(0.01, 'Price must be greater than 0')
     ),
     validity: z.coerce.number().int().min(0).default(0),
     features: z.string().default(''),
@@ -223,7 +223,7 @@ export function SubscriptionsContent() {
 
                         {/* Plan Name */}
                         <div className="space-y-2">
-                            <Label htmlFor="name">Plan Name *</Label>
+                            <Label htmlFor="name">Plan Name <span className="text-destructive">*</span></Label>
                             <Input id="name" {...form.register('name')} placeholder="e.g. Pro Plan" />
                             {form.formState.errors.name && (
                                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
@@ -304,7 +304,7 @@ export function SubscriptionsContent() {
                         {/* Price + Validity */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="price">Price *</Label>
+                                <Label htmlFor="price">Price <span className="text-destructive">*</span></Label>
                                 <Input id="price" type="number" min={0} step="0.01" {...form.register('price')} placeholder="0.00" />
                                 {form.formState.errors.price && (
                                     <p className="text-xs text-destructive">{form.formState.errors.price.message}</p>
