@@ -32,7 +32,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -78,7 +77,6 @@ export function CitiesTab() {
   const [page, setPage] = useState(1);
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
   const [filterStateId, setFilterStateId] = useState<string>("all");
-  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<City | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -99,8 +97,7 @@ export function CitiesTab() {
       : filterCountryId !== "all"
         ? { country_id: Number(filterCountryId) }
         : {}),
-    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
-  } as any);
+  });
   const cities = pageData?.data ?? [];
   const pagination = pageData?.pagination;
   const { data: countriesRaw = [] } = useCountries();
@@ -130,15 +127,6 @@ export function CitiesTab() {
   });
 
   const processedCities = useMemo(() => cities.map(normalise), [cities]);
-
-  const handleSort = (column: string) => {
-    setSort((prev) => {
-      if (prev?.column !== column) return { column, direction: "asc" };
-      if (prev.direction === "asc") return { column, direction: "desc" };
-      return null;
-    });
-    setPage(1);
-  };
 
   const columns: CommonColumn<any>[] = [
     {
@@ -339,9 +327,6 @@ export function CitiesTab() {
             columns={columns}
             data={processedCities as any}
             isLoading={isLoading}
-            onSort={handleSort}
-            sortColumn={sort?.column}
-            sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
             onStatusToggle={(row, val) => updateCity.mutate({ id: row.id, data: { is_active: val } })}
             onEdit={openEdit}
             onDelete={(row) => setDeleteId(row.id)}

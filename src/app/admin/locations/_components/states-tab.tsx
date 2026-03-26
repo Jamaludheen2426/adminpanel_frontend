@@ -99,7 +99,6 @@ export function StatesTab() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
-  const [sort, setSort] = useState<{ column: string; direction: "asc" | "desc" } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<State | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -113,8 +112,7 @@ export function StatesTab() {
   const { data: pageData, isLoading } = useStatesPaginated({
     page, limit: PAGE_SIZE, search: search || undefined,
     ...(filterCountryId !== "all" ? { country_id: Number(filterCountryId) } : {}),
-    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
-  } as any);
+  });
   const states = pageData?.data ?? [];
   const pagination = pageData?.pagination;
   const { data: countriesRaw = [] } = useCountries();
@@ -144,15 +142,6 @@ export function StatesTab() {
   });
 
   const processedStates = useMemo(() => states.map(normalise), [states]);
-
-  const handleSort = (column: string) => {
-    setSort((prev) => {
-      if (prev?.column !== column) return { column, direction: "asc" };
-      if (prev.direction === "asc") return { column, direction: "desc" };
-      return null;
-    });
-    setPage(1);
-  };
 
   const columns: CommonColumn<any>[] = [
     {
@@ -354,9 +343,6 @@ export function StatesTab() {
             columns={columns}
             data={processedStates as any}
             isLoading={isLoading}
-            onSort={handleSort}
-            sortColumn={sort?.column}
-            sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
             onStatusToggle={(row, val) => updateState.mutate({ id: row.id, data: { is_active: val } })}
             onEdit={openEdit}
             onDelete={(row) => setDeleteId(row.id)}

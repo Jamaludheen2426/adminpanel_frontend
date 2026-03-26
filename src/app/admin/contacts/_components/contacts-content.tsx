@@ -22,7 +22,6 @@ export function ContactsContent() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [search] = useState('');
-    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>('all');
 
     // API params
@@ -30,8 +29,6 @@ export function ContactsContent() {
         page,
         limit,
         search,
-        sortBy: sort?.column,
-        sortDesc: sort?.direction === 'desc',
     };
     if (filterStatus !== 'all') {
         queryParams.status = filterStatus;
@@ -43,15 +40,6 @@ export function ContactsContent() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const rawContacts: Contact[] = contactsResponse?.data || [];
-
-    const handleSort = (column: string) => {
-        if (sort?.column === column) {
-            if (sort.direction === 'asc') setSort({ column, direction: 'desc' });
-            else setSort(null);
-        } else {
-            setSort({ column, direction: 'asc' });
-        }
-    };
 
     const columns = [
         {
@@ -173,9 +161,6 @@ export function ContactsContent() {
                         data={rawContacts as any}
                         columns={columns}
                         isLoading={isLoading}
-                        sortColumn={sort?.column}
-                        sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
-                        onSort={handleSort}
                         showStatus={false}
                         showCreated={false}
                         showActions={false}

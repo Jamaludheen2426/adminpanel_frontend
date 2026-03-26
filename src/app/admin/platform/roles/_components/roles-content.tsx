@@ -31,31 +31,16 @@ export function RolesContent() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const debouncedSearch = useDebounce(search, 300);
-  const [sort, setSort] = useState<{ column: string; direction: "ASC" | "DESC" } | null>({
-    column: "name",
-    direction: "ASC",
-  });
-
   const [deleteRole, setDeleteRole] = useState<Role | null>(null);
 
   const { data, isLoading, isFetching } = useRoles({
     page,
     limit,
     search: debouncedSearch,
-    sort_by: sort?.column,
-    sort_order: sort?.direction,
   });
 
   const deleteRoleMutation = useDeleteRole();
   const toggleStatusMutation = useToggleRoleStatus();
-
-  const handleSort = (column: string) => {
-    setSort((prev) => {
-      if (prev?.column !== column) return { column, direction: "ASC" };
-      if (prev.direction === "ASC") return { column, direction: "DESC" };
-      return null;
-    });
-  };
 
   const normalise = (item: Role) => ({
     ...item,
@@ -126,9 +111,6 @@ export function RolesContent() {
               columns={columns}
               data={roles as any}
               isLoading={isLoading}
-              onSort={handleSort}
-              sortColumn={sort?.column}
-              sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
               onStatusToggle={(row, val) => {
                 if ((row.level ?? 0) > currentUserLevel || row.id === currentUser?.role_id) return;
                 toggleStatusMutation.mutate({ id: row.id, is_active: val ? 1 : 0 });

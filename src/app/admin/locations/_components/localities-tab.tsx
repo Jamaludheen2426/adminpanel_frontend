@@ -120,7 +120,6 @@ export function LocalitiesTab() {
   const [filterCountryId, setFilterCountryId] = useState<string>('all');
   const [filterStateId, setFilterStateId] = useState<string>('all');
   const [filterDistrictId, setFilterDistrictId] = useState<string>('all');
-  const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editItem, setEditItem] = useState<LocalityWithNested | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -147,8 +146,7 @@ export function LocalitiesTab() {
         : filterCountryId !== 'all'
           ? { country_id: Number(filterCountryId) }
           : {}),
-    ...(sort ? { sort_by: sort.column, sort_order: sort.direction } : {}),
-  } as any);
+  });
   const localities = (pageData?.data ?? []) as LocalityWithNested[];
   const pagination = pageData?.pagination;
 
@@ -191,15 +189,6 @@ export function LocalitiesTab() {
   // ── Processed list ──────────────────────────────────────────────────────────
 
   const processedLocalities = useMemo(() => localities.map(normalise), [localities]);
-
-  const handleSort = (column: string) => {
-    setSort((prev) => {
-      if (prev?.column !== column) return { column, direction: 'asc' };
-      if (prev.direction === 'asc') return { column, direction: 'desc' };
-      return null;
-    });
-    setPage(1);
-  };
 
   const columns: CommonColumn<any>[] = [
     {
@@ -494,9 +483,6 @@ export function LocalitiesTab() {
             columns={columns}
             data={processedLocalities}
             isLoading={isLoading}
-            onSort={handleSort}
-            sortColumn={sort?.column}
-            sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
             onStatusToggle={(row, val) =>
               updateLocality.mutate({ id: row.id, data: { is_active: val } })
             }

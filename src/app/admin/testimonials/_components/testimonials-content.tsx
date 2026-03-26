@@ -158,6 +158,7 @@ export function TestimonialsContent() {
         {
             key: 'sort_order',
             header: t('common.sort_order', 'Order'),
+            sortable: true,
             render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
@@ -173,6 +174,7 @@ export function TestimonialsContent() {
         {
             key: 'name',
             header: t('common.name', 'Name'),
+            sortable: true,
             render: (row) => (
                 <div className="flex flex-col">
                     <span className="font-medium text-foreground">{row.name}</span>

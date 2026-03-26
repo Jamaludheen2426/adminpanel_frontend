@@ -229,6 +229,7 @@ export function AnnouncementsContent() {
         {
             key: 'name',
             header: t('announcements.name', 'Name'),
+            sortable: true,
             render: (row) => (
                 <span className="font-medium max-w-xs truncate block">{row.name}</span>
             ),
@@ -236,6 +237,7 @@ export function AnnouncementsContent() {
         {
             key: 'start_date',
             header: t('announcements.start_date', 'Start Date'),
+            sortable: true,
             render: (row) => (
                 <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <CalendarIcon className="h-3.5 w-3.5" />
@@ -246,6 +248,7 @@ export function AnnouncementsContent() {
         {
             key: 'end_date',
             header: t('announcements.end_date', 'End Date'),
+            sortable: true,
             render: (row) => (
                 <span className="flex items-center gap-1 text-muted-foreground text-sm">
                     <CalendarIcon className="h-3.5 w-3.5" />

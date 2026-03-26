@@ -28,12 +28,11 @@ export function BannersContent() {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState('');
-    const [sort, setSort] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null);
     const [editBanner, setEditBanner] = useState<AdBanner | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    const { data: response, isLoading } = useAdBanners({ page, limit, search, sortBy: sort?.column, sortDesc: sort?.direction === 'desc' });
+    const { data: response, isLoading } = useAdBanners({ page, limit, search });
     const rawBanners: AdBanner[] = response?.data || [];
     const pagination = response?.pagination;
     const banners = rawBanners.map(banner => ({
@@ -53,15 +52,6 @@ export function BannersContent() {
         } else {
             createBanner.mutate(data);
             setCreateOpen(false);
-        }
-    };
-
-    const handleSort = (column: string) => {
-        if (sort?.column === column) {
-            if (sort.direction === 'asc') setSort({ column, direction: 'desc' });
-            else setSort(null);
-        } else {
-            setSort({ column, direction: 'asc' });
         }
     };
 
@@ -144,9 +134,6 @@ export function BannersContent() {
                         onStatusToggle={(row: any, val: boolean) =>
                             updateBanner.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }
-                        sortColumn={sort?.column}
-                        sortDirection={sort?.direction?.toLowerCase() as "asc" | "desc" | undefined}
-                        onSort={handleSort}
                         showCreated
                         showActions
                         emptyMessage={t('ads.no_banners', 'No banners found. Create your first banner template.')}

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ColumnDef } from '@tanstack/react-table';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import {
     useFaqCategories,
     useCreateFaqCategory,
@@ -16,7 +15,7 @@ import {
 } from '@/hooks/use-faq-categories';
 import { isApprovalRequired } from '@/lib/api-client';
 import { useTranslation } from '@/hooks/use-translation';
-import { DataTable } from '@/components/ui/data-table';
+import { CommonTable, type CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -92,48 +91,33 @@ export function FaqCategoriesContent() {
         }
     };
 
-    const columns = useMemo<ColumnDef<FaqCategory>[]>(() => [
+    const normalise = (item: FaqCategory) => ({
+        ...item,
+        is_active: item.is_active,
+        created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
+    });
+
+    const processedCategories = rawCategories.map(normalise);
+
+    const columns: CommonColumn<FaqCategory>[] = [
         {
-            accessorKey: 'sort_order',
+            key: 'sort_order',
             header: t('faq.sort_order', 'Sort Order'),
-            cell: ({ row }) => <span className="text-muted-foreground">{row.original.sort_order}</span>,
+            sortable: true,
+            render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('faq.category_name', 'Category Name'),
-            cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+            sortable: true,
+            render: (row) => <span className="font-medium">{row.name}</span>,
         },
         {
-            accessorKey: 'description',
+            key: 'description',
             header: t('faq.description', 'Description'),
-            cell: ({ row }) => <span className="text-muted-foreground truncate max-w-xs block">{row.original.description || '—'}</span>,
+            render: (row) => <span className="text-muted-foreground truncate max-w-xs block">{row.description || '—'}</span>,
         },
-        {
-            accessorKey: 'is_active',
-            header: t('common.active', 'Active'),
-            cell: ({ row }) => (
-                <Switch
-                    checked={Number(row.original.is_active) === 1}
-                    disabled={Number(row.original.is_active) === 2 || updateCategory.isPending || updateCategoryStatus.isPending}
-                    onCheckedChange={(checked) => updateCategoryStatus.mutate({ id: row.original.id, is_active: checked })}
-                />
-            ),
-        },
-        {
-            id: 'actions',
-            header: () => <div className="text-right">{t('common.actions', 'Actions')}</div>,
-            cell: ({ row }) => (
-                <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row.original)}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="destructive-outline" size="icon" onClick={() => setDeleteId(row.original.id)}>
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            ),
-        },
-    ], [t, updateCategory]);
+    ];
 
     const isPending = createCategory.isPending || updateCategory.isPending;
 
@@ -154,12 +138,19 @@ export function FaqCategoriesContent() {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {!isLoading && (
-                        <>
-                            <DataTable columns={columns} data={rawCategories} searchKey="name" />
-                            {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
-                        </>
-                    )}
+                    <CommonTable
+                        columns={columns}
+                        data={processedCategories as any}
+                        isLoading={isLoading}
+                        emptyMessage={t('faq.no_categories', 'No categories found.')}
+                        onStatusToggle={(row, val) => updateCategoryStatus.mutate({ id: row.id, is_active: val })}
+                        onEdit={openEdit}
+                        onDelete={(row) => setDeleteId(row.id)}
+                        showStatus
+                        showCreated
+                        showActions
+                    />
+                    {pagination && <TablePagination pagination={{ ...pagination, limit }} onPageChange={setPage} onLimitChange={setLimit} />}
                 </CardContent>
             </Card>
 

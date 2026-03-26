@@ -105,11 +105,13 @@ export function FaqCategoriesContent() {
         {
             key: 'sort_order',
             header: t('faq.sort_order', 'Sort Order'),
+            sortable: true,
             render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
             key: 'name',
             header: t('faq.category_name', 'Category Name'),
+            sortable: true,
             render: (row) => <span className="font-medium">{row.name}</span>,
         },
         {

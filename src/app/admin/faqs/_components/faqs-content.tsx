@@ -44,11 +44,12 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 // ─── normalise function for CommonTable ───────────────────────────────────────
-function normalise(item: Faq): Faq & { created_at: string; is_active: boolean | number } {
+function normalise(item: Faq): Faq & { created_at: string; is_active: boolean | number; category_name: string } {
     return {
         ...item,
         is_active: item.is_active as boolean | number,
         created_at: (item as any).created_at ?? (item as any).createdAt ?? '',
+        category_name: item.category?.name ?? '',
     };
 }
 
@@ -70,18 +71,6 @@ export function FaqsContent() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editItem, setEditItem] = useState<Faq | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
-    const [sortColumn, setSortColumn] = useState<string>('sort_order');
-    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-    const handleSort = (column: string) => {
-        if (sortColumn === column) {
-            setSortDirection(d => d === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortColumn(column);
-            setSortDirection('asc');
-        }
-    };
-
     const form = useForm<FormData>({
         resolver: zodResolver(schema),
         defaultValues: { faq_category_id: 0, question: '', answer: '', sort_order: 0, is_active: true },
@@ -127,17 +116,6 @@ export function FaqsContent() {
         }
     };
 
-    const sortedFaqs = useMemo(() => [...faqs].sort((a, b) => {
-        let aVal: any = a[sortColumn as keyof Faq];
-        let bVal: any = b[sortColumn as keyof Faq];
-        if (sortColumn === 'category.name') { aVal = a.category?.name ?? ''; bVal = b.category?.name ?? ''; }
-        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
-        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
-        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-        return 0;
-    }), [faqs, sortColumn, sortDirection]);
-
     const columns: CommonColumn<Faq>[] = [
         {
             key: 'sort_order',
@@ -146,7 +124,7 @@ export function FaqsContent() {
             render: (row) => <span className="text-muted-foreground">{row.sort_order}</span>,
         },
         {
-            key: 'category.name',
+            key: 'category_name',
             header: t('faq.category', 'Category'),
             sortable: true,
             render: (row) => (
@@ -186,12 +164,9 @@ export function FaqsContent() {
                 <CardContent>
                     <CommonTable
                         columns={columns}
-                        data={sortedFaqs as any}
+                        data={faqs as any}
                         isLoading={isLoading}
                         emptyMessage={t('faq.no_faqs', 'No FAQs found.')}
-                        sortColumn={sortColumn}
-                        sortDirection={sortDirection}
-                        onSort={handleSort}
                         onStatusToggle={(row, val) =>
                             updateFaq.mutate({ id: row.id, data: { is_active: val } })
                         }

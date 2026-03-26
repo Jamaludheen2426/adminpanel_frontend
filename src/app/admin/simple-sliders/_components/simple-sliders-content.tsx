@@ -42,11 +42,13 @@ export function SimpleSlidersContent() {
         {
             key: 'name',
             header: t('simple_sliders.name', 'Name'),
+            sortable: true,
             render: (row) => <span className="font-medium">{row.name}</span>,
         },
         {
             key: 'key',
             header: t('simple_sliders.key', 'Key'),
+            sortable: true,
             render: (row) => <span className="text-muted-foreground font-mono text-sm">{row.key}</span>,
         },
         {

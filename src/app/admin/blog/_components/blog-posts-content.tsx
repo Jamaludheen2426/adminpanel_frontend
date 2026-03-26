@@ -65,6 +65,7 @@ export function BlogPostsContent() {
         {
             key: 'title',
             header: t('blog.title', 'Title'),
+            sortable: true,
             render: (row: BlogPost) => (
                 <div className="max-w-xs">
                     <p className="font-medium truncate">{row.title}</p>
