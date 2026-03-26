@@ -141,6 +141,22 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
       if (hsl) {
         root.style.setProperty("--sidebar-background", hsl);
         root.style.setProperty("--sidebar-foreground", getForegroundForColor(sidebarColor));
+        // Derive sidebar hover fallback from sidebar bg (lightened for dark, darkened for light)
+        const parts = hsl.split(" ");
+        const l = parseFloat(parts[2]);
+        const hoverL = l < 30 ? Math.min(l + 16, 46) : Math.max(l - 10, 20);
+        root.style.setProperty("--sidebar-accent", `${parts[0]} ${parts[1]} ${hoverL}%`);
+        root.style.setProperty("--sidebar-accent-foreground", getForegroundForColor(sidebarColor));
+      }
+    }
+
+    // Apply sidebar hover color (dedicated — overrides the derived fallback above)
+    const sidebarHoverColor = getColor("sidebar_hover_color", "dark_sidebar_hover_color");
+    if (sidebarHoverColor) {
+      const hsl = hexToHsl(sidebarHoverColor);
+      if (hsl) {
+        root.style.setProperty("--sidebar-accent", hsl);
+        root.style.setProperty("--sidebar-accent-foreground", getForegroundForColor(sidebarHoverColor));
       }
     }
 
@@ -173,15 +189,13 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
       }
     }
 
-    // Apply accent color
+    // Apply accent color (page-level only — sidebar hover is controlled by sidebar_hover_color)
     const accentColor = getColor("accent_color", "dark_accent_color");
     if (accentColor) {
       const hsl = hexToHsl(accentColor);
       if (hsl) {
         root.style.setProperty("--accent", hsl);
         root.style.setProperty("--accent-foreground", getForegroundForColor(accentColor));
-        root.style.setProperty("--sidebar-accent", hsl);
-        root.style.setProperty("--sidebar-accent-foreground", getForegroundForColor(accentColor));
       }
     }
 
@@ -321,10 +335,10 @@ export function AppearanceProvider({ children }: { children: React.ReactNode }) 
         "--muted-foreground", "--muted",
         "--background",
         "--sidebar-background", "--sidebar-foreground",
+        "--sidebar-accent", "--sidebar-accent-foreground",
         "--card", "--popover",
         "--border", "--sidebar-border",
         "--accent", "--accent-foreground",
-        "--sidebar-accent", "--sidebar-accent-foreground",
         "--foreground", "--card-foreground", "--popover-foreground",
         "--admin-heading-color",
         "--admin-link-color", "--admin-link-hover-color",
