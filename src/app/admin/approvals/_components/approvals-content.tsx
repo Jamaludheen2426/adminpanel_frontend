@@ -60,6 +60,7 @@ export function ApprovalsContent() {
   type NormalizedApprovalRequest = Omit<ApprovalRequest, 'is_active'> & { is_active: boolean; approval_status: number };
   const normalise = (item: ApprovalRequest): NormalizedApprovalRequest => ({
     ...item,
+    created_at: item.created_at || item.createdAt || '',
     approval_status: item.is_active, // preserve 0=rejected,1=approved,2=pending for badge
     is_active: item.is_active === 1,
   });

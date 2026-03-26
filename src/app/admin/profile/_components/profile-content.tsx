@@ -41,11 +41,13 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    current_password: z.string().min(6, "Password must be at least 6 characters"),
+    current_password: z.string().min(1, "Current password is required"),
     new_password: z.string()
-      .min(6, "At least 6 characters required")
+      .min(8, "At least 8 characters required")
       .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Must contain at least one number"),
+      .regex(/[a-z]/, "Must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Must contain at least one number")
+      .regex(/[^a-zA-Z0-9]/, "Must contain at least one special character"),
     confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
@@ -108,9 +110,11 @@ export function ProfileContent() {
   const confirmPassword = useWatch({ control: passwordForm.control, name: "confirm_password" });
 
   const passwordRules = [
-    { label: "At least 6 characters", met: newPassword.length >= 6 },
+    { label: "At least 8 characters", met: newPassword.length >= 8 },
     { label: "At least one uppercase letter", met: /[A-Z]/.test(newPassword) },
+    { label: "At least one lowercase letter", met: /[a-z]/.test(newPassword) },
     { label: "At least one number", met: /[0-9]/.test(newPassword) },
+    { label: "At least one special character", met: /[^a-zA-Z0-9]/.test(newPassword) },
   ];
 
   const onProfileSubmit = (data: ProfileFormData) => {

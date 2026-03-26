@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ApprovalBadge } from './approval-badge';
 import { PageLoader } from '@/components/common/page-loader';
-import { CheckCircle, XCircle, User, Calendar, FileText } from 'lucide-react';
+import { CheckCircle, XCircle, User, Calendar, FileText, Trash2, Mail } from 'lucide-react';
 
 interface ApprovalDetailDialogProps {
   approvalId: number | null;
@@ -100,24 +100,27 @@ export function ApprovalDetailDialog({
             </div>
 
             {/* Request Info */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <User className="mr-2 h-4 w-4" />
-                  Requester
+            <div className="rounded-lg border p-4">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary text-sm">
+                  {approval.requester?.full_name?.charAt(0)?.toUpperCase() ?? 'U'}
                 </div>
-                <p className="text-sm font-medium">{approval.requester?.full_name}</p>
-                <p className="text-xs text-muted-foreground">{approval.requester?.email}</p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Requested On
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold leading-none">{approval.requester?.full_name ?? '—'}</p>
+                  <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                    <Mail className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{approval.requester?.email ?? '—'}</span>
+                  </div>
                 </div>
-                <p className="text-sm font-medium">
-                  {new Date(approval.createdAt || approval.created_at).toLocaleString()}
-                </p>
+                <div className="flex-shrink-0 text-right space-y-0.5">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground justify-end">
+                    <Calendar className="h-3 w-3" />
+                    <span>Requested On</span>
+                  </div>
+                  <p className="text-xs font-medium">
+                    {new Date(approval.createdAt || approval.created_at).toLocaleString()}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -139,30 +142,63 @@ export function ApprovalDetailDialog({
               </div>
             </div>
 
-            {/* Old vs New Data comparison */}
-            {approval.old_data ? (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-red-200 dark:border-red-800 p-3 space-y-1">
-                  <div className="text-xs font-semibold text-red-600 dark:text-red-400">Current (Before)</div>
-                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                    {JSON.stringify(approval.old_data, null, 2)}
-                  </pre>
-                </div>
-                <div className="rounded-lg border border-green-200 dark:border-green-800 p-3 space-y-1">
-                  <div className="text-xs font-semibold text-green-600 dark:text-green-400">Requested (After)</div>
-                  <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+            {/* Old vs New Data comparison / Delete notice */}
+            {(() => {
+              const isDelete = approval.action?.toLowerCase() === 'delete';
+              const isEmpty = !approval.request_data || Object.keys(approval.request_data as object).length === 0;
+
+              if (isDelete || isEmpty) {
+                return (
+                  <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 flex items-start gap-3">
+                    <Trash2 className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400">Delete Request</p>
+                      <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
+                        This action will <span className="font-semibold">permanently delete</span> the selected record from{' '}
+                        <span className="font-semibold capitalize">{approval.module_slug.replace(/_/g, ' ')}</span>.
+                        This cannot be undone once approved.
+                      </p>
+                      {approval.old_data ? (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-muted-foreground mb-1">Record to be deleted:</p>
+                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                            {JSON.stringify(approval.old_data as object, null, 2)}
+                          </pre>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (approval.old_data) {
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-red-200 dark:border-red-800 p-3 space-y-1">
+                      <div className="text-xs font-semibold text-red-600 dark:text-red-400">Current (Before)</div>
+                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                        {JSON.stringify(approval.old_data, null, 2)}
+                      </pre>
+                    </div>
+                    <div className="rounded-lg border border-green-200 dark:border-green-800 p-3 space-y-1">
+                      <div className="text-xs font-semibold text-green-600 dark:text-green-400">Requested (After)</div>
+                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
+                        {JSON.stringify(approval.request_data, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="rounded-lg border p-4 space-y-2">
+                  <div className="text-sm font-medium">Request Data</div>
+                  <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
                     {JSON.stringify(approval.request_data, null, 2)}
                   </pre>
                 </div>
-              </div>
-            ) : (
-              <div className="rounded-lg border p-4 space-y-2">
-                <div className="text-sm font-medium">Request Data</div>
-                <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                  {JSON.stringify(approval.request_data, null, 2)}
-                </pre>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Review Notes (if reviewed) */}
             {!isPending && approval.review_notes && (

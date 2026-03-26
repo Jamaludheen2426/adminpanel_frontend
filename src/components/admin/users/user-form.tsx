@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format, parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
-import { CalendarIcon, Eye, EyeOff } from "lucide-react";
+import { CalendarIcon, Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,7 @@ const employeeSchema = z.object({
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
   username: z.string().optional(),
   email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().trim().min(1, "Phone is required"),
+  phone: z.string().trim().min(1, "Phone is required").regex(/^\+?[0-9\s\-(). ]{7,20}$/, "Please enter a valid phone number"),
   dob: z.string().optional(),
   gender: z.enum(["male", "female", "other"]).optional(),
   marital_status: z.enum(["married", "unmarried"]).optional(),
@@ -52,20 +52,27 @@ const employeeSchema = z.object({
   is_active: z.number().default(0),
   password: z.string().optional(),
   confirm_password: z.string().optional(),
-}).refine((data) => {
-  if (data.password && data.password.length > 0) {
-    if (data.password.length < 6) return false;
-    return data.password === data.confirm_password;
+}).superRefine((data, ctx) => {
+  if (!data.password || data.password.length === 0) return;
+  if (data.password.length < 8) {
+    ctx.addIssue({ code: "custom", message: "At least 8 characters required", path: ["password"] });
   }
-  return true;
-}, (data) => ({
-  message: data.password && data.password.length > 0 && data.password.length < 6
-    ? "Password must be at least 6 characters"
-    : "Passwords do not match",
-  path: data.password && data.password.length > 0 && data.password.length < 6
-    ? ["password"]
-    : ["confirm_password"],
-}));
+  if (!/[A-Z]/.test(data.password)) {
+    ctx.addIssue({ code: "custom", message: "Must contain at least one uppercase letter", path: ["password"] });
+  }
+  if (!/[a-z]/.test(data.password)) {
+    ctx.addIssue({ code: "custom", message: "Must contain at least one lowercase letter", path: ["password"] });
+  }
+  if (!/[0-9]/.test(data.password)) {
+    ctx.addIssue({ code: "custom", message: "Must contain at least one number", path: ["password"] });
+  }
+  if (!/[^a-zA-Z0-9]/.test(data.password)) {
+    ctx.addIssue({ code: "custom", message: "Must contain at least one special character", path: ["password"] });
+  }
+  if (data.password !== data.confirm_password) {
+    ctx.addIssue({ code: "custom", message: "Passwords do not match", path: ["confirm_password"] });
+  }
+});
 
 type EmployeeFormData = z.infer<typeof employeeSchema>;
 
@@ -80,12 +87,14 @@ function DatePickerField({
   onChange,
   required,
   error,
+  minDate,
 }: {
   label: string;
   value?: string;
   onChange: (val: string) => void;
   required?: boolean;
   error?: string;
+  minDate?: Date;
 }) {
   const [open, setOpen] = useState(false);
   const selected = value ? parseISO(value) : undefined;
@@ -111,6 +120,7 @@ function DatePickerField({
           <Calendar
             mode="single"
             selected={selected}
+            disabled={minDate ? (date) => date < minDate : undefined}
             onSelect={(date) => {
               onChange(date ? format(date, "yyyy-MM-dd") : "");
               setOpen(false);
@@ -151,6 +161,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -180,6 +191,18 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const selectedCountryId = watch("country_id");
   const selectedStateId = watch("state_id");
   const selectedCityId = watch("city_id");
+
+  const watchedPassword = useWatch({ control, name: "password" }) ?? "";
+  const watchedConfirm = useWatch({ control, name: "confirm_password" }) ?? "";
+  const dojValue = watch("doj");
+
+  const passwordRules = [
+    { label: "At least 8 characters", met: watchedPassword.length >= 8 },
+    { label: "At least one uppercase letter", met: /[A-Z]/.test(watchedPassword) },
+    { label: "At least one lowercase letter", met: /[a-z]/.test(watchedPassword) },
+    { label: "At least one number", met: /[0-9]/.test(watchedPassword) },
+    { label: "At least one special character", met: /[^a-zA-Z0-9]/.test(watchedPassword) },
+  ];
 
   // Location API hooks
   const { data: countries = [] } = useCountries();
@@ -397,6 +420,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             onChange={(v) => setValue("dor", v, { shouldValidate: true })}
             required
             error={errors.dor?.message}
+            minDate={dojValue ? parseISO(dojValue) : undefined}
           />
 
           <div className="space-y-2">
@@ -454,6 +478,21 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                 </button>
               </div>
               {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              {watchedPassword.length > 0 && (
+                <ul className="space-y-1 pt-1">
+                  {passwordRules.map((rule) => (
+                    <li key={rule.label} className="flex items-center gap-2 text-xs">
+                      {rule.met
+                        ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                        : <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      }
+                      <span className={rule.met ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
+                        {rule.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -478,6 +517,15 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                 </button>
               </div>
               {errors.confirm_password && <p className="text-sm text-destructive">{errors.confirm_password.message}</p>}
+              {watchedPassword.length > 0 && watchedConfirm.length > 0 && (
+                <p className={`flex items-center gap-2 text-xs ${watchedPassword === watchedConfirm ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                  {watchedPassword === watchedConfirm
+                    ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                    : <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  }
+                  Passwords match
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
