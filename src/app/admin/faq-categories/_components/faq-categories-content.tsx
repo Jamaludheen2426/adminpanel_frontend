@@ -151,10 +151,13 @@ export function FaqCategoriesContent() {
                         isLoading={isLoading}
                         emptyMessage={t('faq.no_categories', 'No categories found.')}
                         onStatusToggle={(row, val) =>
-                            updateCategoryStatus.mutate({ id: row.id, is_active: val })
+                            updateCategoryStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })
                         }
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableStatusToggle={(row) => Number(row.is_active) === 2}
+                        disableEdit={(row) => Number(row.is_active) === 2}
+                        disableDelete={(row) => Number(row.is_active) === 2}
                         showStatus
                         showCreated
                         showActions

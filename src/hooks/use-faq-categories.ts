@@ -34,7 +34,7 @@ const faqCategoriesApi = {
         const response = await apiClient.put(`/faq-categories/${id}`, data);
         return response.data.data?.faqCategory || response.data.faqCategory;
     },
-    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<FaqCategory> => {
+    updateStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<FaqCategory> => {
         const response = await apiClient.patch(`/faq-categories/${id}/status`, { is_active });
         return response.data.data?.faqCategory || response.data.faqCategory;
     },
@@ -98,7 +98,7 @@ export function useUpdateFaqCategory() {
 
 export function useUpdateFaqCategoryStatus() {
     const queryClient = useQueryClient();
-    return useMutation({
+    return useMutation<FaqCategory, any, { id: number; is_active: number }>({
         mutationFn: faqCategoriesApi.updateStatus,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: queryKeys.faqCategories.all });

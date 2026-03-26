@@ -39,7 +39,10 @@ export function ContactsContent() {
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
-    const rawContacts: Contact[] = contactsResponse?.data || [];
+    const rawContacts: Contact[] = (contactsResponse?.data || []).map((c: any) => ({
+        ...c,
+        created_at: c.created_at || c.createdAt || '',
+    }));
 
     const columns = [
         {
@@ -82,7 +85,7 @@ export function ContactsContent() {
             header: t('common.created_at', 'Date'),
             sortable: true,
             render: (row: any) => {
-                const date = new Date(row.createdAt || row.created_at);
+                const date = new Date(row.created_at);
                 return (
                     <div className="text-sm">
                         {date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
