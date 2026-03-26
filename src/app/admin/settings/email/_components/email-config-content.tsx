@@ -406,7 +406,7 @@ export function EmailConfigContent() {
                             </TableCell>
                             <TableCell>
                               <Switch
-                                checked={config.is_active}
+                                checked={Number(config.is_active) === 1}
                                 pending={
                                   (isApprovalRequired(toggleMutation.error) && toggleMutation.variables === config.id) ||
                                   (isApprovalRequired(updateMutation.error) && updateMutation.variables?.id === config.id)

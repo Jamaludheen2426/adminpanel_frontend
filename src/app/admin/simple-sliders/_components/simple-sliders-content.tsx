@@ -63,17 +63,12 @@ export function SimpleSlidersContent() {
             key: 'status_display',
             header: 'Status',
             render: (row) => {
-                // is_active: 0=inactive/draft, 1=active/published, 2=pending approval
-                if (row.is_active === 2) {
-                    return (
-                        <span className="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-yellow-100 text-yellow-800 border border-yellow-200">
-                            Pending
-                        </span>
-                    );
-                }
+                const isPending = Number(row.is_active) === 2 || !!(row as any).has_pending_approval;
                 return (
                     <Switch
-                        checked={row.is_active === 1}
+                        pending={isPending}
+                        checked={Number(row.is_active) === 1}
+                        disabled={isPending}
                         onCheckedChange={(val) =>
                             updateSliderStatus({ id: row.id, is_active: val ? 1 : 0 })
                         }
@@ -123,6 +118,8 @@ export function SimpleSlidersContent() {
                         onSearch={setSearch}
                         onEdit={(row) => router.push(`/admin/simple-sliders/${row.id}`)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
                         showStatus={false}
                         showCreated={false}
                         showActions={true}

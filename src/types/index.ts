@@ -2,7 +2,7 @@
 export interface BaseEntity {
   id: number;
   company_id: number | null;
-  is_active: boolean;
+  is_active: boolean | number;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

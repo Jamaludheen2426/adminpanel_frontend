@@ -160,7 +160,7 @@ export function BlogTagsContent() {
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_tags', 'No blog tags found.')}
-                        onStatusToggle={(row, val) => updateTagStatus.mutate({ id: row.id, is_active: val })}
+                        onStatusToggle={(row, val) => updateTagStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })}
                         onEdit={(row) => openEdit(row as BlogTag)}
                         onDelete={(row) => setDeleteId(row.id)}
                         showCreated={true}

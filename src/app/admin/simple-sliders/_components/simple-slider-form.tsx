@@ -84,8 +84,8 @@ export function SimpleSliderForm({ id }: { id: string }) {
             description: data.description || undefined,
         };
         const cb = {
-            onSuccess: () => { if (exit) router.push('/admin/simple-sliders'); },
-            onError: (e: unknown) => { if (isApprovalRequired(e) && exit) router.push('/admin/simple-sliders'); },
+            onSuccess: () => { if (!isEdit || exit) router.push('/admin/simple-sliders'); },
+            onError: (e: unknown) => { if (isApprovalRequired(e) && (!isEdit || exit)) router.push('/admin/simple-sliders'); },
         };
         if (isEdit) { updateSlider.mutate({ id: Number(id), payload }, cb); }
         else { createSlider.mutate(payload, cb); }

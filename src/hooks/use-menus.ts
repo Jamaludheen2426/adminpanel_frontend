@@ -46,7 +46,7 @@ const menusApi = {
         const response = await apiClient.put(`/menus/${id}`, data);
         return response.data.data?.menu || response.data.data;
     },
-    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<Menu> => {
+    updateStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<Menu> => {
         const response = await apiClient.patch(`/menus/${id}/status`, { is_active });
         return response.data.data?.menu || response.data.data;
     },

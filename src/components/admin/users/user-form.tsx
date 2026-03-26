@@ -45,8 +45,8 @@ const employeeSchema = z.object({
   address: z.string().optional(),
   department: z.string().trim().min(1, "Department is required"),
   designation: z.string().trim().min(1, "Designation is required"),
-  doj: z.string().optional(),
-  dor: z.string().optional(),
+  doj: z.string().trim().min(1, "Date of Joining is required"),
+  dor: z.string().trim().min(1, "Date of Relieving is required"),
   role_id: z.number({ required_error: "Please select a role" }),
   login_access: z.number().default(1),
   is_active: z.number().default(0),
@@ -78,17 +78,21 @@ function DatePickerField({
   label,
   value,
   onChange,
+  required,
+  error,
 }: {
   label: string;
   value?: string;
   onChange: (val: string) => void;
+  required?: boolean;
+  error?: string;
 }) {
   const [open, setOpen] = useState(false);
   const selected = value ? parseISO(value) : undefined;
 
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label>{label}{required && <span className="text-destructive ml-1">*</span>}</Label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -115,6 +119,7 @@ function DatePickerField({
           />
         </PopoverContent>
       </Popover>
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
@@ -381,13 +386,17 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
           <DatePickerField
             label="Date of Joining (DOJ)"
             value={watch("doj")}
-            onChange={(v) => setValue("doj", v)}
+            onChange={(v) => setValue("doj", v, { shouldValidate: true })}
+            required
+            error={errors.doj?.message}
           />
 
           <DatePickerField
             label="Date of Relieving (DOR)"
             value={watch("dor")}
-            onChange={(v) => setValue("dor", v)}
+            onChange={(v) => setValue("dor", v, { shouldValidate: true })}
+            required
+            error={errors.dor?.message}
           />
 
           <div className="space-y-2">

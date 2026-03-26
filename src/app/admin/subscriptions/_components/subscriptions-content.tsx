@@ -201,9 +201,12 @@ export function SubscriptionsContent() {
                         data={subscriptions as any}
                         isLoading={isLoading}
                         emptyMessage="No subscriptions found. Create your first plan."
-                        onStatusToggle={(row, val) => updateStatus.mutate({ id: row.id, is_active: val })}
+                        onStatusToggle={(row, val) => updateStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })}
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus
                         showCreated
                         showActions

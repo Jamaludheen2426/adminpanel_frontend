@@ -327,9 +327,12 @@ export function CitiesTab() {
             columns={columns}
             data={processedCities as any}
             isLoading={isLoading}
-            onStatusToggle={(row, val) => updateCity.mutate({ id: row.id, data: { is_active: val } })}
+            onStatusToggle={(row, val) => updateCity.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })}
             onEdit={openEdit}
             onDelete={(row) => setDeleteId(row.id)}
+            disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
             emptyMessage={t("locations.no_districts_found", "No districts found")}
             showStatus
             showCreated

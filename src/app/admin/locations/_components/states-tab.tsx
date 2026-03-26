@@ -343,9 +343,12 @@ export function StatesTab() {
             columns={columns}
             data={processedStates as any}
             isLoading={isLoading}
-            onStatusToggle={(row, val) => updateState.mutate({ id: row.id, data: { is_active: val } })}
+            onStatusToggle={(row, val) => updateState.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })}
             onEdit={openEdit}
             onDelete={(row) => setDeleteId(row.id)}
+            disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
             emptyMessage="No states found"
             showStatus
             showCreated

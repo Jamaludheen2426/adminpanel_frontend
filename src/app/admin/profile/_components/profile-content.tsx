@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import { useUploadMedia } from "@/hooks/use-media";
 import { useTranslation } from "@/hooks/use-translation";
 import { useTimezones } from "@/hooks/use-timezones";
 import { Spinner } from "@/components/ui/spinner";
-import { User, Mail, Phone, Shield, Calendar, Camera, Eye, EyeOff } from "lucide-react";
+import { User, Mail, Phone, Shield, Calendar, Camera, Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,9 +41,12 @@ const profileSchema = z.object({
 
 const passwordSchema = z
   .object({
-    current_password: z.string().min(6, "Current password must be at least 6 characters"),
-    new_password: z.string().min(6, "New password must be at least 6 characters"),
-    confirm_password: z.string().min(6, "Confirm password must be at least 6 characters"),
+    current_password: z.string().min(6, "Password must be at least 6 characters"),
+    new_password: z.string()
+      .min(6, "At least 6 characters required")
+      .regex(/[A-Z]/, "Must contain at least one uppercase letter")
+      .regex(/[0-9]/, "Must contain at least one number"),
+    confirm_password: z.string().min(1, "Please confirm your password"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords don't match",
@@ -92,13 +95,23 @@ export function ProfileContent() {
 
   const passwordForm = useForm<PasswordFormData>({
     resolver: zodResolver(passwordSchema),
-    mode: "onChange",
+    mode: "onBlur",
+    reValidateMode: "onBlur",
     defaultValues: {
       current_password: "",
       new_password: "",
       confirm_password: "",
     },
   });
+
+  const newPassword = useWatch({ control: passwordForm.control, name: "new_password" });
+  const confirmPassword = useWatch({ control: passwordForm.control, name: "confirm_password" });
+
+  const passwordRules = [
+    { label: "At least 6 characters", met: newPassword.length >= 6 },
+    { label: "At least one uppercase letter", met: /[A-Z]/.test(newPassword) },
+    { label: "At least one number", met: /[0-9]/.test(newPassword) },
+  ];
 
   const onProfileSubmit = (data: ProfileFormData) => {
     const { email, ...updateData } = data;
@@ -345,6 +358,21 @@ export function ProfileContent() {
                         {passwordForm.formState.errors.new_password.message}
                       </p>
                     )}
+                    {newPassword.length > 0 && (
+                      <ul className="space-y-1 pt-1">
+                        {passwordRules.map((rule) => (
+                          <li key={rule.label} className="flex items-center gap-2 text-xs">
+                            {rule.met
+                              ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                              : <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            }
+                            <span className={rule.met ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
+                              {rule.label}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -369,6 +397,17 @@ export function ProfileContent() {
                       <p className="text-sm text-destructive">
                         {passwordForm.formState.errors.confirm_password.message}
                       </p>
+                    )}
+                    {confirmPassword.length > 0 && (
+                      <div className="flex items-center gap-2 text-xs pt-1">
+                        {confirmPassword === newPassword
+                          ? <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                          : <Circle className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        }
+                        <span className={confirmPassword === newPassword ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
+                          Passwords match
+                        </span>
+                      </div>
                     )}
                   </div>
 

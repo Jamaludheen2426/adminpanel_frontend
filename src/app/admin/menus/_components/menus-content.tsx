@@ -246,10 +246,13 @@ export function MenusContent() {
                         isLoading={isLoading}
                         emptyMessage={t('menus.no_records', 'No menus found. Create your first menu.')}
                         onStatusToggle={(row, val) =>
-                            updateStatus.mutate({ id: row.id, is_active: val })
+                            updateStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })
                         }
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus
                         showCreated
                         showActions

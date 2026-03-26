@@ -219,7 +219,7 @@ export function BlogCategoriesContent() {
                         })) as any}
                         isLoading={isLoading}
                         emptyMessage={t('blog.no_categories', 'No blog categories found.')}
-                        onStatusToggle={(row, val) => updateCategoryStatus.mutate({ id: row.id, is_active: val })}
+                        onStatusToggle={(row, val) => updateCategoryStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })}
                         onEdit={(row) => openEdit(row as BlogCategory)}
                         onDelete={(row) => setDeleteId(row.id)}
                         showCreated={true}

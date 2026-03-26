@@ -134,6 +134,9 @@ export function BannersContent() {
                         onStatusToggle={(row: any, val: boolean) =>
                             updateBanner.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }
+                        disableStatusToggle={(row: any) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableEdit={(row: any) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row: any) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showCreated
                         showActions
                         emptyMessage={t('ads.no_banners', 'No banners found. Create your first banner template.')}

@@ -301,7 +301,7 @@ export function LanguagesContent() {
                         </TableCell>
                         <TableCell>
                           <Switch
-                            checked={language.is_active}
+                            checked={Number(language.is_active) === 1}
                             pending={isApprovalRequired(toggleStatusMutation.error) && toggleStatusMutation.variables?.id === language.id}
                             disabled={
                               language.is_default ||

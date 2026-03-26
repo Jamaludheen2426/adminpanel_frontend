@@ -181,7 +181,7 @@ export function FaqCategoriesContent() {
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="name">{t('faq.name', 'Name')} *</Label>
+                            <Label htmlFor="name">{t('faq.name', 'Name')} <span className="text-destructive">*</span></Label>
                             <Input id="name" {...form.register('name')} placeholder="e.g. General, Billing" />
                             {form.formState.errors.name && <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>}
                         </div>

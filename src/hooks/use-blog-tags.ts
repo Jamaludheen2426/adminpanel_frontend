@@ -33,7 +33,7 @@ const blogTagsApi = {
         const response = await apiClient.put(`/blog-tags/${id}`, data);
         return response.data.data?.blogTag || response.data.blogTag;
     },
-    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<BlogTag> => {
+    updateStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<BlogTag> => {
         const response = await apiClient.patch(`/blog-tags/${id}/status`, { is_active });
         return response.data.data?.blogTag || response.data.blogTag;
     },

@@ -367,7 +367,7 @@ export function TemplatesContent() {
                           </TableCell>
                           <TableCell>
                             <Switch
-                              checked={template.is_active}
+                              checked={Number(template.is_active) === 1}
                               pending={isApprovalRequired(toggleMutation.error) && toggleMutation.variables === template.id}
                               onCheckedChange={() =>
                                 handleToggleActive(template.id)

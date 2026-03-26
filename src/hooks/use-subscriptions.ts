@@ -48,7 +48,7 @@ const subscriptionsApi = {
         const response = await apiClient.put(`/subscriptions/${id}`, data);
         return response.data.data?.subscription || response.data.data;
     },
-    updateStatus: async ({ id, is_active }: { id: number; is_active: boolean }): Promise<Subscription> => {
+    updateStatus: async ({ id, is_active }: { id: number; is_active: number }): Promise<Subscription> => {
         const response = await apiClient.patch(`/subscriptions/${id}/status`, { is_active });
         return response.data.data?.subscription || response.data.data;
     },

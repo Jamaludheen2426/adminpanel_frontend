@@ -296,10 +296,13 @@ export function AnnouncementsContent() {
                         isLoading={isLoading}
                         emptyMessage={t('announcements.empty', 'No announcements found.')}
                         onStatusToggle={(row, val) =>
-                            updateAnnouncement.mutate({ id: row.id, data: { is_active: val } })
+                            updateAnnouncement.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }
                         onEdit={(row) => openEdit(row)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus
                         showCreated
                         showActions

@@ -484,10 +484,13 @@ export function LocalitiesTab() {
             data={processedLocalities}
             isLoading={isLoading}
             onStatusToggle={(row, val) =>
-              updateLocality.mutate({ id: row.id, data: { is_active: val } })
+              updateLocality.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
             }
             onEdit={openEdit}
             onDelete={(row) => setDeleteId(row.id)}
+            disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+            disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
             emptyMessage={t('locations.no_cities_found', 'No cities found')}
             showStatus
             showCreated
@@ -683,23 +686,6 @@ export function LocalitiesTab() {
               )}
             </div>
 
-            {/* Pincode */}
-            <div className="space-y-2">
-              <Label htmlFor="loc-pincode">
-                {t('locations.pincode', 'Pincode')} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="loc-pincode"
-                placeholder="400053"
-                {...form.register('pincode')}
-              />
-              {form.formState.errors.pincode && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.pincode.message}
-                </p>
-              )}
-            </div>
-
             {/* City Name */}
             <div className="space-y-2">
               <Label htmlFor="loc-name">
@@ -716,6 +702,23 @@ export function LocalitiesTab() {
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.name.message}
+                </p>
+              )}
+            </div>
+
+            {/* Pincode */}
+            <div className="space-y-2">
+              <Label htmlFor="loc-pincode">
+                {t('locations.pincode', 'Pincode')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="loc-pincode"
+                placeholder="400053"
+                {...form.register('pincode')}
+              />
+              {form.formState.errors.pincode && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.pincode.message}
                 </p>
               )}
             </div>

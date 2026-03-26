@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, HelpCircle } from 'lucide-react';
 import { useFaqs, useCreateFaq, useUpdateFaq, useDeleteFaq, Faq } from '@/hooks/use-faqs';
 import { isApprovalRequired } from '@/lib/api-client';
 import { useFaqCategories } from '@/hooks/use-faq-categories';
@@ -151,9 +151,14 @@ export function FaqsContent() {
             <Card>
                 <CardHeader>
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('faq.title', 'FAQs')}</CardTitle>
-                            <CardDescription>{t('faq.desc', 'Manage frequently asked questions and answers')}</CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <HelpCircle className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('faq.title', 'FAQs')}</CardTitle>
+                                <CardDescription>{t('faq.desc', 'Manage frequently asked questions and answers')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />
@@ -168,10 +173,13 @@ export function FaqsContent() {
                         isLoading={isLoading}
                         emptyMessage={t('faq.no_faqs', 'No FAQs found.')}
                         onStatusToggle={(row, val) =>
-                            updateFaq.mutate({ id: row.id, data: { is_active: val } })
+                            updateFaq.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableStatusToggle={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus
                         showCreated
                         showActions
