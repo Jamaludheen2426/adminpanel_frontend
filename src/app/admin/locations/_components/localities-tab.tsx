@@ -610,7 +610,7 @@ export function LocalitiesTab() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Country */}
             <div className="space-y-2">
-              <Label>{t('locations.country', 'Country')} *</Label>
+              <Label>{t('locations.country', 'Country')} <span className="text-destructive">*</span></Label>
               <Select
                 value={selectedCountryId?.toString() ?? ''}
                 onValueChange={(v) => {
@@ -636,7 +636,7 @@ export function LocalitiesTab() {
 
             {/* State */}
             <div className="space-y-2">
-              <Label>{t('locations.state', 'State')} *</Label>
+              <Label>{t('locations.state', 'State')} <span className="text-destructive">*</span></Label>
               <Select
                 value={selectedStateId?.toString() ?? ''}
                 onValueChange={(v) => {
@@ -662,7 +662,7 @@ export function LocalitiesTab() {
 
             {/* District */}
             <div className="space-y-2">
-              <Label>{t('locations.district', 'District')} *</Label>
+              <Label>{t('locations.district', 'District')} <span className="text-destructive">*</span></Label>
               <Controller
                 control={form.control}
                 name="city_id"
@@ -697,10 +697,27 @@ export function LocalitiesTab() {
               )}
             </div>
 
+            {/* Pincode */}
+            <div className="space-y-2">
+              <Label htmlFor="loc-pincode">
+                {t('locations.pincode', 'Pincode')} <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="loc-pincode"
+                placeholder="400053"
+                {...form.register('pincode')}
+              />
+              {form.formState.errors.pincode && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.pincode.message}
+                </p>
+              )}
+            </div>
+
             {/* City Name */}
             <div className="space-y-2">
               <Label htmlFor="loc-name">
-                {t('locations.city_name', 'City Name')} *
+                {t('locations.city_name', 'City Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="loc-name"
@@ -713,23 +730,6 @@ export function LocalitiesTab() {
               {form.formState.errors.name && (
                 <p className="text-sm text-destructive">
                   {form.formState.errors.name.message}
-                </p>
-              )}
-            </div>
-
-            {/* Pincode */}
-            <div className="space-y-2">
-              <Label htmlFor="loc-pincode">
-                {t('locations.pincode', 'Pincode')} *
-              </Label>
-              <Input
-                id="loc-pincode"
-                placeholder="400053"
-                {...form.register('pincode')}
-              />
-              {form.formState.errors.pincode && (
-                <p className="text-sm text-destructive">
-                  {form.formState.errors.pincode.message}
                 </p>
               )}
             </div>

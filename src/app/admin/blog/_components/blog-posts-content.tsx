@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useBlogPosts, useDeleteBlogPost, useUpdateBlogPost, useCreateBlogPost, BlogPost } from '@/hooks/use-blog-posts';
+import { isApprovalRequired } from '@/lib/api-client';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, CommonColumn } from '@/components/common/common-table';
 import { Button } from '@/components/ui/button';
@@ -185,8 +186,12 @@ export function BlogPostsContent() {
                             defaultValues={editPost}
                             isPending={updatePost.isPending}
                             onSave={async (data) => {
-                                await updatePost.mutateAsync({ id: editPost.id, data });
-                                setEditPost(null);
+                                try {
+                                    await updatePost.mutateAsync({ id: editPost.id, data });
+                                    setEditPost(null);
+                                } catch (e) {
+                                    if (isApprovalRequired(e)) setEditPost(null);
+                                }
                             }}
                         />
                     )}

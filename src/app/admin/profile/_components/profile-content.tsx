@@ -48,6 +48,10 @@ const passwordSchema = z
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords don't match",
     path: ["confirm_password"],
+  })
+  .refine((data) => data.new_password !== data.current_password, {
+    message: "New password must be different from current password",
+    path: ["new_password"],
   });
 
 type ProfileFormData = z.infer<typeof profileSchema>;

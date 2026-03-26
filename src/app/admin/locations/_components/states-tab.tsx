@@ -394,7 +394,7 @@ export function StatesTab() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Country First */}
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>Country <span className="text-destructive">*</span></Label>
               <Controller
                 control={form.control}
                 name="country_id"
@@ -425,7 +425,7 @@ export function StatesTab() {
 
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="s-name">Name *</Label>
+              <Label htmlFor="s-name">Name <span className="text-destructive">*</span></Label>
               <Input
                 id="s-name"
                 placeholder="Tamil Nadu"

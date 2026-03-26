@@ -213,7 +213,7 @@ export function FaqsContent() {
                     </DialogHeader>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-4">
                         <div className="space-y-2">
-                            <Label htmlFor="category">{t('faq.category', 'Category')} *</Label>
+                            <Label htmlFor="category">{t('faq.category', 'Category')} <span className="text-destructive">*</span></Label>
                             <Controller
                                 control={form.control}
                                 name="faq_category_id"
@@ -239,13 +239,13 @@ export function FaqsContent() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="question">{t('faq.question', 'Question')} *</Label>
+                            <Label htmlFor="question">{t('faq.question', 'Question')} <span className="text-destructive">*</span></Label>
                             <Input id="question" {...form.register('question')} placeholder="e.g. How do I reset my password?" />
                             {form.formState.errors.question && <p className="text-xs text-destructive">{form.formState.errors.question.message}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="answer">{t('faq.answer', 'Answer')} *</Label>
+                            <Label htmlFor="answer">{t('faq.answer', 'Answer')} <span className="text-destructive">*</span></Label>
                             <Controller
                                 control={form.control}
                                 name="answer"

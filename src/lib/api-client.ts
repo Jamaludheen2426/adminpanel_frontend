@@ -59,8 +59,16 @@ apiClient.interceptors.response.use(
     // Detect approval-required responses (HTTP 202 or approval_required flag)
     const data = response.data;
     if (response.status === 202 || data?.approval_required === true) {
-      // Show info toast
-      toast.info(data?.message || 'Approval request submitted. Waiting for review.');
+      // Show toast with color based on HTTP method
+      const method = response.config?.method?.toLowerCase();
+      const approvalMsg = data?.message || 'Your request has been sent for approval.';
+      if (method === 'delete') {
+        toast(approvalMsg);
+      } else if (method === 'put' || method === 'patch') {
+        toast.error(approvalMsg);
+      } else {
+        toast.info(approvalMsg);
+      }
 
       // Invalidate approval queries to update pending count
       queryClient.invalidateQueries({ queryKey: queryKeys.approvals.pending() });

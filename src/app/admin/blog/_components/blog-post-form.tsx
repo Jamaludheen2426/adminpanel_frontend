@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { RichTextEditor } from '@/components/common/rich-text-editor';
 import { ImageCropper } from '@/components/common/image-cropper';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { resolveMediaUrl } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useBlogCategories } from '@/hooks/use-blog-categories';
@@ -245,6 +245,7 @@ export function BlogPostForm({ defaultValues, onSave, isPending }: BlogPostFormP
         try {
             await onSave(data);
         } catch (err: any) {
+            if (isApprovalRequired(err)) return;
             const message: string = err?.response?.data?.message || err?.message || 'Failed to save';
             if (message.toLowerCase().includes('slug')) {
                 setError('slug', { type: 'server', message });

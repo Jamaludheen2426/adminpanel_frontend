@@ -427,7 +427,7 @@ export function CitiesTab() {
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label>{t("locations.country", "Country")} *</Label>
+              <Label>{t("locations.country", "Country")} <span className="text-destructive">*</span></Label>
               <Controller control={form.control} name="country_id" render={({ field }) => (
                 <Select value={field.value?.toString() || selectedCountryId?.toString()}
                   onValueChange={(v) => { const id = parseInt(v); field.onChange(id); setSelectedCountryId(id); form.setValue("state_id", undefined as unknown as number); }}>
@@ -439,7 +439,7 @@ export function CitiesTab() {
             </div>
 
             <div className="space-y-2">
-              <Label>{t("locations.state", "State")} *</Label>
+              <Label>{t("locations.state", "State")} <span className="text-destructive">*</span></Label>
               <Controller control={form.control} name="state_id" render={({ field }) => (
                 <Select value={field.value?.toString()} onValueChange={(v) => field.onChange(parseInt(v))}
                   disabled={!selectedCountryId && !form.getValues("country_id")}>
@@ -450,7 +450,7 @@ export function CitiesTab() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ci-name">{t("common.name", "Name")} *</Label>
+              <Label htmlFor="ci-name">{t("common.name", "Name")} <span className="text-destructive">*</span></Label>
               <Input id="ci-name" placeholder={t("locations.district_placeholder", "e.g. Chennai North")} {...form.register("name")} />
               {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
             </div>

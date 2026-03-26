@@ -360,7 +360,7 @@ export function CountriesTab() {
           </DialogHeader>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="c-name">Name *</Label>
+              <Label htmlFor="c-name">Name <span className="text-destructive">*</span></Label>
               <Input
                 id="c-name"
                 placeholder="India"
@@ -374,7 +374,7 @@ export function CountriesTab() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="c-code">
-                Country ISO Code *{" "}
+                Country ISO Code <span className="text-destructive">*</span>{" "}
                 <a
                   href="https://www.iso.org/iso-3166-country-codes.html"
                   target="_blank"

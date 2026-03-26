@@ -324,7 +324,7 @@ export function AnnouncementsContent() {
 
                         {/* Name — full width */}
                         <div className="md:col-span-2 space-y-2">
-                            <Label htmlFor="ann-name">{t('announcements.name', 'Name')} *</Label>
+                            <Label htmlFor="ann-name">{t('announcements.name', 'Name')} <span className="text-destructive">*</span></Label>
                             <Input id="ann-name" placeholder={t('announcements.name_placeholder', 'Announcement 1')} {...form.register('name')} />
                             <p className="text-xs text-muted-foreground">{t('announcements.name_hint', 'Name for internal reference only, not visible to users')}</p>
                             {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
@@ -332,7 +332,7 @@ export function AnnouncementsContent() {
 
                         {/* Content — full width rich editor */}
                         <div className="md:col-span-2 space-y-2">
-                            <Label>{t('announcements.content', 'Content')} *</Label>
+                            <Label>{t('announcements.content', 'Content')} <span className="text-destructive">*</span></Label>
                             <Controller control={form.control} name="content" render={({ field }) => (
                                 <RichTextEditor
                                     value={field.value}

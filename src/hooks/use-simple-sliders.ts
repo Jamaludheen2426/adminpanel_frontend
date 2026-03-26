@@ -92,7 +92,6 @@ export const useCreateSimpleSlider = () => {
         onError: (error: unknown) => {
             if (isApprovalRequired(error)) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.simpleSliders.all });
-                toast.info('Slider submitted for approval');
                 return;
             }
             const err = error as any;
@@ -114,7 +113,6 @@ export const useUpdateSimpleSlider = () => {
             if (isApprovalRequired(error)) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.simpleSliders.all });
                 queryClient.invalidateQueries({ queryKey: queryKeys.simpleSliders.detail(vars.id) });
-                toast.info('Slider update submitted for approval');
                 return;
             }
             const err = error as any;
