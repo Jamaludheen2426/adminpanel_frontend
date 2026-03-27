@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ApprovalBadge } from './approval-badge';
 import { PageLoader } from '@/components/common/page-loader';
-import { CheckCircle, XCircle, User, Calendar, FileText, Trash2, Mail } from 'lucide-react';
+import { CheckCircle, XCircle, User, Calendar, FileText, Trash2, Mail, ArrowRight } from 'lucide-react';
 
 interface ApprovalDetailDialogProps {
   approvalId: number | null;
@@ -147,11 +147,24 @@ export function ApprovalDetailDialog({
               const isDelete = approval.action?.toLowerCase() === 'delete';
               const isEmpty = !approval.request_data || Object.keys(approval.request_data as object).length === 0;
 
+              // Skip internal/meta fields that aren't meaningful to show
+              const skipFields = new Set(['id', 'company_id', 'created_at', 'updated_at', 'deleted_at', 'createdAt', 'updatedAt', 'deletedAt', 'password']);
+
+              const formatFieldName = (key: string) =>
+                key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+              const formatValue = (val: unknown): string => {
+                if (val === null || val === undefined) return '—';
+                if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+                if (typeof val === 'object') return JSON.stringify(val);
+                return String(val);
+              };
+
               if (isDelete || isEmpty) {
                 return (
                   <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-4 flex items-start gap-3">
                     <Trash2 className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-red-700 dark:text-red-400">Delete Request</p>
                       <p className="text-xs text-red-600 dark:text-red-500 mt-0.5">
                         This action will <span className="font-semibold">permanently delete</span> the selected record from{' '}
@@ -159,11 +172,16 @@ export function ApprovalDetailDialog({
                         This cannot be undone once approved.
                       </p>
                       {approval.old_data ? (
-                        <div className="mt-3">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1">Record to be deleted:</p>
-                          <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                            {JSON.stringify(approval.old_data as object, null, 2)}
-                          </pre>
+                        <div className="mt-3 space-y-1">
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">Record to be deleted:</p>
+                          {Object.entries(approval.old_data as Record<string, unknown>)
+                            .filter(([key]) => !skipFields.has(key))
+                            .map(([key, val]) => (
+                              <div key={key} className="flex items-baseline gap-2 text-xs">
+                                <span className="text-muted-foreground shrink-0 min-w-[100px]">{formatFieldName(key)}:</span>
+                                <span className="font-medium break-all">{formatValue(val)}</span>
+                              </div>
+                            ))}
                         </div>
                       ) : null}
                     </div>
@@ -171,31 +189,64 @@ export function ApprovalDetailDialog({
                 );
               }
 
+              // Edit: show field-by-field diff
               if (approval.old_data) {
-                return (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border border-red-200 dark:border-red-800 p-3 space-y-1">
-                      <div className="text-xs font-semibold text-red-600 dark:text-red-400">Current (Before)</div>
-                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                        {JSON.stringify(approval.old_data, null, 2)}
-                      </pre>
+                const oldData = approval.old_data as Record<string, unknown>;
+                const newData = (approval.request_data || {}) as Record<string, unknown>;
+
+                // Get only fields that actually changed
+                const changedFields = Object.keys(newData).filter((key) => {
+                  if (skipFields.has(key)) return false;
+                  const oldVal = formatValue(oldData[key]);
+                  const newVal = formatValue(newData[key]);
+                  return oldVal !== newVal;
+                });
+
+                if (changedFields.length === 0) {
+                  return (
+                    <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+                      No field changes detected in this request.
                     </div>
-                    <div className="rounded-lg border border-green-200 dark:border-green-800 p-3 space-y-1">
-                      <div className="text-xs font-semibold text-green-600 dark:text-green-400">Requested (After)</div>
-                      <pre className="text-xs bg-muted p-2 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                        {JSON.stringify(approval.request_data, null, 2)}
-                      </pre>
+                  );
+                }
+
+                return (
+                  <div className="rounded-lg border p-4 space-y-3">
+                    <div className="text-sm font-medium">Changes Requested</div>
+                    <div className="space-y-2">
+                      {changedFields.map((key) => (
+                        <div key={key} className="rounded-md bg-muted/50 p-2.5 space-y-1">
+                          <div className="text-xs font-semibold text-muted-foreground">{formatFieldName(key)}</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400 px-2 py-0.5 rounded break-all max-w-[45%]">
+                              {formatValue(oldData[key])}
+                            </span>
+                            <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-400 px-2 py-0.5 rounded break-all max-w-[45%]">
+                              {formatValue(newData[key])}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 );
               }
 
+              // Create: show submitted data as field list
               return (
                 <div className="rounded-lg border p-4 space-y-2">
                   <div className="text-sm font-medium">Request Data</div>
-                  <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-w-full whitespace-pre-wrap break-all">
-                    {JSON.stringify(approval.request_data, null, 2)}
-                  </pre>
+                  <div className="space-y-1">
+                    {Object.entries(approval.request_data as Record<string, unknown>)
+                      .filter(([key]) => !skipFields.has(key))
+                      .map(([key, val]) => (
+                        <div key={key} className="flex items-baseline gap-2 text-xs">
+                          <span className="text-muted-foreground shrink-0 min-w-[100px]">{formatFieldName(key)}:</span>
+                          <span className="font-medium break-all">{formatValue(val)}</span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               );
             })()}

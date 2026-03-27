@@ -59,12 +59,13 @@ apiClient.interceptors.response.use(
     // Detect approval-required responses (HTTP 202 or approval_required flag)
     const data = response.data;
     if (response.status === 202 || data?.approval_required === true) {
-      // Show toast with color based on HTTP method
+      // Show toast with color based on action from backend response
+      const action = data?.action?.toLowerCase();
       const method = response.config?.method?.toLowerCase();
       const approvalMsg = data?.message || 'Your request has been sent for approval.';
-      if (method === 'delete') {
+      if (action === 'delete' || method === 'delete') {
         toast(approvalMsg);
-      } else if (method === 'put' || method === 'patch') {
+      } else if (action === 'update' || action === 'edit' || method === 'put' || method === 'patch') {
         toast.error(approvalMsg);
       } else {
         toast.info(approvalMsg);
