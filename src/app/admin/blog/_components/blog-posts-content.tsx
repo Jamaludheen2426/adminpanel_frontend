@@ -169,8 +169,12 @@ export function BlogPostsContent() {
                     <BlogPostForm
                         isPending={createPost.isPending}
                         onSave={async (data) => {
-                            await createPost.mutateAsync(data);
-                            setCreateOpen(false);
+                            try {
+                                await createPost.mutateAsync(data);
+                                setCreateOpen(false);
+                            } catch (e) {
+                                if (isApprovalRequired(e)) setCreateOpen(false);
+                            }
                         }}
                     />
                 </DialogContent>

@@ -78,17 +78,23 @@ export function SimpleSliderForm({ id }: { id: string }) {
         }
     };
 
-    const submit = (data: FormData, exit: boolean) => {
+    const submit = async (data: FormData, exit: boolean) => {
         const payload = {
             ...data,
             description: data.description || undefined,
         };
-        const cb = {
-            onSuccess: () => { if (!isEdit || exit) router.push('/admin/simple-sliders'); },
-            onError: (e: unknown) => { if (isApprovalRequired(e) && (!isEdit || exit)) router.push('/admin/simple-sliders'); },
-        };
-        if (isEdit) { updateSlider.mutate({ id: Number(id), payload }, cb); }
-        else { createSlider.mutate(payload, cb); }
+        try {
+            if (isEdit) {
+                await updateSlider.mutateAsync({ id: Number(id), payload });
+            } else {
+                await createSlider.mutateAsync(payload);
+            }
+            if (!isEdit || exit) router.push('/admin/simple-sliders');
+        } catch (e) {
+            if (isApprovalRequired(e) && (!isEdit || exit)) {
+                router.push('/admin/simple-sliders');
+            }
+        }
     };
 
     const onSave = form.handleSubmit((d) => submit(d, false));
