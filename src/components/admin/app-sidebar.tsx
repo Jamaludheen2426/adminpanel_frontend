@@ -428,10 +428,10 @@ export function AppSidebar() {
                                     asChild
                                     isActive={isActive(child.href)}
                                   >
-                                    <Link href={child.href || "#"}>
-                                      <child.icon className="w-4 h-4" />
-                                      <span>{t(child.labelKey)}</span>
-                                    </Link>
+                                    <a href={child.href || "#"} className="flex items-center gap-2">
+                                      <child.icon className="h-4 w-4 shrink-0" />
+                                      <span className="truncate">{t(child.labelKey)}</span>
+                                    </a>
                                   </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
                               ))}
@@ -445,9 +445,9 @@ export function AppSidebar() {
                   return (
                     <SidebarMenuItem key={item.labelKey}>
                       <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                        <Link href={item.href || "#"}>
-                          <item.icon className="w-4 h-4" />
-                          <span>{t(item.labelKey)}</span>
+                        <a href={item.href || "#"} className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span className="truncate">{t(item.labelKey)}</span>
                           {item.labelKey === "nav.approvals" && pendingCount != null && pendingCount > 0 && (
                             <Badge
                               variant="destructive"
@@ -464,7 +464,7 @@ export function AppSidebar() {
                               {unreadContactsCount > 99 ? '99+' : unreadContactsCount}
                             </Badge>
                           )}
-                        </Link>
+                        </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
