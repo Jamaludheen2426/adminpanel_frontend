@@ -4,16 +4,15 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import { useRouter } from "next/navigation";
-import { CalendarIcon, Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -21,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useCreateUser, useUpdateUser } from "@/hooks/use-users";
 import { isApprovalRequired } from "@/lib/api-client";
 import { useRoles } from "@/hooks/use-roles";
@@ -34,7 +32,7 @@ const employeeSchema = z.object({
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
   username: z.string().optional(),
   email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().trim().min(1, "Phone is required").regex(/^\+?[0-9\s\-(). ]{7,20}$/, "Please enter a valid phone number"),
+  phone: z.string().trim().min(1, "Phone is required").regex(/^\+?[0-9\s\-(). ]{7,20}$/, "Please enter a valid phone number (minimum 7 digits)"),
   dob: z.string().optional(),
   gender: z.enum(["male", "female", "other"]).optional(),
   marital_status: z.enum(["married", "unmarried"]).optional(),
@@ -79,59 +77,6 @@ type EmployeeFormData = z.infer<typeof employeeSchema>;
 interface UserFormProps {
   user?: User | null;
   onSuccess?: () => void;
-}
-
-function DatePickerField({
-  label,
-  value,
-  onChange,
-  required,
-  error,
-  minDate,
-}: {
-  label: string;
-  value?: string;
-  onChange: (val: string) => void;
-  required?: boolean;
-  error?: string;
-  minDate?: Date;
-}) {
-  const [open, setOpen] = useState(false);
-  const selected = value ? parseISO(value) : undefined;
-
-  return (
-    <div className="space-y-2">
-      <Label>{label}{required && <span className="text-destructive ml-1">*</span>}</Label>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className={cn(
-              "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {value ? format(parseISO(value), "dd MMM yyyy") : "DD-MM-YYYY"}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={selected}
-            disabled={minDate ? (date) => date < minDate : undefined}
-            onSelect={(date) => {
-              onChange(date ? format(date, "yyyy-MM-dd") : "");
-              setOpen(false);
-            }}
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-    </div>
-  );
 }
 
 export function UserForm({ user, onSuccess }: UserFormProps) {
@@ -240,7 +185,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const isPending = createUserMutation.isPending || updateUserMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" autoComplete="off">
       {/* Personal Information */}
       <Card>
         <CardHeader className="pb-3">
@@ -255,12 +200,12 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" placeholder="Enter username" {...register("username")} />
+            <Input id="username" placeholder="Enter username" autoComplete="off" {...register("username")} />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-            <Input id="email" type="email" placeholder="Enter email address" {...register("email")} />
+            <Input id="email" type="email" placeholder="Enter email address" autoComplete="off" {...register("email")} />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
 
@@ -270,10 +215,13 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
           </div>
 
-          <DatePickerField
+          <DatePicker
             label="Date of Birth"
             value={watch("dob")}
             onChange={(v) => setValue("dob", v)}
+            maxDate={new Date()}
+            yearRangeStart={80}
+            yearRangeEnd={0}
           />
 
           <div className="space-y-2">
@@ -406,21 +354,27 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             {errors.designation && <p className="text-sm text-destructive">{errors.designation.message}</p>}
           </div>
 
-          <DatePickerField
+          <DatePicker
             label="Date of Joining (DOJ)"
             value={watch("doj")}
             onChange={(v) => setValue("doj", v, { shouldValidate: true })}
             required
             error={errors.doj?.message}
+            maxDate={new Date()}
+            yearRangeStart={50}
+            yearRangeEnd={0}
           />
 
-          <DatePickerField
+          <DatePicker
             label="Date of Relieving (DOR)"
             value={watch("dor")}
             onChange={(v) => setValue("dor", v, { shouldValidate: true })}
             required
             error={errors.dor?.message}
             minDate={dojValue ? parseISO(dojValue) : undefined}
+            maxDate={new Date()}
+            yearRangeStart={50}
+            yearRangeEnd={0}
           />
 
           <div className="space-y-2">
@@ -465,6 +419,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter password"
+                  autoComplete="new-password"
                   {...register("password")}
                   className="pr-10"
                 />
@@ -504,6 +459,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                   id="confirm_password"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm password"
+                  autoComplete="new-password"
                   {...register("confirm_password")}
                   className="pr-10"
                 />

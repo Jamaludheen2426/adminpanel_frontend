@@ -35,7 +35,12 @@ import { PageLoader } from '@/components/common/page-loader';
 const profileSchema = z.object({
   full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
   email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().optional(),
+  phone: z.string().trim()
+    .refine(
+      (val) => !val || /^\+?[0-9\s\-(). ]{7,20}$/.test(val),
+      "Please enter a valid phone number (minimum 7 digits)"
+    )
+    .optional(),
   timezone: z.string().optional(),
 });
 
@@ -276,6 +281,11 @@ export function ProfileContent() {
                       placeholder="+1234567890"
                       {...profileForm.register("phone")}
                     />
+                    {profileForm.formState.errors.phone && (
+                      <p className="text-sm text-destructive">
+                        {profileForm.formState.errors.phone.message}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

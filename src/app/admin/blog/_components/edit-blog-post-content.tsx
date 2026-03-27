@@ -46,8 +46,14 @@ export function EditBlogPostContent({ id }: { id: number }) {
                     try {
                         await update.mutateAsync({ id, data });
                         router.push('/admin/blog');
+                        router.refresh();
                     } catch (e) {
-                        if (isApprovalRequired(e)) router.push('/admin/blog');
+                        if (isApprovalRequired(e)) {
+                            router.push('/admin/blog');
+                            router.refresh();
+                            return;
+                        }
+                        throw e;
                     }
                 }}
             />

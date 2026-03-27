@@ -25,8 +25,14 @@ export function CreateBlogPostContent() {
                     try {
                         await create.mutateAsync(data);
                         router.push('/admin/blog');
+                        router.refresh();
                     } catch (e) {
-                        if (isApprovalRequired(e)) router.push('/admin/blog');
+                        if (isApprovalRequired(e)) {
+                            router.push('/admin/blog');
+                            router.refresh();
+                            return;
+                        }
+                        throw e;
                     }
                 }}
             />
