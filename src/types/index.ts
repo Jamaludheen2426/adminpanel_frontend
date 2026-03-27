@@ -121,6 +121,7 @@ export interface UpdateUserDto {
   full_name?: string;
   email?: string;
   phone?: string;
+  password?: string;
   role_id?: number;
   is_active?: number;
   username?: string;

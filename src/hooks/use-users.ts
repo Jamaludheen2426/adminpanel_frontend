@@ -83,6 +83,12 @@ export function useUpdateUser() {
     onSuccess: (updatedUser, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
+      // If password was changed, force-refetch the current session immediately.
+      // If the logged-in user's password was changed by a superadmin, the backend
+      // should invalidate their token and the /auth/me call will return 401.
+      if (variables.data.password) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+      }
       const name = updatedUser?.full_name || 'Employee';
       if (variables.data.role_id) {
         toast.success(`${name}'s role updated successfully`);
@@ -128,6 +134,10 @@ export function useDeleteUser() {
     mutationFn: usersApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
+      // Force-refetch /auth/me immediately. If the current session belongs to the
+      // deleted account, the backend returns 401, which the global interceptor
+      // catches and redirects to /auth/login straight away.
+      queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
       toast.success('Employee deleted successfully');
     },
     onError: (error: Error & { response?: { data?: { message?: string } } }) => {

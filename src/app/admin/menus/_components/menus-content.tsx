@@ -441,10 +441,10 @@ export function MenusContent() {
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closeDialog}>
+                            <Button type="button" variant="outline" onClick={closeDialog} disabled={isPending}>
                                 {t('common.cancel', 'Cancel')}
                             </Button>
-                            <Button type="submit">
+                            <Button type="submit" disabled={isPending}>
                                 {t('common.save', 'Save')}
                             </Button>
                         </DialogFooter>

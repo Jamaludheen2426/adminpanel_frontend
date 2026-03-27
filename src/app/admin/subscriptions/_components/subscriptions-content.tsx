@@ -366,8 +366,8 @@ export function SubscriptionsContent() {
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={closeDialog}>{t('common.cancel', 'Cancel')}</Button>
-                            <Button type="submit">{t('common.save', 'Save')}</Button>
+                            <Button type="button" variant="outline" onClick={closeDialog} disabled={isPending}>{t('common.cancel', 'Cancel')}</Button>
+                            <Button type="submit" disabled={isPending}>{t('common.save', 'Save')}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>

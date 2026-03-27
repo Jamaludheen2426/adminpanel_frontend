@@ -83,8 +83,12 @@ export function useCurrentUser() {
       }
     },
     retry: false,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    // Poll every 30s to detect account deletion/suspension quickly
+    // staleTime MUST be 0 so that refetchInterval always makes a real network call.
+    // If staleTime > 0, React Query serves cached data and skips the fetch entirely,
+    // meaning deleted/password-changed accounts are never detected by polling.
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    // Poll every 30s to detect deletion/suspension/password-change quickly
     refetchInterval: 30 * 1000,
     refetchIntervalInBackground: false,
   });

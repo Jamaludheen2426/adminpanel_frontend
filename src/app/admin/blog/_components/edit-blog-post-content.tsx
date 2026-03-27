@@ -43,18 +43,22 @@ export function EditBlogPostContent({ id }: { id: number }) {
                 defaultValues={post}
                 isPending={update.isPending}
                 onSave={async (data) => {
-                    try {
-                        await update.mutateAsync({ id, data });
-                        router.push('/admin/blog');
-                        router.refresh();
-                    } catch (e) {
-                        if (isApprovalRequired(e)) {
-                            router.push('/admin/blog');
-                            router.refresh();
-                            return;
-                        }
-                        throw e;
-                    }
+                    return new Promise((resolve, reject) => {
+                        update.mutate({ id, data }, {
+                            onSuccess: () => {
+                                router.push('/admin/blog');
+                                resolve();
+                            },
+                            onError: (e) => {
+                                if (isApprovalRequired(e)) {
+                                    router.push('/admin/blog');
+                                    resolve();
+                                } else {
+                                    reject(e);
+                                }
+                            }
+                        });
+                    });
                 }}
             />
         </div>

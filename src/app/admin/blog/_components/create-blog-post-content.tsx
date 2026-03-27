@@ -22,18 +22,22 @@ export function CreateBlogPostContent() {
             <BlogPostForm
                 isPending={create.isPending}
                 onSave={async (data) => {
-                    try {
-                        await create.mutateAsync(data);
-                        router.push('/admin/blog');
-                        router.refresh();
-                    } catch (e) {
-                        if (isApprovalRequired(e)) {
-                            router.push('/admin/blog');
-                            router.refresh();
-                            return;
-                        }
-                        throw e;
-                    }
+                    return new Promise((resolve, reject) => {
+                        create.mutate(data, {
+                            onSuccess: () => {
+                                router.push('/admin/blog');
+                                resolve();
+                            },
+                            onError: (e) => {
+                                if (isApprovalRequired(e)) {
+                                    router.push('/admin/blog');
+                                    resolve();
+                                } else {
+                                    reject(e);
+                                }
+                            }
+                        });
+                    });
                 }}
             />
         </div>

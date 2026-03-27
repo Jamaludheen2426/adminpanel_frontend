@@ -149,6 +149,7 @@ export function SimpleSliderForm({ id }: { id: string }) {
 
     return (
         <div className="space-y-5 pb-10">
+            <PageLoader open={isSaving} />
 
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 items-start">
                 {/* ── Left column ──────────────────────────────────────── */}
