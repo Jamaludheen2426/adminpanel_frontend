@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { apiClient, isApprovalRequired } from '@/lib/api-client';
 import { queryKeys } from '@/lib/query-client';
 import { toast } from 'sonner';
@@ -77,6 +78,7 @@ export function useCreateUser() {
 // Update user mutation
 export function useUpdateUser() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: usersApi.update,
@@ -88,6 +90,22 @@ export function useUpdateUser() {
       // should invalidate their token and the /auth/me call will return 401.
       if (variables.data.password) {
         queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
+        // Trigger immediate refetch instead of just invalidating.
+        // If current user's session is invalid (401), logout & redirect to login.
+        queryClient.refetchQueries({ queryKey: queryKeys.auth.me() }).then(
+          (result) => {
+            // Refetch succeeded, user session still valid
+          },
+          (error) => {
+            // Refetch failed (likely 401) - user's password was changed by superadmin
+            if (error?.response?.status === 401 || error?.response?.status === 403) {
+              // Clear cache and redirect to login
+              queryClient.clear();
+              router.push('/auth/login');
+              toast.info('Your session has expired. Please log in again.');
+            }
+          }
+        );
       }
       const name = updatedUser?.full_name || 'Employee';
       if (variables.data.role_id) {
