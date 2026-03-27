@@ -82,31 +82,41 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: usersApi.update,
-    onSuccess: (updatedUser, variables) => {
+    onSuccess: async (updatedUser, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
-      // If password was changed, force-refetch the current session immediately.
-      // If the logged-in user's password was changed by a superadmin, the backend
-      // should invalidate their token and the /auth/me call will return 401.
+      
+      // If password was changed, immediately check if current user's session is still valid
       if (variables.data.password) {
-        queryClient.invalidateQueries({ queryKey: queryKeys.auth.me() });
-        // Trigger immediate refetch instead of just invalidating.
-        // If current user's session is invalid (401), logout & redirect to login.
-        queryClient.refetchQueries({ queryKey: queryKeys.auth.me() }).then(
-          (result) => {
-            // Refetch succeeded, user session still valid
-          },
-          (error) => {
-            // Refetch failed (likely 401) - user's password was changed by superadmin
-            if (error?.response?.status === 401 || error?.response?.status === 403) {
-              // Clear cache and redirect to login
-              queryClient.clear();
-              router.push('/auth/login');
-              toast.info('Your session has expired. Please log in again.');
-            }
-          }
-        );
+        try {
+          // Show loading indicator while checking session
+          toast.loading('Verifying your session...', { id: 'session-check' });
+          
+          // Attempt to refetch auth/me with timeout
+          const refetchPromise = queryClient.refetchQueries({ queryKey: queryKeys.auth.me() });
+          
+          // If refetch takes more than 5 seconds, assume session invalid and logout
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Session check timeout')), 5000)
+          );
+          
+          await Promise.race([refetchPromise, timeoutPromise]);
+          
+          // If we got here, session is still valid
+          toast.dismiss('session-check');
+        } catch (error: any) {
+          // Session invalid (401/403 or timeout) - logout immediately
+          toast.dismiss('session-check');
+          queryClient.clear();
+          localStorage.removeItem('auth_pending');
+          document.cookie = 'access_token=; Max-Age=-99999999;';
+          document.cookie = 'refresh_token=; Max-Age=-99999999;';
+          document.cookie = 'auth_pending=; Max-Age=-99999999;';
+          router.push('/auth/login');
+          toast.error('Your password was changed. Please log in again.');
+        }
       }
+      
       const name = updatedUser?.full_name || 'Employee';
       if (variables.data.role_id) {
         toast.success(`${name}'s role updated successfully`);
