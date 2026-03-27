@@ -204,8 +204,10 @@ export function AdsContent() {
                         data={ads as any}
                         columns={columns}
                         isLoading={isLoading}
-                        onEdit={(row: any) => Number(row.is_active) !== 2 && setEditAd(row)}
+                        onEdit={(row: any) => setEditAd(row)}
                         onDelete={(row: any) => setDeleteId(row.id)}
+                        disableEdit={(row: any) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row: any) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         onStatusToggle={(row: any, val: boolean) =>
                             updateAd.mutate({ id: row.id, data: { is_active: val ? 1 : 0 } })
                         }

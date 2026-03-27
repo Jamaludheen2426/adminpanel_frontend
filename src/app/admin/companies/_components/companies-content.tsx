@@ -242,6 +242,8 @@ export function CompaniesContent() {
               showActions={true}
               onEdit={(row) => setEditId(row.id)}
               onDelete={(row) => setDeleteId(row.id)}
+              disableEdit={(row) => Number(row.is_active) === 2}
+              disableDelete={(row) => Number(row.is_active) === 2}
             />
 
             {pagination && (

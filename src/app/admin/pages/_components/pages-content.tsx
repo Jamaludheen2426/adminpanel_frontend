@@ -103,6 +103,8 @@ export function PagesContent() {
                         }
                         onEdit={(row) => router.push(`/admin/pages/${row.id}`)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number((row as any).status) === 2 || !!(row as any).has_pending_approval}
+                        disableDelete={(row) => Number((row as any).status) === 2 || !!(row as any).has_pending_approval}
                         showStatus
                         showCreated
                         showActions

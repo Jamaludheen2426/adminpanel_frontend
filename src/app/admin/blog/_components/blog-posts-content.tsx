@@ -150,6 +150,8 @@ export function BlogPostsContent() {
                         }
                         onEdit={(row) => setEditPost(row as unknown as BlogPost)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
                         showCreated
                         showActions
                     />

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -387,6 +387,8 @@ export function EmailTemplatesContent() {
               isLoading={isLoading}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              disableEdit={(row) => Number((row as any).is_active) === 2 || !!(row as any).has_pending_approval}
+              disableDelete={(row) => Number((row as any).is_active) === 2 || !!(row as any).has_pending_approval}
               onStatusToggle={(row, val) => updateMutation.mutate({ id: row.id, data: { is_active: val } })}
               showStatus
               showCreated

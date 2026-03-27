@@ -222,6 +222,8 @@ export function BlogCategoriesContent() {
                         onStatusToggle={(row, val) => updateCategoryStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })}
                         onEdit={(row) => openEdit(row as BlogCategory)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
                         showCreated={true}
                         showStatus
                         showActions

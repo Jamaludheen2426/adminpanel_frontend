@@ -225,8 +225,10 @@ export function TestimonialsContent() {
                         data={testimonials as any}
                         isLoading={isLoading}
                         emptyMessage={t('testimonial.no_results', 'No testimonials found.')}
-                        onEdit={(row) => Number(row.is_active) !== 2 && openEdit(row)}
+                        onEdit={(row) => openEdit(row)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus={false}
                         showCreated
                         showActions

@@ -241,6 +241,8 @@ export function VendorsContent() {
                         onRowClick={(row) => setSelectedVendor(row as Vendor)}
                         onEdit={(row) => router.push(`/admin/vendors/${row.id}/edit`)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => !!(row as any).has_pending_approval}
+                        disableDelete={(row) => !!(row as any).has_pending_approval}
                         emptyMessage="No vendors found. Add your first vendor."
                     />
                     {vendorsRes?.pagination && (

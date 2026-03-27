@@ -163,6 +163,8 @@ export function BlogTagsContent() {
                         onStatusToggle={(row, val) => updateTagStatus.mutate({ id: row.id, is_active: val ? 1 : 0 })}
                         onEdit={(row) => openEdit(row as BlogTag)}
                         onDelete={(row) => setDeleteId(row.id)}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!(row as any).has_pending_approval}
                         showCreated={true}
                         showStatus
                         showActions

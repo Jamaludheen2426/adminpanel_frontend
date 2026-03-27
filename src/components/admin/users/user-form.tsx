@@ -28,51 +28,56 @@ import { useCountries, useStates, useCities, useLocalities } from "@/hooks/use-l
 import { getUserRoleLevel } from "@/lib/auth-utils";
 import type { User } from "@/types";
 
-const employeeSchema = z.object({
-  full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
-  username: z.string().optional(),
-  email: z.string().trim().email("Please enter a valid email"),
-  phone: z.string().trim().min(1, "Phone is required").regex(/^\+?[0-9\s\-(). ]{7,20}$/, "Please enter a valid phone number (minimum 7 digits)"),
-  dob: z.string().optional(),
-  gender: z.enum(["male", "female", "other"]).optional(),
-  marital_status: z.enum(["married", "unmarried"]).optional(),
-  country_id: z.number().optional(),
-  state_id: z.number().optional(),
-  city_id: z.number().optional(),
-  pincode_id: z.number().optional(),
-  address: z.string().optional(),
-  department: z.string().trim().min(1, "Department is required"),
-  designation: z.string().trim().min(1, "Designation is required"),
-  doj: z.string().trim().min(1, "Date of Joining is required"),
-  dor: z.string().trim().min(1, "Date of Relieving is required"),
-  role_id: z.number({ required_error: "Please select a role" }),
-  login_access: z.number().default(1),
-  is_active: z.number().default(0),
-  password: z.string().optional(),
-  confirm_password: z.string().optional(),
-}).superRefine((data, ctx) => {
-  if (!data.password || data.password.length === 0) return;
-  if (data.password.length < 8) {
-    ctx.addIssue({ code: "custom", message: "At least 8 characters required", path: ["password"] });
-  }
-  if (!/[A-Z]/.test(data.password)) {
-    ctx.addIssue({ code: "custom", message: "Must contain at least one uppercase letter", path: ["password"] });
-  }
-  if (!/[a-z]/.test(data.password)) {
-    ctx.addIssue({ code: "custom", message: "Must contain at least one lowercase letter", path: ["password"] });
-  }
-  if (!/[0-9]/.test(data.password)) {
-    ctx.addIssue({ code: "custom", message: "Must contain at least one number", path: ["password"] });
-  }
-  if (!/[^a-zA-Z0-9]/.test(data.password)) {
-    ctx.addIssue({ code: "custom", message: "Must contain at least one special character", path: ["password"] });
-  }
-  if (data.password !== data.confirm_password) {
-    ctx.addIssue({ code: "custom", message: "Passwords do not match", path: ["confirm_password"] });
-  }
-});
+const makeEmployeeSchema = (isEditMode: boolean) =>
+  z.object({
+    full_name: z.string().trim().min(2, "Full name must be at least 2 characters"),
+    username: z.string().optional(),
+    email: z.string().trim().email("Please enter a valid email"),
+    phone: z.string().trim().min(1, "Phone is required").regex(/^\+?[0-9\s\-(). ]{7,20}$/, "Please enter a valid phone number (minimum 7 digits)"),
+    dob: z.string().optional(),
+    gender: z.enum(["male", "female", "other"]).optional(),
+    marital_status: z.enum(["married", "unmarried"]).optional(),
+    country_id: z.number().optional(),
+    state_id: z.number().optional(),
+    city_id: z.number().optional(),
+    pincode_id: z.number().optional(),
+    address: z.string().optional(),
+    department: z.string().trim().min(1, "Department is required"),
+    designation: z.string().trim().min(1, "Designation is required"),
+    doj: z.string().trim().min(1, "Date of Joining is required"),
+    dor: z.string().trim().min(1, "Date of Relieving is required"),
+    role_id: z.number({ required_error: "Please select a role" }),
+    login_access: z.number().default(1),
+    is_active: z.number().default(0),
+    // Field-level required on create, optional on edit
+    password: isEditMode
+      ? z.string().optional()
+      : z.string().min(1, "Password is required"),
+    confirm_password: z.string().optional(),
+  }).superRefine((data, ctx) => {
+    if (data.password && data.password.length > 0) {
+      if (data.password.length < 8) {
+        ctx.addIssue({ code: "custom", message: "At least 8 characters required", path: ["password"] });
+      }
+      if (!/[A-Z]/.test(data.password)) {
+        ctx.addIssue({ code: "custom", message: "Must contain at least one uppercase letter", path: ["password"] });
+      }
+      if (!/[a-z]/.test(data.password)) {
+        ctx.addIssue({ code: "custom", message: "Must contain at least one lowercase letter", path: ["password"] });
+      }
+      if (!/[0-9]/.test(data.password)) {
+        ctx.addIssue({ code: "custom", message: "Must contain at least one number", path: ["password"] });
+      }
+      if (!/[^a-zA-Z0-9]/.test(data.password)) {
+        ctx.addIssue({ code: "custom", message: "Must contain at least one special character", path: ["password"] });
+      }
+      if (data.password !== data.confirm_password) {
+        ctx.addIssue({ code: "custom", message: "Passwords do not match", path: ["confirm_password"] });
+      }
+    }
+  });
 
-type EmployeeFormData = z.infer<typeof employeeSchema>;
+type EmployeeFormData = z.infer<ReturnType<typeof makeEmployeeSchema>>;
 
 interface UserFormProps {
   user?: User | null;
@@ -91,9 +96,14 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const currentUserLevel = getUserRoleLevel(currentUser);
   const targetUserLevel = user?.role?.level ?? 0;
 
-  // Password section: hide when editing a user whose role level >= current user's level
-  // (Admin cannot change SuperAdmin/Developer password)
-  const canChangePassword = !user || user.id === currentUser?.id || currentUserLevel > targetUserLevel;
+  // Password section: superadmin/developer can always change any password;
+  // others only if editing themselves or a lower-level user
+  const canChangePassword =
+    !user ||
+    user.id === currentUser?.id ||
+    currentUser?.role?.slug === "developer" ||
+    currentUser?.role?.slug === "super_admin" ||
+    currentUserLevel > targetUserLevel;
 
   const availableRoles = rolesData?.data?.filter((role) => {
     if (currentUser?.role?.slug === "developer") return true;
@@ -107,9 +117,10 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
     setValue,
     watch,
     control,
+    setError,
     formState: { errors },
   } = useForm<EmployeeFormData>({
-    resolver: zodResolver(employeeSchema),
+    resolver: zodResolver(makeEmployeeSchema(!!user)),
     defaultValues: {
       full_name: user?.full_name || "",
       username: user?.username || "",
@@ -140,6 +151,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const watchedPassword = useWatch({ control, name: "password" }) ?? "";
   const watchedConfirm = useWatch({ control, name: "confirm_password" }) ?? "";
   const dojValue = watch("doj");
+  const dorValue = watch("dor");
 
   const passwordRules = [
     { label: "At least 8 characters", met: watchedPassword.length >= 8 },
@@ -154,6 +166,25 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const { data: states = [] } = useStates(selectedCountryId || 0);
   const { data: districts = [] } = useCities(selectedStateId || 0);
   const { data: cityOptions = [] } = useLocalities(selectedCityId || 0);
+
+  // Email uniqueness check on blur
+  const [emailChecking, setEmailChecking] = useState(false);
+  const checkEmailExists = async (email: string) => {
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) return;
+    // Skip check if it's the same as current user's email (edit mode)
+    if (user?.email === email) return;
+    setEmailChecking(true);
+    try {
+      const response = await (await import('@/lib/api-client')).apiClient.get('/users', { params: { search: email, limit: 5 } });
+      const users: any[] = response.data?.data ?? [];
+      const duplicate = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase() && u.id !== user?.id);
+      if (duplicate) {
+        setError('email', { type: 'manual', message: 'This email is already registered' });
+      }
+    } catch { /* ignore */ } finally {
+      setEmailChecking(false);
+    }
+  };
 
   const onSubmit = (data: EmployeeFormData) => {
     const { confirm_password, ...rest } = data;
@@ -172,12 +203,24 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
     if (user) {
       updateUserMutation.mutate({ id: user.id, data: submitData }, {
         onSuccess: navigateToList,
-        onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
+        onError: (error: any) => {
+          if (isApprovalRequired(error)) { navigateToList(); return; }
+          const msg: string = error?.response?.data?.message || '';
+          if (msg.toLowerCase().includes('email')) {
+            setError('email', { type: 'manual', message: msg || 'This email is already registered' });
+          }
+        },
       });
     } else {
       createUserMutation.mutate(submitData as EmployeeFormData & { password: string }, {
         onSuccess: navigateToList,
-        onError: (error: any) => { if (isApprovalRequired(error)) navigateToList(); },
+        onError: (error: any) => {
+          if (isApprovalRequired(error)) { navigateToList(); return; }
+          const msg: string = error?.response?.data?.message || '';
+          if (msg.toLowerCase().includes('email')) {
+            setError('email', { type: 'manual', message: msg || 'This email is already registered' });
+          }
+        },
       });
     }
   };
@@ -205,7 +248,20 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="email">Email <span className="text-destructive">*</span></Label>
-            <Input id="email" type="email" placeholder="Enter email address" autoComplete="off" {...register("email")} />
+            <div className="relative">
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter email address"
+                autoComplete="off"
+                {...register("email")}
+                onBlur={(e) => checkEmailExists(e.target.value)}
+                className={emailChecking ? 'pr-8' : ''}
+              />
+              {emailChecking && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground animate-pulse">checking…</span>
+              )}
+            </div>
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
 
@@ -360,7 +416,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             onChange={(v) => setValue("doj", v, { shouldValidate: true })}
             required
             error={errors.doj?.message}
-            maxDate={new Date()}
+            maxDate={dorValue && !isNaN(parseISO(dorValue).getTime()) ? new Date(Math.min(parseISO(dorValue).getTime(), new Date().getTime())) : new Date()}
             yearRangeStart={50}
             yearRangeEnd={0}
           />

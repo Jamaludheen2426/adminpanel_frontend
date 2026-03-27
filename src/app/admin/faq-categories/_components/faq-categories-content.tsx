@@ -156,8 +156,8 @@ export function FaqCategoriesContent() {
                         onEdit={openEdit}
                         onDelete={(row) => setDeleteId(row.id)}
                         disableStatusToggle={(row) => Number(row.is_active) === 2}
-                        disableEdit={(row) => Number(row.is_active) === 2}
-                        disableDelete={(row) => Number(row.is_active) === 2}
+                        disableEdit={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
+                        disableDelete={(row) => Number(row.is_active) === 2 || !!row.has_pending_approval}
                         showStatus
                         showCreated
                         showActions

@@ -64,11 +64,29 @@ const authApi = {
 
 // Get current user
 export function useCurrentUser() {
+  const router = useRouter();
+
   return useQuery({
     queryKey: queryKeys.auth.me(),
-    queryFn: authApi.me,
+    queryFn: async () => {
+      try {
+        return await authApi.me();
+      } catch (error: any) {
+        const status = error?.response?.status;
+        if (status === 401 || status === 403) {
+          // Account deleted or session expired — redirect to login
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            router.push('/auth/login');
+          }
+        }
+        throw error;
+      }
+    },
     retry: false,
     staleTime: 10 * 60 * 1000, // 10 minutes
+    // Poll every 30s to detect account deletion/suspension quickly
+    refetchInterval: 30 * 1000,
+    refetchIntervalInBackground: false,
   });
 }
 
