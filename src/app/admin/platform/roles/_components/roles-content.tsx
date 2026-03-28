@@ -147,13 +147,12 @@ export function RolesContent() {
           if (deleteRole) {
             deleteRoleMutation.mutate(deleteRole.id, {
               onSuccess: () => setDeleteRole(null),
-              onError: () => setDeleteRole(null),
             });
           }
         }}
         isDeleting={deleteRoleMutation.isPending}
         title={t("roles.delete_role", "Delete Role")}
-        description={`Are you sure you want to delete the role "${deleteRole?.name}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete the role "${deleteRole?.name}"? This action cannot be undone. Roles with assigned employees cannot be deleted — reassign or remove all employees from this role first.`}
       />
     </PermissionGuard>
   );

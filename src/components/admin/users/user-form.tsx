@@ -25,7 +25,7 @@ import { isApprovalRequired } from "@/lib/api-client";
 import { useRoles } from "@/hooks/use-roles";
 import { useAuth } from "@/hooks/use-auth";
 import { useCountries, useStates, useCities, useLocalities } from "@/hooks/use-locations";
-import { getUserRoleLevel } from "@/lib/auth-utils";
+import { getUserRoleLevel, isDeveloper, isSuperAdmin } from "@/lib/auth-utils";
 import type { User } from "@/types";
 
 const makeEmployeeSchema = (isEditMode: boolean) =>
@@ -42,10 +42,10 @@ const makeEmployeeSchema = (isEditMode: boolean) =>
     city_id: z.number().optional(),
     pincode_id: z.number().optional(),
     address: z.string().optional(),
-    department: z.string().trim().min(1, "Department is required"),
-    designation: z.string().trim().min(1, "Designation is required"),
-    doj: z.string().trim().min(1, "Date of Joining is required"),
-    dor: z.string().trim().min(1, "Date of Relieving is required"),
+    department: z.string().optional(),
+    designation: z.string().optional(),
+    doj: z.string().optional(),
+    dor: z.string().optional(),
     role_id: z.number({ required_error: "Please select a role" }),
     login_access: z.number().default(1),
     is_active: z.number().default(0),
@@ -101,8 +101,8 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const canChangePassword =
     !user ||
     user.id === currentUser?.id ||
-    currentUser?.role?.slug === "developer" ||
-    currentUser?.role?.slug === "super_admin" ||
+    isDeveloper(currentUser) ||
+    isSuperAdmin(currentUser) ||
     currentUserLevel > targetUserLevel;
 
   const availableRoles = rolesData?.data?.filter((role) => {
@@ -255,13 +255,15 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
                 placeholder="Enter email address"
                 autoComplete="off"
                 {...register("email")}
-                onBlur={(e) => checkEmailExists(e.target.value)}
+                onBlur={(e) => !user && checkEmailExists(e.target.value)}
+                disabled={!!user}
                 className={emailChecking ? 'pr-8' : ''}
               />
               {emailChecking && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground animate-pulse">checking…</span>
               )}
             </div>
+            {user && <p className="text-xs text-muted-foreground">Email cannot be changed after account creation.</p>}
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
 
@@ -399,13 +401,13 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="department">Department <span className="text-destructive">*</span></Label>
+            <Label htmlFor="department">Department</Label>
             <Input id="department" placeholder="Enter department" {...register("department")} />
             {errors.department && <p className="text-sm text-destructive">{errors.department.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="designation">Designation <span className="text-destructive">*</span></Label>
+            <Label htmlFor="designation">Designation</Label>
             <Input id="designation" placeholder="Enter designation" {...register("designation")} />
             {errors.designation && <p className="text-sm text-destructive">{errors.designation.message}</p>}
           </div>
@@ -414,7 +416,6 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             label="Date of Joining (DOJ)"
             value={watch("doj")}
             onChange={(v) => setValue("doj", v, { shouldValidate: true })}
-            required
             error={errors.doj?.message}
             maxDate={dorValue && !isNaN(parseISO(dorValue).getTime()) ? new Date(Math.min(parseISO(dorValue).getTime(), new Date().getTime())) : new Date()}
             yearRangeStart={50}
@@ -425,7 +426,6 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             label="Date of Relieving (DOR)"
             value={watch("dor")}
             onChange={(v) => setValue("dor", v, { shouldValidate: true })}
-            required
             error={errors.dor?.message}
             minDate={dojValue ? parseISO(dojValue) : undefined}
             maxDate={new Date()}

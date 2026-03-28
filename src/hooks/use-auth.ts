@@ -74,8 +74,10 @@ export function useCurrentUser() {
       } catch (error: any) {
         const status = error?.response?.status;
         if (status === 401 || status === 403) {
-          // Account deleted or session expired — redirect to login
+          // Clear cookies first so middleware doesn't redirect back to /admin,
+          // then redirect to login
           if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+            try { await fetch('/api/auth/clear-session', { method: 'POST' }); } catch { /* ignore */ }
             router.push('/auth/login');
           }
         }
@@ -275,9 +277,9 @@ export function useSmartLogin() {
         const res = await apiClient.post('/auth/login', data);
         return { type: 'admin' as const, user: res.data.data.user };
       } catch (adminErr: any) {
-        // Only fall back to vendor on auth errors (401/403/404), not server errors
+        // 403 = access denied (inactive, suspended) — show that message, don't try vendor
         const status = adminErr?.response?.status;
-        if (!status || status >= 500) throw adminErr;
+        if (!status || status >= 500 || status === 403) throw adminErr;
       }
 
       // 2. Fall back to vendor login
