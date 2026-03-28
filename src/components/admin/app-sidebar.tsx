@@ -24,6 +24,7 @@ import {
   Megaphone,
   BellRing,
   HelpCircle,
+  FileQuestion,
   MapPin,
   Newspaper,
   Phone,
@@ -177,7 +178,7 @@ const menuItems: MenuItem[] = [
     pluginSlug: "faq",
     children: [
       { labelKey: "nav.faq_list", href: "/admin/faqs", icon: HelpCircle, permission: "faqs.view" },
-      { labelKey: "nav.faq_categories", href: "/admin/faq-categories", icon: HelpCircle, permission: "faq_categories.view" },
+      { labelKey: "nav.faq_categories", href: "/admin/faq-categories", icon: FileQuestion, permission: "faq_categories.view" },
     ],
   },
   {

@@ -11,7 +11,7 @@ const languageSchema = z.object({
     code: z.string().trim().min(2, 'Code must be at least 2 characters').max(10, 'Code must be at most 10 characters'),
     native_name: z.string().optional(),
     direction: z.enum(['ltr', 'rtl']).default('ltr'),
-    is_active: z.boolean().default(true),
+    is_active: z.union([z.boolean(), z.number()]).transform(v => v === true || v === 1).default(true),
 });
 
 interface LanguageFormProps {
@@ -37,12 +37,14 @@ export function LanguageForm({ open, onOpenChange, language, onSuccess }: Langua
                 { value: 'rtl', label: 'Right to Left (RTL)' },
             ],
         },
-        { name: 'is_active', label: 'Is Active?', type: 'switch' },
+        { name: 'is_active', label: 'Is Active?', type: 'switch', disabled: !!language?.is_default },
     ];
 
     const handleSubmit = (data: any) => {
         if (language) {
             const { code, ...updateData } = data;
+            // Default language cannot be deactivated
+            if (language.is_default) updateData.is_active = true;
             updateMutation.mutate({ id: language.id, data: updateData }, { onSuccess });
         } else {
             createMutation.mutate(data, { onSuccess });
@@ -62,7 +64,7 @@ export function LanguageForm({ open, onOpenChange, language, onSuccess }: Langua
                 code: language.code,
                 native_name: language.native_name || '',
                 direction: language.direction,
-                is_active: language.is_active,
+                is_active: language.is_active === 1 || language.is_active === true,
             } : { direction: 'ltr', is_active: true }}
             onSubmit={handleSubmit}
             isPending={isPending}

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, HelpCircle, LayoutGrid, X } from 'lucide-react';
+import { Plus, HelpCircle, LayoutGrid, X, LayoutList } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { Icon as IconifyIcon } from '@iconify/react';
 import { IconPickerDialog } from './icon-picker-dialog';
@@ -228,10 +228,15 @@ export function MenusContent() {
             <PageLoader open={isLoading || isPending || deleteMenu.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('menus.title', 'Menus')}</CardTitle>
-                            <CardDescription>{t('menus.desc', 'Manage menu items')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <LayoutList className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('menus.title', 'Menus')}</CardTitle>
+                                <CardDescription>{t('menus.desc', 'Manage menu items')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />

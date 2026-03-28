@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, List } from 'lucide-react';
+import { Plus, FileQuestion } from 'lucide-react';
 import {
     useFaqCategories,
     useCreateFaqCategory,
@@ -131,7 +131,7 @@ export function FaqCategoriesContent() {
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-primary/10">
-                                <List className="h-5 w-5 text-primary" />
+                                <FileQuestion className="h-5 w-5 text-primary" />
                             </div>
                             <div>
                                 <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>

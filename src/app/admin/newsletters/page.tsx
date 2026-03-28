@@ -4,9 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function NewslettersPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">Newsletters</h1>
-        <p className="text-muted-foreground mt-1">Manage newsletter subscribers and campaigns</p>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Newspaper className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Newsletters</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Manage newsletter subscribers and campaigns</p>
+        </div>
       </div>
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-24 text-center">

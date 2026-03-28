@@ -151,7 +151,8 @@ export function CommonFormDialog({
                     </Label>
                     <Switch
                         checked={!!watch(field.name)}
-                        onCheckedChange={(v) => setValue(field.name, v)}
+                        onCheckedChange={(v) => !field.disabled && setValue(field.name, v)}
+                        disabled={field.disabled}
                     />
                 </div>
             );

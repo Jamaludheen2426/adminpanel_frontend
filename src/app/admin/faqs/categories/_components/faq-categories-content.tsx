@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus } from 'lucide-react';
+import { Plus, FileQuestion } from 'lucide-react';
 import {
     useFaqCategories,
     useCreateFaqCategory,
@@ -126,10 +126,15 @@ export function FaqCategoriesContent() {
             <PageLoader open={isLoading || isPending || deleteCategory.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>
-                            <CardDescription>{t('faq.categories_desc', 'Manage categories for your FAQ section')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <FileQuestion className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('faq.categories_title', 'FAQ Categories')}</CardTitle>
+                                <CardDescription>{t('faq.categories_desc', 'Manage categories for your FAQ section')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />

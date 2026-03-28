@@ -244,6 +244,7 @@ export function LanguagesContent() {
                 </Button>
 
                 <LanguageForm
+                  key={selectedLanguage?.id ?? 'new'}
                   open={isDialogOpen}
                   onOpenChange={setIsDialogOpen}
                   language={selectedLanguage}
