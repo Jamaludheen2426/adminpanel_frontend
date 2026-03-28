@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, LayoutList } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -59,11 +59,14 @@ export function MenuContent() {
     <PermissionGuard permission="settings.view">
       <div className="space-y-6">
         <PageLoader open={bulkUpdateMutation.isPending} />
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Menu</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure sidebar menu appearance and behavior
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <LayoutList className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Menu</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">Configure sidebar menu appearance and behavior</p>
+          </div>
         </div>
 
         <Card>

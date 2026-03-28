@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -61,11 +61,14 @@ export function ThemeOptionContent() {
     <PermissionGuard permission="settings.view">
       <div className="space-y-6">
         <PageLoader open={bulkUpdateMutation.isPending} />
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Theme Options</h1>
-          <p className="text-muted-foreground mt-1">
-            Fine-tune typography, spacing, and component styles
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <SlidersHorizontal className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Theme Options</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">Fine-tune typography, spacing, and component styles</p>
+          </div>
         </div>
 
         {/* Font Family */}

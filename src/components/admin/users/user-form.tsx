@@ -151,7 +151,6 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
   const watchedPassword = useWatch({ control, name: "password" }) ?? "";
   const watchedConfirm = useWatch({ control, name: "confirm_password" }) ?? "";
   const dojValue = watch("doj");
-  const dorValue = watch("dor");
 
   const passwordRules = [
     { label: "At least 8 characters", met: watchedPassword.length >= 8 },
@@ -417,7 +416,7 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             value={watch("doj")}
             onChange={(v) => setValue("doj", v, { shouldValidate: true })}
             error={errors.doj?.message}
-            maxDate={dorValue && !isNaN(parseISO(dorValue).getTime()) ? new Date(Math.min(parseISO(dorValue).getTime(), new Date().getTime())) : new Date()}
+            maxDate={new Date()}
             yearRangeStart={50}
             yearRangeEnd={0}
           />
@@ -428,9 +427,8 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
             onChange={(v) => setValue("dor", v, { shouldValidate: true })}
             error={errors.dor?.message}
             minDate={dojValue ? parseISO(dojValue) : undefined}
-            maxDate={new Date()}
             yearRangeStart={50}
-            yearRangeEnd={0}
+            yearRangeEnd={5}
           />
 
           <div className="space-y-2">

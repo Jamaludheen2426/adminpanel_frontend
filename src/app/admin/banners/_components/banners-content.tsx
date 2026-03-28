@@ -8,7 +8,7 @@ import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Monitor, Tablet, Smartphone, LayoutTemplate, Plus } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, LayoutTemplate, Plus, Image } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { PageLoader } from '@/components/common/page-loader';
 import { TablePagination } from '@/components/common/table-pagination';
@@ -113,10 +113,15 @@ export function BannersContent() {
             <PageLoader open={isLoading || createBanner.isPending || updateBanner.isPending || deleteBanner.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('nav.ad_banners', 'Create Banner')}</CardTitle>
-                            <CardDescription>{t('ads.banners_desc', 'Define banner dimension templates that are used to enforce image sizes in ads.')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Image className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('nav.ad_banners', 'Ad Banners')}</CardTitle>
+                                <CardDescription>{t('ads.banners_desc', 'Define banner dimension templates that are used to enforce image sizes in ads.')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={() => setCreateOpen(true)}>
                             <Plus className="mr-2 h-4 w-4" />

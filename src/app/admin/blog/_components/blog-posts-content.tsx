@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, BookOpen } from 'lucide-react';
 import { useBlogPosts, useDeleteBlogPost, useUpdateBlogPost, useCreateBlogPost, BlogPost } from '@/hooks/use-blog-posts';
 import { isApprovalRequired } from '@/lib/api-client';
 import { useTranslation } from '@/hooks/use-translation';
@@ -118,17 +118,17 @@ export function BlogPostsContent() {
         <div className="space-y-6">
             <PageLoader open={isFetching || createPost.isPending || updatePost.isPending || deletePost.isPending} />
 
-            <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">{t('blog.posts_title', 'Blog Posts')}</h1>
-                <p className="text-muted-foreground mt-1">{t('blog.posts_desc', 'Manage all blog posts')}</p>
-            </div>
-
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('blog.posts_title', 'Blog Posts')}</CardTitle>
-                            <CardDescription>{t('blog.posts_desc', 'Manage all blog posts')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <BookOpen className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('blog.posts_title', 'Blog Posts')}</CardTitle>
+                                <CardDescription>{t('blog.posts_desc', 'Manage all blog posts')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={() => setCreateOpen(true)}>
                             <Plus className="mr-2 h-4 w-4" />

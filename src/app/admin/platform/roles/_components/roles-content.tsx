@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Check } from "lucide-react";
+import { Plus, Search, Check, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   CommonTable,
   type CommonColumn,
 } from "@/components/common/common-table";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DeleteDialog } from "@/components/common/delete-dialog";
 import { useRoles, useDeleteRole, useToggleRoleStatus } from "@/hooks/use-roles";
 import { useAuth } from "@/hooks/use-auth";
@@ -83,25 +83,32 @@ export function RolesContent() {
         {/* Page Loader */}
         <PageLoader open={isLoading || isFetching || deleteRoleMutation.isPending || toggleStatusMutation.isPending} />
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold">{t("nav.roles")}</h1>
-          <Button onClick={() => router.push("/admin/platform/roles/create")}>
-            <Plus className="mr-2 h-4 w-4" />
-            {t("roles.add_role")}
-          </Button>
-        </div>
-
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={t("roles.search")}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>{t("nav.roles")}</CardTitle>
+                  <CardDescription>Manage user roles and permissions</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t("roles.search")}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button onClick={() => router.push("/admin/platform/roles/create")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t("roles.add_role")}
+                </Button>
               </div>
             </div>
           </CardHeader>

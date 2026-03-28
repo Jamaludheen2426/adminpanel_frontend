@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { ApprovalBadge } from '@/components/admin/approvals/approval-badge';
 import { ApprovalDetailDialog } from '@/components/admin/approvals/approval-detail-dialog';
-import { Search, Eye } from 'lucide-react';
+import { Search, Eye, ClipboardCheck } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { PermissionGuard } from '@/components/guards/permission-guard';
 import { PageLoader } from '@/components/common/page-loader';
@@ -113,11 +113,14 @@ export function ApprovalsContent() {
         {/* Page Loader */}
         <PageLoader open={isLoading} />
 
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Approval Requests</h1>
-          <p className="text-muted-foreground">
-            Review and manage approval requests from your team
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <ClipboardCheck className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Approval Requests</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">Review and manage approval requests from your team</p>
+          </div>
         </div>
 
         <Card>
@@ -177,10 +180,17 @@ export function ApprovalsContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Approval Requests</CardTitle>
-            <CardDescription>
-              {data?.pagination.totalItems || 0} total requests
-            </CardDescription>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <ClipboardCheck className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle>Approval Requests</CardTitle>
+                <CardDescription>
+                  {data?.pagination.totalItems || 0} total requests
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
 
           <CardContent>

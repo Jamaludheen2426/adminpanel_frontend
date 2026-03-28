@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor, Check } from "lucide-react";
+import { Sun, Moon, Monitor, Check, Palette } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -39,11 +39,14 @@ export function ThemeContent() {
   return (
     <PermissionGuard permission="settings.view">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Theme</h1>
-          <p className="text-muted-foreground mt-1">
-            Choose your color scheme for the admin panel
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Palette className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Theme</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">Choose your color scheme for the admin panel</p>
+          </div>
         </div>
 
         <Card>

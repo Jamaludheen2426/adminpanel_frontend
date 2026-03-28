@@ -194,9 +194,14 @@ export function SettingsContent() {
       <PageLoader open={isLoading} text={t("common.loading", "Loading...")} />
 
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t("nav.settings")}</h1>
-          <p className="text-muted-foreground mt-1">{t("settings.page_desc")}</p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Settings className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{t("nav.settings")}</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">{t("settings.page_desc")}</p>
+          </div>
         </div>
 
         {visibleGroups.map((group) => (

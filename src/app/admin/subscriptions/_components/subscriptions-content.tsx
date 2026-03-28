@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, X, ChevronDown } from 'lucide-react';
+import { Plus, X, ChevronDown, Repeat } from 'lucide-react';
 import {
     useSubscriptions,
     useCreateSubscription,
@@ -184,10 +184,15 @@ export function SubscriptionsContent() {
             <PageLoader open={isLoading || isPending || deleteSubscription.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>Subscriptions</CardTitle>
-                            <CardDescription>Manage subscription plans</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Repeat className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>Subscriptions</CardTitle>
+                                <CardDescription>Manage subscription plans</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />

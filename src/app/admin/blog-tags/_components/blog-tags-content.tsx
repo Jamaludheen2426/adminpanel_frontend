@@ -133,17 +133,17 @@ export function BlogTagsContent() {
         <div className="space-y-6">
             <PageLoader open={isLoading || isPending || deleteTag.isPending} />
 
-            <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">{t('blog.tags_title', 'Blog Tags')}</h1>
-                <p className="text-muted-foreground mt-1">{t('blog.tags_desc', 'Manage tags for blog posts')}</p>
-            </div>
-
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('blog.tags_title', 'Blog Tags')}</CardTitle>
-                            <CardDescription>{t('blog.tags_desc', 'Manage tags for blog posts')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Tag className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('blog.tags_title', 'Blog Tags')}</CardTitle>
+                                <CardDescription>{t('blog.tags_desc', 'Manage tags for blog posts')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />

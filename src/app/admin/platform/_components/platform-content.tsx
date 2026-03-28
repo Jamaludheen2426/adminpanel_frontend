@@ -14,6 +14,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/hooks/use-auth";
@@ -109,11 +110,16 @@ export function PlatformContent() {
       <PageLoader open={isLoading} text={t("common.loading", "Loading...")} />
 
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('platform.page_desc', 'Manage employees, roles, and system administration')}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <UserCog className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.platform_admin', 'Platform Administration')}</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">
+              {t('platform.page_desc', 'Manage employees, roles, and system administration')}
+            </p>
+          </div>
         </div>
 
         {visibleGroups.map((group) => (

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, User, Building } from 'lucide-react';
+import { Plus, User, Building, Star } from 'lucide-react';
 import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useDeleteTestimonial, Testimonial } from '@/hooks/use-testimonials';
 import { useTranslation } from '@/hooks/use-translation';
 import { CommonTable, type CommonColumn } from '@/components/common/common-table';
@@ -208,10 +208,15 @@ export function TestimonialsContent() {
             <PageLoader open={isLoading || isPending || deleteTestimonial.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('testimonial.title', 'Testimonials')}</CardTitle>
-                            <CardDescription>{t('testimonial.desc', 'Manage customer reviews and feedback')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Star className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('testimonial.title', 'Testimonials')}</CardTitle>
+                                <CardDescription>{t('testimonial.desc', 'Manage customer reviews and feedback')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={openCreate}>
                             <Plus className="mr-2 h-4 w-4" />

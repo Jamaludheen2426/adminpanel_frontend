@@ -5,7 +5,7 @@ import { CommonTable } from '@/components/common/common-table';
 import { useContacts, useDeleteContact, Contact } from '@/hooks/use-contacts';
 import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Button } from '@/components/ui/button';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2, Eye, Mail } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -138,9 +138,14 @@ export function ContactsContent() {
             <Card>
                 <CardHeader>
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('nav.contact', 'Contact Messages')}</CardTitle>
-                            <CardDescription>{t('contacts.description', 'Manage and reply to inquiries sent via the contact form.')}</CardDescription>
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Mail className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('nav.contact', 'Contact Messages')}</CardTitle>
+                                <CardDescription>{t('contacts.description', 'Manage and reply to inquiries sent via the contact form.')}</CardDescription>
+                            </div>
                         </div>
                         <div className="flex gap-2">
                             {statusFilters.map((filter) => (

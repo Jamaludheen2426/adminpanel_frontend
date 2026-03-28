@@ -1,6 +1,7 @@
 'use client';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MapPin } from 'lucide-react';
 import { CountriesTab } from '@/app/admin/locations/_components/countries-tab';
 import { StatesTab } from '@/app/admin/locations/_components/states-tab';
 import { CitiesTab } from '@/app/admin/locations/_components/cities-tab';
@@ -14,11 +15,16 @@ export function LocationsContent() {
   return (
     <PermissionGuard permission="locations.view">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.locations', 'Locations')}</h1>
-          <p className="text-muted-foreground mt-1">
-            {t('settings.locations_desc', 'Manage countries, states, districts and cities')}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <MapPin className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.locations', 'Locations')}</h1>
+            <p className="text-muted-foreground text-sm mt-0.5">
+              {t('settings.locations_desc', 'Manage countries, states, districts and cities')}
+            </p>
+          </div>
         </div>
 
         <Tabs defaultValue="countries">

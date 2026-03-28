@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Pencil } from "lucide-react";
+import { Plus, Search, Pencil, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PermissionGuard } from "@/components/guards/permission-guard";
@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { isApprovalRequired } from "@/lib/api-client";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useMemo } from "react";
 import {
   AlertDialog,
@@ -241,24 +241,33 @@ export function UsersContent() {
         {/* Global Page Loader */}
         <PageLoader open={isLoading || isFetching || deleteUserMutation.isPending || toggleStatusMutation.isPending || updateUserMutation.isPending} />
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-2xl sm:text-3xl font-bold">Employees</h1>
-          <Button onClick={() => router.push("/admin/platform/users/create")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Employee
-          </Button>
-        </div>
-
         <Card>
           <CardHeader>
-            <div className="relative max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search employees..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Employees</CardTitle>
+                  <CardDescription>Manage employee accounts and access</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search employees..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Button onClick={() => router.push("/admin/platform/users/create")}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Employee
+                </Button>
+              </div>
             </div>
           </CardHeader>
 

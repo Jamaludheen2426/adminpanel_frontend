@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Languages,
   Building2,
+  LayoutDashboard,
 } from "lucide-react";
 import {
   Table,
@@ -437,11 +438,16 @@ export function DashboardContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.dashboard')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('auth.welcome_back')}, {user?.full_name || "Admin"}
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <LayoutDashboard className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('nav.dashboard')}</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            {t('auth.welcome_back')}, {user?.full_name || "Admin"}
+          </p>
+        </div>
       </div>
 
       {/* Conditional Dashboard */}

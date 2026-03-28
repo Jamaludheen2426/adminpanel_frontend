@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Search, ChevronDown, ChevronRight } from "lucide-react";
+import { Search, ChevronDown, ChevronRight, Puzzle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useModules } from "@/hooks/use-modules";
 import { useTranslation } from "@/hooks/use-translation";
 import React from "react";
@@ -48,17 +48,19 @@ export function ModulesContent() {
         {/* Page Loader */}
         <PageLoader open={isLoading} />
 
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Modules & Permissions</h1>
-          <p className="text-muted-foreground mt-1">
-            System modules and their auto-generated permissions. Assign these to roles and configure approval requirements in Role Management.
-          </p>
-        </div>
-
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Puzzle className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Modules & Permissions</CardTitle>
+                  <CardDescription>System modules and their auto-generated permissions. Assign these to roles and configure approval requirements in Role Management.</CardDescription>
+                </div>
+              </div>
+              <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search modules..."

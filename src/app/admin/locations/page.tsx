@@ -6,17 +6,23 @@ import { StatesTab } from './_components/states-tab';
 import { CitiesTab } from './_components/cities-tab';
 import { LocalitiesTab } from './_components/localities-tab';
 import { useTranslation } from '@/hooks/use-translation';
+import { MapPin } from 'lucide-react';
 
 export default function LocationsPage() {
   const { t } = useTranslation();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('nav.locations', 'Locations')}</h1>
-        <p className="text-muted-foreground mt-1">
-          {t('settings.locations_desc', 'Manage countries, states, districts and cities')}
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-primary/10">
+          <MapPin className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{t('nav.locations', 'Locations')}</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            {t('settings.locations_desc', 'Manage countries, states, districts and cities')}
+          </p>
+        </div>
       </div>
 
       <Tabs defaultValue="countries">

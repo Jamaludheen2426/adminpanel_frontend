@@ -13,7 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { resolveMediaUrl } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Plus, Store } from 'lucide-react';
 import { PageLoader } from '@/components/common/page-loader';
 import { TablePagination } from '@/components/common/table-pagination';
 
@@ -220,10 +220,15 @@ export function VendorsContent() {
             />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>Vendors</CardTitle>
-                            <CardDescription>Manage vendor accounts and their details.</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Store className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>Vendors</CardTitle>
+                                <CardDescription>Manage vendor accounts and their details.</CardDescription>
+                            </div>
                         </div>
                         <Button onClick={() => router.push('/admin/vendors/new')} className="gap-2">
                             <Plus className="h-4 w-4" /> Add Vendor

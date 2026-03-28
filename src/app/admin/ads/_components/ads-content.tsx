@@ -8,7 +8,7 @@ import { DeleteDialog } from '@/components/common/delete-dialog';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { resolveMediaUrl } from '@/lib/utils';
-import { FileCode2, Plus } from 'lucide-react';
+import { FileCode2, Plus, Megaphone } from 'lucide-react';
 import { ImageCropper } from '@/components/common/image-cropper';
 import { useTranslation } from '@/hooks/use-translation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -188,10 +188,15 @@ export function AdsContent() {
             <PageLoader open={isLoading || createAd.isPending || updateAd.isPending || deleteAd.isPending} />
             <Card>
                 <CardHeader>
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <CardTitle>{t('nav.ads', 'Ads')}</CardTitle>
-                            <CardDescription>{t('ads.description', 'Manage front-end advertisements and banners.')}</CardDescription>
+                    <div className="flex items-center justify-between flex-wrap gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <Megaphone className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <CardTitle>{t('nav.ads', 'Ads')}</CardTitle>
+                                <CardDescription>{t('ads.description', 'Manage front-end advertisements and banners.')}</CardDescription>
+                            </div>
                         </div>
                         <Button size="sm" onClick={() => setCreateOpen(true)}>
                             <Plus className="mr-2 h-4 w-4" />
